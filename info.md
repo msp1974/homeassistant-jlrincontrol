@@ -1,0 +1,1 @@
+This component provides integration to the JLR InControl functionality to homeassistant. For more information please see the [Readme.md](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Readme.Md)
