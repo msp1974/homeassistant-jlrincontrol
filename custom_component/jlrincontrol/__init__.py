@@ -12,13 +12,14 @@ import json
 
 import logging
 import voluptuous as vol
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     async_dispatcher_connect,
 )
 from homeassistant.helpers.entity import Entity
-
+from homeassistant.util import Throttle
 from datetime import timedelta
 from homeassistant.const import (
     CONF_USERNAME,
@@ -26,9 +27,15 @@ from homeassistant.const import (
     CONF_RESOURCES,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    PRESSURE_PSI,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
+
 from homeassistant.helpers.discovery import async_load_platform
-from .const import METERS_TO_MILES
+from .const import KMS_TO_MILES, SIGNAL_STATE_UPDATED
 
 # from homeassistant.helpers.entity import Entity
 # from homeassistant.helpers.dispatcher import dispatcher_send
@@ -38,6 +45,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "jlrincontrol"
 DATA_KEY = DOMAIN
+
+CONF_PIN = "pin"
 
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
@@ -76,6 +85,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_PIN): cv.string,
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
                     vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
                 ),
@@ -94,10 +104,10 @@ async def async_setup(hass, config):
     """Setup JLR InConnect component"""
     # interval = config[DOMAIN].get(CONF_SCAN_INTERVAL)
 
-    data = JLRApiHandler(config)
+    data = JLRApiHandler(hass, config)
     await data.async_update()
 
-    if not data.vehicles:
+    if not data.vehicle:
         # No vehicles or wrong credentials
         _LOGGER.error("Unable to get vehicles from api.  Check credentials")
         return False
@@ -112,12 +122,14 @@ async def async_setup(hass, config):
 
 
 class JLRApiHandler:
-    def __init__(self, config):
+    def __init__(self, hass, config):
+        self._hass = hass
         self.config = config
-        self.vehicles = None
+        self.vehicle = None
         self.connection = None
         self.attributes = None
         self.status = None
+        self.wakeup = None
         self.position = None
         self.user_info = None
         self.user_preferences = None
@@ -128,8 +140,10 @@ class JLRApiHandler:
             password=self.config[DOMAIN].get(CONF_PASSWORD),
         )
 
-        self.vehicles = self.connection.vehicles
+        # Get one time info
+        self.vehicle = self.connection.vehicles[0]
         self.user_info = self.connection.get_user_info()
+        self.attributes = self.vehicle.get_attributes()
 
         _LOGGER.debug("User Info - {}".format(self.user_preferences))
 
@@ -143,15 +157,31 @@ class JLRApiHandler:
                 "Miles UkGallons Celsius DistPerVol kWhPer100Dist kWh"
             )
 
-    async def async_update(self):
-        self.attributes = self.vehicles[0].get_attributes()
-        self.position = self.vehicles[0].get_position()
-        status = self.vehicles[0].get_status()
-        self.status = {d["key"]: d["value"] for d in status["vehicleStatus"]}
+    @callback
+    def schedule_next_update(self):
+        self._hass.async_create_task(self.async_update())
 
-        _LOGGER.debug("API REG - {}".format(self.attributes.get("registrationNumber")))
+    @callback
+    def schedule_next_health_update(self):
+        self._hass.async_create_task(self.async_update())
+
+    @Throttle(timedelta(seconds=30))
+    async def async_update(self):
+        self.position = self.vehicle.get_position()
+        status = self.vehicle.get_status()
+        self.status = {d["key"]: d["value"] for d in status["vehicleStatus"]}
+        self.wakeup = self.vehicle.get_wakeup_time()
+
+        # _LOGGER.debug("API REG - {}".format(self.attributes.get("registrationNumber")))
+
+        _LOGGER.debug("Status - {}".format(self.status))
 
         return True
+
+    async def async_update_vehicle_health(self):
+        # TODO: Add checking that it has been successful
+        # by calling service status
+        await self.vehicle.get_health_status()
 
     def get_odometer(self):
         if "Miles" in self.user_preferences:
@@ -159,13 +189,33 @@ class JLRApiHandler:
         else:
             return int(int(self.status.get("ODOMETER_METERS")) / 1000)
 
+    def dist_to_user_prefs(self, kms: int) -> str:
+        if "Miles" in self.user_preferences:
+            return str(int(int(kms) * KMS_TO_MILES)) + LENGTH_MILES
+        else:
+            return str(kms) + LENGTH_KILOMETERS
+
+    def temp_to_user_prefs(self, temp: int) -> str:
+        if "Celsius" in self.user_preferences:
+            return str(temp) + TEMP_CELSIUS
+        else:
+            return str((int(temp) * 1.8) + 32) + TEMP_FAHRENHEIT
+
 
 class JLREntity(Entity):
     def __init__(self, data, sensor_type):
         """Create a new generic Dyson sensor."""
         self._name = None
+        self._data = data
         self._sensor_type = sensor_type
         self._icon = "mid:cloud"
+        self._entity_prefix = (
+            self._data.attributes.get("vehicleBrand")
+            + self._data.attributes.get("vehicleType")
+            + "-"
+            + self._data.vehicle.vin[-6]
+            + "-"
+        )
 
     @property
     def should_poll(self):
@@ -184,11 +234,11 @@ class JLREntity(Entity):
     @property
     def unique_id(self):
         """Return the sensor's unique id."""
-        return f"JagXF-{self._sensor_type}--{self._name}"
+        return f"{self._entity_prefix}-{self._sensor_type}"
 
     async def async_update(self):
         _LOGGER.debug("Update requested")
-        await self.data.async_update()
+        await self._data.async_update()
         return True
 
     async def async_added_to_hass(self):
@@ -198,4 +248,4 @@ class JLREntity(Entity):
             """Update sensor state."""
             await self.async_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, "WiserHubUpdateMessage", async_update_state)
+        async_dispatcher_connect(self.hass, SIGNAL_STATE_UPDATED, async_update_state)

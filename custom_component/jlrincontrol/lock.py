@@ -24,29 +24,34 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class JLRLock(JLREntity, LockDevice):
     def __init__(self, data):
         super().__init__(data, "vehicle")
-        self.data = data
         _LOGGER.debug(
             "Loading vehicle lock for {}".format(
-                self.data.attributes.get("registrationNumber")
+                self._data.attributes.get("registrationNumber")
             )
         )
-        self._name = self.data.attributes.get("nickname") + " Doors"
+        self._name = self._data.attributes.get("nickname") + " Doors"
 
     @property
     def is_locked(self):
         """Return true if lock is locked."""
         _LOGGER.debug("Getting state of vehicle lock")
-        return self.data.status.get("DOOR_IS_ALL_DOORS_LOCKED") == "TRUE"
+        return self._data.status.get("DOOR_IS_ALL_DOORS_LOCKED") == "TRUE"
 
     def lock(self, **kwargs):
         """Lock the car."""
+        # TODO: Check that vehicle is not in sleep mode
         _LOGGER.debug("Locking vehicle")
-        # self.instrument.lock()
+        p = self._data.config.get("pin")
+        if p:
+            self._data.vehicle.lock(p)
 
     def unlock(self, **kwargs):
         """Unlock the car."""
+        # TODO: Check that vehicle is not in sleep mode
         _LOGGER.debug("Unlocking vehicle")
-        # self.instrument.unlock()
+        p = self._data.config.get("pin")
+        if p:
+            self._data.vehicle.unlock(p)
 
     @property
     def icon(self):
@@ -54,7 +59,7 @@ class JLRLock(JLREntity, LockDevice):
 
     @property
     def device_state_attributes(self):
-        s = self.data.status
+        s = self._data.status
         attrs = {}
         for k, v in DATA_ATTRS_DOOR_STATUS.items():
             attrs[k.title() + " Status"] = s.get(v).title()

@@ -9,7 +9,9 @@ JLR_PLATFORMS = ["sensor", "switch"]
 
 
 # Conversions
-METERS_TO_MILES = 0.00062137
+KMS_TO_MILES = 0.62137
+
+SIGNAL_STATE_UPDATED = f"{DOMAIN}.updated"
 
 
 SENSOR_TYPES = {
@@ -76,20 +78,23 @@ DATA_ATTRS_DOOR_POSITION = {
 }
 
 DATA_ATTRS_SERVICE_STATUS = {
-    "exhaust fluid distance to service": "EXT_EXHAUST_FLUID_DISTANCE_TO_SERVICE_KM",
-    "washer fluid": "WASHER_FLUID_WARN",
-    "engine coolant temp": "ENGINE_COOLANT_TEMP",
     "brake fluid": "BRAKE_FLUID_WARN",
-    "oil level": "EXT_OIL_LEVEL_WARN",
     "coolant level": "ENG_COOLANT_LEVEL_WARN",
-    "distance to service": "EXT_KILOMETERS_TO_SERVICE",
-    "exhaust fluid fill": "EXT_EXHAUST_FLUID_VOLUME_REFILL_LITRESX10",
-    "exhanust fluid": "EXT_EXHAUST_FLUID_WARN",
-    "battery voltage": "BATTERY_VOLTAGE",
-    "engine blockage": "ENGINE_BLOCK",
     "DPF": "EXT_PARTICULATE_FILTER_WARN",
+    "engine blockage": "ENGINE_BLOCK",
+    "exhaust fluid": "EXT_EXHAUST_FLUID_WARN",
+    "oil level": "EXT_OIL_LEVEL_WARN",
+    "washer fluid": "WASHER_FLUID_WARN",
+}
+
+DATA_ATTRS_SERVICE_INFO = {
     "battery": "BATTERY_STATUS",
+    "distance to service": "EXT_KILOMETERS_TO_SERVICE",
+    "battery voltage": "BATTERY_VOLTAGE",
     "crash sensors": "TU_STATUS_CRASH_INPUT",
+    "exhaust fluid distance to service": "EXT_EXHAUST_FLUID_DISTANCE_TO_SERVICE_KM",
+    "exhaust fluid fill": "EXT_EXHAUST_FLUID_VOLUME_REFILL_LITRESX10",
+    "engine coolant temp": "ENGINE_COOLANT_TEMP",
 }
 
 DATA_ATTRS_TYRE_STATUS = {
@@ -119,6 +124,8 @@ DATA_ATTRS_WINDOW_STATUS = {
     "rear left": "WINDOW_REAR_LEFT_STATUS",
     "rear right": "WINDOW_REAR_RIGHT_STATUS",
 }
+
+SERVICE_STATUS_OK = ["CLEAR", "FUNCTIONING", "NORMAL", "NORMAL_UNBLOCKED"]
 
 
 JLR_SERVICES = {
