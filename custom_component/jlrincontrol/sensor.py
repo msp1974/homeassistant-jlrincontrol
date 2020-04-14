@@ -16,7 +16,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-DATA_KEY = DOMAIN
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -53,16 +52,13 @@ class JLRVehicleSensor(JLREntity):
     @property
     def device_state_attributes(self):
         a = self._data.attributes
-        p = self._data.position
         attrs = {}
 
         for k, v in DATA_ATTRS_CAR_INFO.items():
             attrs[k.title()] = a.get(v)
 
         attrs["Odometer"] = self._data.get_odometer()
-        attrs["Latitude"] = round(p.get("position").get("latitude"), 8)
-        attrs["Longitude"] = round(p.get("position").get("longitude"), 8)
-        attrs["State"] = self._data.wakeup.get("state")
+        attrs["State"] = self._data.wakeup.get("state").title()
         attrs["Next Update"] = self._data.wakeup.get("wakeupTime")
         return attrs
 

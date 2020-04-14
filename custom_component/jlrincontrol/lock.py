@@ -39,19 +39,27 @@ class JLRLock(JLREntity, LockDevice):
 
     def lock(self, **kwargs):
         """Lock the car."""
-        # TODO: Check that vehicle is not in sleep mode
         _LOGGER.debug("Locking vehicle")
-        p = self._data.config.get("pin")
-        if p:
-            self._data.vehicle.lock(p)
+        if self._data.wakeup.get("state") != "SLEEPING":
+            p = self._data.config.get("pin")
+            if p:
+                self._data.vehicle.lock(p)
+        else:
+            _LOGGER.warning(
+                "Error locking vehicle. Vehicle is in sleep mode. You cannot control it until you have woken it up."
+            )
 
     def unlock(self, **kwargs):
         """Unlock the car."""
-        # TODO: Check that vehicle is not in sleep mode
         _LOGGER.debug("Unlocking vehicle")
-        p = self._data.config.get("pin")
-        if p:
-            self._data.vehicle.unlock(p)
+        if self._data.wakeup.get("state") != "SLEEPING":
+            p = self._data.config.get("pin")
+            if p:
+                self._data.vehicle.unlock(p)
+        else:
+            _LOGGER.warning(
+                "Error unlocking vehicle. Vehicle is in sleep mode. You cannot control it until you have woken it up."
+            )
 
     @property
     def icon(self):
