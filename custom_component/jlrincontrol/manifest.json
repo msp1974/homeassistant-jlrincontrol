@@ -7,6 +7,6 @@
     "@msp1974"
   ],
   "requirements": [
-    "jlrpy"
+    "jlrpy==1.3.2"
   ]
 }
