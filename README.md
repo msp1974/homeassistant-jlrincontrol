@@ -4,6 +4,9 @@ This reposiroty contains a Home Assistant integration for the Jaguar Landrover I
 # Functionality
 
 
+# Sample Images
+![](https://raw.githubusercontent.com/msp1974/homeassistant-jlrincontrol/master/docs/panel1.png)
+
 # Code Installation
 The intention is to make this a HACS install when it has reached a decent level of functionality and stability.  For now please see manual installation instructions.
 
