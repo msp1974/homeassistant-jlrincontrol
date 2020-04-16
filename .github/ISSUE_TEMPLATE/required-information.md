@@ -10,6 +10,7 @@ assignees: ''
 # Basic Info
 Version of HA:
 HassIO on Docker or custom install (please describe):
+Vehicle (make and model):
 Description of issue:
 
 
