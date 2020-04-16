@@ -1,5 +1,5 @@
 # JLR Home Assistant Integration (v0.1alpha)
-This reposiroty contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
+This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
 # Functionality
 
