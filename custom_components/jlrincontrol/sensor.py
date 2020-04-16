@@ -36,7 +36,7 @@ class JLRVehicleSensor(JLREntity):
     def __init__(self, data):
         super().__init__(data, "vehicle")
         _LOGGER.debug(
-            "Loading vehicles sensors for {}".format(
+            "Loading vehicle sensor for {}".format(
                 self._data.attributes.get("registrationNumber")
             )
         )
@@ -55,7 +55,8 @@ class JLRVehicleSensor(JLREntity):
         attrs = {}
 
         for k, v in DATA_ATTRS_CAR_INFO.items():
-            attrs[k.title()] = a.get(v)
+            if a.get(v):
+                attrs[k.title()] = a.get(v)
 
         attrs["Odometer"] = self._data.get_odometer()
         # If wakeup available add details
@@ -70,7 +71,7 @@ class JLRVehicleTyreSensor(JLREntity):
     def __init__(self, data):
         super().__init__(data, "tyre")
         _LOGGER.debug(
-            "Loading tyre sensors for {}".format(
+            "Loading tyre sensor for {}".format(
                 self._data.attributes.get("registrationNumber")
             )
         )
@@ -100,10 +101,12 @@ class JLRVehicleTyreSensor(JLREntity):
 
         # Statuses
         for k, v in DATA_ATTRS_TYRE_STATUS.items():
-            attrs[k.title() + " Status"] = s.get(v).title()
+            if s.get(v):
+                attrs[k.title() + " Status"] = s.get(v).title()
         # Pressures
         for k, v in DATA_ATTRS_TYRE_PRESSURE.items():
-            attrs[k.title() + " Pressure (PSI)"] = __toPSI(s.get(v))
+            if s.get(v):
+                attrs[k.title() + " Pressure (PSI)"] = __toPSI(s.get(v))
 
         return attrs
 
@@ -112,7 +115,7 @@ class JLRVehicleWindowSensor(JLREntity):
     def __init__(self, data):
         super().__init__(data, "window")
         _LOGGER.debug(
-            "Loading vehicle status sensors for {}".format(
+            "Loading window sensor for {}".format(
                 self._data.attributes.get("registrationNumber")
             )
         )
@@ -131,12 +134,15 @@ class JLRVehicleWindowSensor(JLREntity):
         else:
             return "Open"
 
+        # If
+
     @property
     def device_state_attributes(self):
         s = self._data.status
         attrs = {}
         for k, v in DATA_ATTRS_WINDOW_STATUS.items():
-            attrs[k.title() + " Position"] = s.get(v).title()
+            if s.get(v):
+                attrs[k.title() + " Position"] = s.get(v).title()
 
         return attrs
 
@@ -145,7 +151,7 @@ class JLRVehicleServiceSensor(JLREntity):
     def __init__(self, data):
         super().__init__(data, "service_info")
         _LOGGER.debug(
-            "Loading vehicle status sensors for {}".format(
+            "Loading vehicle service info sensor for {}".format(
                 self._data.attributes.get("registrationNumber")
             )
         )
@@ -169,8 +175,8 @@ class JLRVehicleServiceSensor(JLREntity):
         s = self._data.status
         attrs = {}
         for k, v in DATA_ATTRS_SERVICE_STATUS.items():
-            attrs[k.title()] = s.get(v).title()
-
+            if s.get(v):
+                attrs[k.title()] = s.get(v).title()
         return attrs
 
 
@@ -178,7 +184,7 @@ class JLRVehicleRangeSensor(JLREntity):
     def __init__(self, data):
         super().__init__(data, "range")
         _LOGGER.debug(
-            "Loading vehicle range sensors for {}".format(
+            "Loading vehicle range sensor for {}".format(
                 self._data.attributes.get("registrationNumber")
             )
         )
