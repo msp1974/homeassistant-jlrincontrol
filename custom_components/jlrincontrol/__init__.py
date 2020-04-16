@@ -155,7 +155,7 @@ class JLRApiHandler:
             SCAN_INTERVAL, self.do_status_update
         )
 
-        _LOGGER.info("JLR InControl Updated Received")
+        _LOGGER.info("JLR InControl Update Received")
         # Send update notice to all components to update
         async_dispatcher_send(self._hass, SIGNAL_STATE_UPDATED)
 
