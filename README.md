@@ -2,7 +2,11 @@
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
 # Functionality
+Currently this loads a series of sensors only.  I am in the process of adding services to control the vehicle.
 
+As this is an alpha version, please be aware that updates could include breaking changes as we develop.
+
+Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations welcome!), there maybe issues with some models not supporting some funtions.  Please raise an issue for these and say what vehcile you have and post the log.
 
 # Sample Images
 ![](https://raw.githubusercontent.com/msp1974/homeassistant-jlrincontrol/master/docs/panel1.png)
