@@ -8,6 +8,7 @@ msparker@sky.com
 """
 
 import json
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -17,6 +18,7 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PIN,
     CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
@@ -42,38 +44,10 @@ from .const import DOMAIN, KMS_TO_MILES, SCAN_INTERVAL, SIGNAL_STATE_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PIN = "pin"
-
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
 PLATFORMS = ["sensor", "lock", "device_tracker"]
-
-RESOURCES = [
-    "position",
-    "distance",
-    "climatisation",
-    "window_heater",
-    "combustion_engine_heating",
-    "charging",
-    "battery_level",
-    "fuel_level",
-    "service_inspection",
-    "oil_inspection",
-    "last_connected",
-    "charging_time_left",
-    "electric_range",
-    "combustion_range",
-    "combined_range",
-    "charge_max_ampere",
-    "climatisation_target_temperature",
-    "external_power",
-    "parking_light",
-    "climatisation_without_external_power",
-    "door_locked",
-    "trunk_locked",
-    "request_in_progress",
-]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -84,10 +58,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_PIN): cv.string,
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
                     vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
-                ),
-                vol.Optional(CONF_NAME, default={}): vol.Schema({cv.slug: cv.string}),
-                vol.Optional(CONF_RESOURCES): vol.All(
-                    cv.ensure_list, [vol.In(RESOURCES)]
                 ),
             }
         ),
@@ -128,8 +98,13 @@ class JLRApiHandler:
         self.wakeup = None
         self.position = None
         self.user_info = None
-        self.user_preferences = None
         self.timer_handle = None
+        self.user_preferences = {
+            "timeZone": "Europe/London",
+            "unitsOfMeasurement": "Miles Litres Celsius DistPerVol kWhPer100Dist kWh",
+            "dateFormat": "DD/MM/YYYY",
+            "language": "en_GB",
+        }
 
         _LOGGER.debug("Creating connection to JLR InControl API")
         self.connection = jlrpy.Connection(
@@ -139,20 +114,21 @@ class JLRApiHandler:
 
         # Get one time info
         self.vehicle = self.connection.vehicles[0]
-        self.user_info = self.connection.get_user_info()
         self.attributes = self.vehicle.get_attributes()
 
-        _LOGGER.debug("User Info - {}".format(self.user_preferences))
+        # Get user preferences - inconsistant return of data - retry until fetched (max 10 times)
+        for i in range(10):
+            _LOGGER.debug("Requesting user preferences iteration {}".format(i + 1))
+            u = self.connection.get_user_info()
+            # Check for user prefs info
+            if u.get("contact").get("userPreferences"):
+                self.user_preferences = u.get("contact").get("userPreferences")
+                _LOGGER.debug("Requested user preferences returned.")
+                break
+            # Pause between requests
+            asyncio.sleep(0.2)
 
-        u = self.user_info["contact"].get("userPreferences")
-        if u:
-            self.user_preferences = u.get("unitsOfMeasurement")
-        else:
-            # Set to default if cannot read from api
-            # Need to sort out a retry if it fails
-            self.user_preferences = (
-                "Miles UkGallons Celsius DistPerVol kWhPer100Dist kWh"
-            )
+        _LOGGER.debug("User Preferences - {}".format(self.user_preferences))
 
     @callback
     def do_status_update(self):
@@ -183,10 +159,6 @@ class JLRApiHandler:
         # Send update notice to all components to update
         async_dispatcher_send(self._hass, SIGNAL_STATE_UPDATED)
 
-        # _LOGGER.debug("API REG - {}".format(self.attributes.get("registrationNumber")))
-
-        # _LOGGER.debug("Status - {}".format(self.status))
-
         return True
 
     async def async_update_vehicle_health(self):
@@ -195,22 +167,24 @@ class JLRApiHandler:
         await self.vehicle.get_health_status()
 
     def get_odometer(self):
-        if "Miles" in self.user_preferences:
+        if "Miles" in self.user_preferences.get("unitsOfMeasurement"):
             return int(self.status.get("ODOMETER_MILES"))
         else:
-            return int(int(self.status.get("ODOMETER_METERS")) / 1000)
+            return int(int(self.status.get("ODOMETER_METER")) / 1000)
 
     def dist_to_user_prefs(self, kms: int) -> str:
-        if "Miles" in self.user_preferences:
+        if "Miles" in self.user_preferences.get("unitsOfMeasurement"):
             return str(int(int(kms) * KMS_TO_MILES)) + LENGTH_MILES
         else:
             return str(kms) + LENGTH_KILOMETERS
 
     def temp_to_user_prefs(self, temp: int) -> str:
-        if "Celsius" in self.user_preferences:
+        if "Celsius" in self.user_preferences.get("unitsOfMeasurement"):
             return str(temp) + TEMP_CELSIUS
         else:
             return str((int(temp) * 1.8) + 32) + TEMP_FAHRENHEIT
+
+    # TODO: vol_to_user_prefs
 
     """
     --------------------------------------------------
