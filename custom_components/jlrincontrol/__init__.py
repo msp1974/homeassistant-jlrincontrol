@@ -166,7 +166,13 @@ class JLRApiHandler:
         self.position = self.vehicle.get_position()
         status = self.vehicle.get_status()
         self.status = {d["key"]: d["value"] for d in status["vehicleStatus"]}
-        self.wakeup = self.vehicle.get_wakeup_time()
+
+        # Wakeup may not be available on all models - issue #1
+        try:
+            self.wakeup = self.vehicle.get_wakeup_time()
+        except Exception as ex:
+            _LOGGER.debug("Unable to get wakeup info.  Error is {}".format(ex))
+            self.wakeup = None
 
         # Schedule next update
         self.timer_handle = self._hass.loop.call_later(

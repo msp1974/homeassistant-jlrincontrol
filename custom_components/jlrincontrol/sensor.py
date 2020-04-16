@@ -58,8 +58,11 @@ class JLRVehicleSensor(JLREntity):
             attrs[k.title()] = a.get(v)
 
         attrs["Odometer"] = self._data.get_odometer()
-        attrs["State"] = self._data.wakeup.get("state").title()
-        attrs["Next Update"] = self._data.wakeup.get("wakeupTime")
+        # If wakeup available add details
+        if self._data.wakeup:
+            attrs["State"] = self._data.wakeup.get("state").title()
+            attrs["Next Update"] = self._data.wakeup.get("wakeupTime")
+
         return attrs
 
 
