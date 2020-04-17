@@ -11,7 +11,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     data = hass.data[DOMAIN]
-    _LOGGER.debug("Device Tracker")
+    _LOGGER.debug(
+        "Loading device tracker for {}".format(data.attributes.get("nickname"))
+    )
 
     tracker = JLRDeviceTracker(hass, async_see, data)
     await tracker.async_update()
@@ -34,7 +36,11 @@ class JLRDeviceTracker(DeviceScanner):
             round(p.get("position").get("longitude"), 8),
         ]
 
-        _LOGGER.debug("Updating vehicle location")
+        _LOGGER.debug(
+            "Updating vehicle location for {}".format(
+                self._data.attributes.get("nickname")
+            )
+        )
 
         await self._see(
             dev_id=dev_id,

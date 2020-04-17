@@ -47,6 +47,8 @@ _LOGGER = logging.getLogger(__name__)
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
+CONF_DEBUG_DATA = "debug_data"
+
 PLATFORMS = ["sensor", "lock", "device_tracker"]
 
 CONFIG_SCHEMA = vol.Schema(
@@ -55,6 +57,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_DEBUG_DATA, default=False): cv.boolean,
                 vol.Optional(CONF_PIN): cv.string,
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
                     vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
@@ -116,6 +119,13 @@ class JLRApiHandler:
         self.vehicle = self.connection.vehicles[0]
         self.attributes = self.vehicle.get_attributes()
 
+        # Add one time dump of attr and status data for debugging
+        if self.config[DOMAIN].get(CONF_DEBUG_DATA):
+            _LOGGER.debug("ATTRIBUTE DATA - {}".format(self.attributes))
+            status = self.vehicle.get_status()
+            self.status = {d["key"]: d["value"] for d in status["vehicleStatus"]}
+            _LOGGER.debug("STATUS DATA - {}".format(self.status))
+
         # Get user preferences - inconsistant return of data - retry until fetched (max 10 times)
         for i in range(10):
             _LOGGER.debug("Requesting user preferences iteration {}".format(i + 1))
@@ -175,9 +185,9 @@ class JLRApiHandler:
 
     def dist_to_user_prefs(self, kms: int) -> str:
         if "Miles" in self.user_preferences.get("unitsOfMeasurement"):
-            return str(int(int(kms) * KMS_TO_MILES)) + LENGTH_MILES
+            return int(int(kms) * KMS_TO_MILES)
         else:
-            return str(kms) + LENGTH_KILOMETERS
+            return kms
 
     def temp_to_user_prefs(self, temp: int) -> str:
         if "Celsius" in self.user_preferences.get("unitsOfMeasurement"):

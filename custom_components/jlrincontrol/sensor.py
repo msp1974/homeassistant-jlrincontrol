@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     data = hass.data[DOMAIN]
     devices = []
-    _LOGGER.debug("Loading sensors")
+    _LOGGER.debug("Loading Sensors")
 
     devices.append(JLRVehicleSensor(data))
     devices.append(JLRVehicleWindowSensor(data))
@@ -42,18 +42,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class JLRVehicleSensor(JLREntity):
     def __init__(self, data):
         super().__init__(data, "vehicle")
-        _LOGGER.debug(
-            "Loading vehicles sensors for {}".format(
-                self._data.attributes.get("registrationNumber")
-            )
-        )
         self._icon = "mdi:car"
         self._name = self._data.attributes.get("nickname") + " Info"
+        _LOGGER.debug("Loading {} Sensors".format(self._name))
 
     @property
     def state(self):
         x = self._data.attributes.get("registrationNumber")
-        _LOGGER.debug("Reg - {}".format(x))
         return x
 
     @property
@@ -78,13 +73,9 @@ class JLRVehicleSensor(JLREntity):
 class JLRVehicleTyreSensor(JLREntity):
     def __init__(self, data):
         super().__init__(data, "tyre")
-        _LOGGER.debug(
-            "Loading tyre sensor for {}".format(
-                self._data.attributes.get("registrationNumber")
-            )
-        )
         self._icon = "mdi:car-tire-alert"
         self._name = self._data.attributes.get("nickname") + " Tyres"
+        _LOGGER.debug("Loading {} Sensors".format(self._name))
 
     @property
     def state(self):
@@ -122,13 +113,9 @@ class JLRVehicleTyreSensor(JLREntity):
 class JLRVehicleWindowSensor(JLREntity):
     def __init__(self, data):
         super().__init__(data, "window")
-        _LOGGER.debug(
-            "Loading vehicle status sensors for {}".format(
-                self._data.attributes.get("registrationNumber")
-            )
-        )
         self._icon = "mdi:car-door"
         self._name = self._data.attributes.get("nickname") + " Windows"
+        _LOGGER.debug("Loading {} Sensors".format(self._name))
 
     @property
     def state(self):
@@ -164,13 +151,9 @@ class JLRVehicleWindowSensor(JLREntity):
 class JLRVehicleServiceSensor(JLREntity):
     def __init__(self, data):
         super().__init__(data, "service_info")
-        _LOGGER.debug(
-            "Loading vehicle service info sensor for {}".format(
-                self._data.attributes.get("registrationNumber")
-            )
-        )
         self._icon = "mdi:wrench"
         self._name = self._data.attributes.get("nickname") + " Service Info"
+        _LOGGER.debug("Loading {} Sensors".format(self._name))
 
     @property
     def state(self):
@@ -204,34 +187,31 @@ class JLRVehicleServiceSensor(JLREntity):
 class JLRVehicleRangeSensor(JLREntity):
     def __init__(self, data):
         super().__init__(data, "range")
-        _LOGGER.debug(
-            "Loading vehicle range sensor for {}".format(
-                self._data.attributes.get("registrationNumber")
-            )
-        )
         self.fuel = self._data.attributes.get("fuelType")
         self._icon = (
             "mdi:speedometer" if self.fuel == FUEL_TYPE_BATTERY else "mdi:gas-station"
         )
         self._name = self._data.attributes.get("nickname") + " Range"
+        _LOGGER.debug("Loading {} Sensors".format(self._name))
 
     @property
     def state(self):
         if self.fuel == FUEL_TYPE_BATTERY:
             if "Miles" in self._data.user_preferences.get("unitsOfMeasurement"):
-                return (
-                    self._data.status.get("EV_RANGE_ON_BATTERY_MILES", "0")
-                    + LENGTH_MILES
-                )
+                return self._data.status.get("EV_RANGE_ON_BATTERY_MILES", "0")
             else:
-                return (
-                    self._data.status.get("EV_RANGE_ON_BATTERY_KM", "0")
-                    + LENGTH_KILOMETERS
-                )
+                return self._data.status.get("EV_RANGE_ON_BATTERY_KM", "0")
         else:
             return self._data.dist_to_user_prefs(
                 self._data.status.get("DISTANCE_TO_EMPTY_FUEL")
             )
+
+    @property
+    def unit_of_measurement(self):
+        if "Miles" in self._data.user_preferences.get("unitsOfMeasurement"):
+            return LENGTH_MILES
+        else:
+            return LENGTH_KILOMETERS
 
     @property
     def device_state_attributes(self):
@@ -253,13 +233,9 @@ class JLRVehicleRangeSensor(JLREntity):
 class JLREVChargeSensor(JLREntity):
     def __init__(self, data):
         super().__init__(data, "ev_battery")
-        _LOGGER.debug(
-            "Loading vehicle EV charge sensor for {}".format(
-                self._data.attributes.get("registrationNumber")
-            )
-        )
         self._icon = "mdi:car-electric"
         self._name = self._data.attributes.get("nickname") + " EV Battery"
+        _LOGGER.debug("Loading {} Sensors".format(self._name))
 
     @property
     def state(self):
