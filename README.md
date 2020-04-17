@@ -1,4 +1,4 @@
-# JLR Home Assistant Integration (v0.2alpha)
+# JLR Home Assistant Integration (v0.3alpha)
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
 # Functionality
@@ -43,9 +43,13 @@ Initial build of the component to read basic sensors
 * Added a bunch of new sensor information
 * Better handles vehicles that do not present some sensor info
 
+## v0.3alpha
+* Fixed: Range sensor now handles EVs
+* Added: New EV Charge sensor to show charge information (not fully tested)
+
 ### Known Issues
 * Only works for first vehicle on account
 * Some distance sensors do not show in local units
 * Service Info sensor shows ok even if car is needing service or adblue top up
-* EV fuel shows range but not charge
+
 
