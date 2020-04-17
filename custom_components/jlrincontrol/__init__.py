@@ -142,6 +142,7 @@ class JLRApiHandler:
         self.position = self.vehicle.get_position()
         status = self.vehicle.get_status()
         self.status = {d["key"]: d["value"] for d in status["vehicleStatus"]}
+        self.status["lastUpdatedTime"] = status.get("lastUpdatedTime")
 
         # Wakeup may not be available on all models - issue #1
         try:
