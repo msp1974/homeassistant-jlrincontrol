@@ -225,7 +225,7 @@ class JLRVehicleRangeSensor(JLREntity):
                 )
             else:
                 return (
-                    self._data.status.get("EV_RANGE_ON_BATTERY_KMS", "0")
+                    self._data.status.get("EV_RANGE_ON_BATTERY_KM", "0")
                     + LENGTH_KILOMETERS
                 )
         else:
