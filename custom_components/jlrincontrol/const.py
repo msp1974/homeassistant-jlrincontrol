@@ -88,13 +88,9 @@ DATA_ATTRS_SERVICE_STATUS = {
 }
 
 DATA_ATTRS_SERVICE_INFO = {
-    "battery": "BATTERY_STATUS",
     "distance to service": "EXT_KILOMETERS_TO_SERVICE",
-    "battery voltage": "BATTERY_VOLTAGE",
-    "crash sensors": "TU_STATUS_CRASH_INPUT",
     "exhaust fluid distance to service": "EXT_EXHAUST_FLUID_DISTANCE_TO_SERVICE_KM",
     "exhaust fluid fill": "EXT_EXHAUST_FLUID_VOLUME_REFILL_LITRESX10",
-    "engine coolant temp": "ENGINE_COOLANT_TEMP",
 }
 
 DATA_ATTRS_TYRE_STATUS = {

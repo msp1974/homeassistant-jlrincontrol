@@ -12,6 +12,7 @@ from .const import (
     DATA_ATTRS_DOOR_POSITION,
     DATA_ATTRS_WINDOW_STATUS,
     DATA_ATTRS_SERVICE_STATUS,
+    DATA_ATTRS_SERVICE_INFO,
     SERVICE_STATUS_OK,
 )
 
@@ -36,7 +37,7 @@ class JLRVehicleSensor(JLREntity):
     def __init__(self, data):
         super().__init__(data, "vehicle")
         _LOGGER.debug(
-            "Loading vehicle sensor for {}".format(
+            "Loading vehicles sensors for {}".format(
                 self._data.attributes.get("registrationNumber")
             )
         )
@@ -55,8 +56,7 @@ class JLRVehicleSensor(JLREntity):
         attrs = {}
 
         for k, v in DATA_ATTRS_CAR_INFO.items():
-            if a.get(v):
-                attrs[k.title()] = a.get(v)
+            attrs[k.title()] = a.get(v)
 
         attrs["Odometer"] = self._data.get_odometer()
         # If wakeup available add details
@@ -64,6 +64,7 @@ class JLRVehicleSensor(JLREntity):
             attrs["State"] = self._data.wakeup.get("state").title()
             attrs["Next Update"] = self._data.wakeup.get("wakeupTime")
 
+        attrs["Last Updated"] = self._data.status.get("lastUpdatedTime")
         return attrs
 
 
@@ -115,7 +116,7 @@ class JLRVehicleWindowSensor(JLREntity):
     def __init__(self, data):
         super().__init__(data, "window")
         _LOGGER.debug(
-            "Loading window sensor for {}".format(
+            "Loading vehicle status sensors for {}".format(
                 self._data.attributes.get("registrationNumber")
             )
         )
@@ -126,7 +127,7 @@ class JLRVehicleWindowSensor(JLREntity):
     def state(self):
         if all(
             [
-                self._data.status.get(v) == "CLOSED"
+                self._data.status.get(v) in ["CLOSED", "FALSE"]
                 for k, v in DATA_ATTRS_WINDOW_STATUS.items()
             ]
         ):
@@ -134,14 +135,20 @@ class JLRVehicleWindowSensor(JLREntity):
         else:
             return "Open"
 
-        # If
-
     @property
     def device_state_attributes(self):
         s = self._data.status
         attrs = {}
         for k, v in DATA_ATTRS_WINDOW_STATUS.items():
-            if s.get(v):
+            # Add sunroof status if applicable
+            if k == "sunroof":
+                if self._data.attributes.get("roofType") == "SUNROOF":
+                    attrs[k.title()] = (
+                        "Open"
+                        if self._data.status.get("IS_SUNROOF_OPEN") == "TRUE"
+                        else "Closed"
+                    )
+            else:
                 attrs[k.title() + " Position"] = s.get(v).title()
 
         return attrs
@@ -163,6 +170,7 @@ class JLRVehicleServiceSensor(JLREntity):
         if all(
             [
                 self._data.status.get(v) in SERVICE_STATUS_OK
+                or self._data.status.get(v) == None
                 for k, v in DATA_ATTRS_SERVICE_STATUS.items()
             ]
         ):
@@ -175,6 +183,12 @@ class JLRVehicleServiceSensor(JLREntity):
         s = self._data.status
         attrs = {}
         for k, v in DATA_ATTRS_SERVICE_STATUS.items():
+            if s.get(v):
+                attrs[k.title()] = s.get(v).title()
+
+        # Add metric sensors
+        # TODO: Convert to local units
+        for k, v in DATA_ATTRS_SERVICE_INFO.items():
             if s.get(v):
                 attrs[k.title()] = s.get(v).title()
         return attrs
