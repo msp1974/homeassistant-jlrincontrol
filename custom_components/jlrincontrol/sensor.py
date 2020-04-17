@@ -3,9 +3,10 @@ import logging
 
 # from homeassistant.const import STATE_OFF, UNIT_PERCENTAGE
 from . import JLREntity, DOMAIN
-from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.const import UNIT_PERCENTAGE, LENGTH_KILOMETERS, LENGTH_MILES
 from .const import (
     DATA_ATTRS_CAR_INFO,
+    DATA_ATTRS_EV_CHARGE_INFO,
     DATA_ATTRS_TYRE_STATUS,
     DATA_ATTRS_TYRE_PRESSURE,
     DATA_ATTRS_DOOR_STATUS,
@@ -13,6 +14,7 @@ from .const import (
     DATA_ATTRS_WINDOW_STATUS,
     DATA_ATTRS_SERVICE_STATUS,
     DATA_ATTRS_SERVICE_INFO,
+    FUEL_TYPE_BATTERY,
     SERVICE_STATUS_OK,
 )
 
@@ -29,6 +31,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     devices.append(JLRVehicleTyreSensor(data))
     devices.append(JLRVehicleServiceSensor(data))
     devices.append(JLRVehicleRangeSensor(data))
+
+    # If EV show EV sensorl otherwise show fuel sensor
+    if data.attributes.get("fuelType") == FUEL_TYPE_BATTERY:
+        devices.append(JLREVChargeSensor(data))
 
     async_add_entities(devices, True)
 
@@ -56,7 +62,8 @@ class JLRVehicleSensor(JLREntity):
         attrs = {}
 
         for k, v in DATA_ATTRS_CAR_INFO.items():
-            attrs[k.title()] = a.get(v)
+            if a.get(v):
+                attrs[k.title()] = a.get(v)
 
         attrs["Odometer"] = self._data.get_odometer()
         # If wakeup available add details
@@ -202,20 +209,77 @@ class JLRVehicleRangeSensor(JLREntity):
                 self._data.attributes.get("registrationNumber")
             )
         )
-        self._icon = "mdi:gas-station"
+        self.fuel = self._data.attributes.get("fuelType")
+        self._icon = (
+            "mdi:speedometer" if self.fuel == FUEL_TYPE_BATTERY else "mdi:gas-station"
+        )
         self._name = self._data.attributes.get("nickname") + " Range"
 
     @property
     def state(self):
-        return self._data.dist_to_user_prefs(
-            self._data.status.get("DISTANCE_TO_EMPTY_FUEL")
-        )
+        if self.fuel == FUEL_TYPE_BATTERY:
+            if "Miles" in self._data.user_preferences.get("unitsOfMeasurement"):
+                return (
+                    self._data.status.get("EV_RANGE_ON_BATTERY_MILES", "0")
+                    + LENGTH_MILES
+                )
+            else:
+                return (
+                    self._data.status.get("EV_RANGE_ON_BATTERY_KMS", "0")
+                    + LENGTH_KILOMETERS
+                )
+        else:
+            return self._data.dist_to_user_prefs(
+                self._data.status.get("DISTANCE_TO_EMPTY_FUEL")
+            )
 
     @property
     def device_state_attributes(self):
-        # TODO: If fuelTankVolume is not none show remaining litres
         attrs = {}
-        attrs["Fuel Type"] = self._data.attributes.get("fuelType")
-        attrs["Fuel Level"] = self._data.status.get("FUEL_LEVEL_PERC") + UNIT_PERCENTAGE
+        attrs["Fuel Type"] = self.fuel
 
+        if self.fuel == FUEL_TYPE_BATTERY:
+            attrs["Battery Level"] = (
+                self._data.status.get("EV_STATE_OF_CHARGE", "0") + UNIT_PERCENTAGE
+            )
+        else:
+            # TODO: If fuelTankVolume is not none show remaining litres
+            attrs["Fuel Level"] = (
+                self._data.status.get("FUEL_LEVEL_PERC", "0") + UNIT_PERCENTAGE
+            )
+        return attrs
+
+
+class JLREVChargeSensor(JLREntity):
+    def __init__(self, data):
+        super().__init__(data, "ev_battery")
+        _LOGGER.debug(
+            "Loading vehicle EV charge sensor for {}".format(
+                self._data.attributes.get("registrationNumber")
+            )
+        )
+        self._icon = "mdi:car-electric"
+        self._name = self._data.attributes.get("nickname") + " EV Battery"
+
+    @property
+    def state(self):
+        return self._data.status.get("EV_CHARGING_STATUS", "Unknown").title()
+
+    @property
+    def device_state_attributes(self):
+        s = self._data.status
+        attrs = {}
+
+        units = (
+            "MILES"
+            if "Miles" in self._data.user_preferences.get("unitsOfMeasurement")
+            else "KM"
+        )
+
+        for k, v in DATA_ATTRS_EV_CHARGE_INFO.items():
+            if s.get(v):
+                try:
+                    attrs[k.title()] = s.get(v).format(units).title()
+                except AttributeError:
+                    attrs[k.title()] = s.get(v).title()
         return attrs
