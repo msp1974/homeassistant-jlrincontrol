@@ -1,17 +1,49 @@
 import logging
+from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    VOLUME_LITERS,
+    VOLUME_GALLONS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "jlrincontrol"
 DATA_JLR_CONFIG = "jlr_config"
-VERSION = "0.1.0"
+VERSION = "0.5alpha"
 SCAN_INTERVAL = 60
 
+SIGNAL_STATE_UPDATED = f"{DOMAIN}.updated"
 
 # Conversions
 KMS_TO_MILES = 0.62137
 
-SIGNAL_STATE_UPDATED = f"{DOMAIN}.updated"
+FUEL_TYPE_BATTERY = "Electric"
+
+JLR_USER_PREF_PARAMS = [
+    "distance",
+    "volume",
+    "temperature",
+    "distPerVol",
+    "energy",
+    "energyPerDist",
+]
+
+JLR_TO_HA_UNITS = {
+    "distance": {"Km": LENGTH_KILOMETERS, "Miles": LENGTH_MILES},
+    "volume": {
+        "Litre": VOLUME_LITERS,
+        "UkGallons": VOLUME_GALLONS,
+        "UsGallons": VOLUME_GALLONS,
+    },
+    "temperature": {"Celsius": TEMP_CELSIUS, "Fahrenheit": TEMP_FAHRENHEIT},
+    "distPerVol": {"DistPerVol": "Km/L"},
+    "energy": {"kWh": ENERGY_KILO_WATT_HOUR},
+    "energyPerDist": {"kWhPer100Dist": ENERGY_KILO_WATT_HOUR + "/100m"},
+}
 
 
 SENSOR_TYPES = {

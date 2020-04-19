@@ -3,7 +3,8 @@ import logging
 
 # from homeassistant.const import STATE_OFF, UNIT_PERCENTAGE
 from . import JLREntity, DOMAIN
-from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.const import UNIT_PERCENTAGE, LENGTH_KILOMETERS, LENGTH_MILES
+from homeassistant.util import dt
 from .const import (
     DATA_ATTRS_CAR_INFO,
     DATA_ATTRS_TYRE_STATUS,
@@ -25,6 +26,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     devices.append(JLRVehicleSensor(data))
     devices.append(JLRVehicleWindowSensor(data))
+    devices.append(JLRVehicleAlarmSensor(data))
     devices.append(JLRVehicleTyreSensor(data))
     devices.append(JLRVehicleServiceSensor(data))
     devices.append(JLRVehicleRangeSensor(data))
@@ -62,8 +64,20 @@ class JLRVehicleSensor(JLREntity):
         # If wakeup available add details
         if self._data.wakeup:
             attrs["State"] = self._data.wakeup.get("state").title()
-            attrs["Next Update"] = self._data.wakeup.get("wakeupTime")
+            attrs["Next Update"] = self.to_local_datetime(
+                self._data.wakeup.get("wakeupTime")
+            )
 
+        if self._data.status.get("lastUpdatedTime"):
+            attrs["Last Contacted"] = self.to_local_datetime(
+                self._data.status.get("lastUpdatedTime")
+            )
+            attrs["Last Contacted Age"] = (
+                dt.get_age(
+                    self.to_local_datetime(self._data.status.get("lastUpdatedTime"))
+                )
+                + " ago"
+            )
         return attrs
 
 
@@ -144,6 +158,28 @@ class JLRVehicleWindowSensor(JLREntity):
             if s.get(v):
                 attrs[k.title() + " Position"] = s.get(v).title()
 
+        return attrs
+
+
+class JLRVehicleAlarmSensor(JLREntity):
+    def __init__(self, data):
+        super().__init__(data, "ev_battery")
+        self._icon = "mdi:security"
+        self._name = self._data.attributes.get("nickname") + " Alarm"
+        _LOGGER.debug("Loading {} Sensors".format(self._name))
+
+    @property
+    def state(self):
+        status = self._data.status.get("THEFT_ALARM_STATUS")
+        if status:
+            status = status.replace("ALARM_", "")
+            return status.replace("_", "").title()
+        else:
+            return "Not Supported"
+
+    @property
+    def device_state_attributes(self):
+        attrs = {}
         return attrs
 
 

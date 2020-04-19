@@ -35,6 +35,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import dt
 
 from .const import DOMAIN, KMS_TO_MILES, SCAN_INTERVAL, SIGNAL_STATE_UPDATED
 
@@ -224,8 +225,7 @@ class JLREntity(Entity):
             self._data.attributes.get("vehicleBrand")
             + self._data.attributes.get("vehicleType")
             + "-"
-            + self._data.vehicle.vin[-6]
-            + "-"
+            + self._data.vehicle.vin[-6:]
         )
 
     @property
@@ -259,3 +259,9 @@ class JLREntity(Entity):
             await self.async_update_ha_state(True)
 
         async_dispatcher_connect(self.hass, SIGNAL_STATE_UPDATED, async_update_state)
+
+    def to_local_datetime(self, datetime: str):
+        try:
+            return dt.as_local(dt.parse_datetime(datetime))
+        except Exception:
+            return None
