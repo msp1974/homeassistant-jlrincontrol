@@ -4,6 +4,7 @@ import logging
 # from homeassistant.const import STATE_OFF, UNIT_PERCENTAGE
 from homeassistant.components.lock import LockDevice
 from . import JLREntity, DOMAIN
+from .services import JLRService
 from .const import DATA_ATTRS_DOOR_POSITION, DATA_ATTRS_DOOR_STATUS
 
 
@@ -16,13 +17,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     devices = []
     _LOGGER.debug("Loading locks")
 
-    devices.append(JLRLock(data))
+    devices.append(JLRLock(hass, data))
 
     async_add_entities(devices, True)
 
 
 class JLRLock(JLREntity, LockDevice):
-    def __init__(self, data):
+    def __init__(self, hass, data):
         super().__init__(data, "vehicle")
         _LOGGER.debug(
             "Loading vehicle lock for {}".format(
@@ -30,6 +31,7 @@ class JLRLock(JLREntity, LockDevice):
             )
         )
         self._name = self._data.attributes.get("nickname") + " Doors"
+        self._hass = hass
 
     @property
     def is_locked(self):
@@ -37,29 +39,49 @@ class JLRLock(JLREntity, LockDevice):
         _LOGGER.debug("Getting state of vehicle lock")
         return self._data.status.get("DOOR_IS_ALL_DOORS_LOCKED") == "TRUE"
 
-    def lock(self, **kwargs):
+    async def async_lock(self, **kwargs):
         """Lock the car."""
         _LOGGER.debug("Locking vehicle")
-        if self._data.wakeup.get("state") != "SLEEPING":
-            p = self._data.config.get("pin")
-            if p:
-                self._data.vehicle.lock(p)
-        else:
+        if self._data.wakeup and self._data.wakeup.get("state") == "SLEEPING":
             _LOGGER.warning(
                 "Error locking vehicle. Vehicle is in sleep mode. You cannot control it until you have woken it up."
             )
+            return False
+        else:
+            p = self._data.pin
+            if p:
+                kwargs = {}
+                kwargs["service_name"] = "lock"
+                kwargs["service_code"] = "RDL"
+                kwargs["pin"] = p
+                jlr_service = JLRService(self._hass, self._data)
+                await jlr_service.async_call_service(**kwargs)
+            else:
+                _LOGGER.warning(
+                    "Cannot lock vehicle - pin not set in configuration.yaml"
+                )
 
-    def unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs):
         """Unlock the car."""
         _LOGGER.debug("Unlocking vehicle")
-        if self._data.wakeup.get("state") != "SLEEPING":
-            p = self._data.config.get("pin")
-            if p:
-                self._data.vehicle.unlock(p)
-        else:
+        if self._data.wakeup and self._data.wakeup.get("state") == "SLEEPING":
             _LOGGER.warning(
                 "Error unlocking vehicle. Vehicle is in sleep mode. You cannot control it until you have woken it up."
             )
+            return False
+        else:
+            p = self._data.pin
+            if p:
+                kwargs = {}
+                kwargs["service_name"] = "unlock"
+                kwargs["service_code"] = "RDU"
+                kwargs["pin"] = p
+                jlr_service = JLRService(self._hass, self._data)
+                await jlr_service.async_call_service(**kwargs)
+            else:
+                _LOGGER.warning(
+                    "Cannot unlock vehicle - pin not set in configuration.yaml"
+                )
 
     @property
     def icon(self):

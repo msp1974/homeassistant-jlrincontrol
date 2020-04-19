@@ -6,9 +6,8 @@ Includes Sensor Devices and Services
 https://github.com/msp1974/homeassistant-jlrincontrol.git
 msparker@sky.com
 """
-
-import json
 import asyncio
+import json
 import logging
 from datetime import timedelta
 
@@ -16,6 +15,8 @@ import homeassistant.helpers.config_validation as cv
 import jlrpy
 import voluptuous as vol
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PIN,
@@ -37,10 +38,15 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt
 
-from .const import DOMAIN, KMS_TO_MILES, SCAN_INTERVAL, SIGNAL_STATE_UPDATED
+from .const import (
+    DOMAIN,
+    KMS_TO_MILES,
+    SCAN_INTERVAL,
+    SIGNAL_STATE_UPDATED,
+    JLR_SERVICES,
+)
+from .services import JLRService
 
-# from homeassistant.helpers.entity import Entity
-# from homeassistant.helpers.dispatcher import dispatcher_send
 # from homeassistant.helpers.icon import icon_for_battery_level
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +54,32 @@ _LOGGER = logging.getLogger(__name__)
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
+ATTR_PIN = "pin"
+ATTR_CHARGE_LEVEL = "max_charge_level"
+ATTR_TARGET_VALUE = "target_value"
+ATTR_TARGET_TEMP = "target_temp"
+CONF_DEBUG_DATA = "debug_data"
+CONF_DISTANCE_UNIT = "distance_unit"
+
 PLATFORMS = ["sensor", "lock", "device_tracker"]
+
+
+SERVICES_BASE_SCHEMA = {
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+}
+SERVICES_PIN_SCHEMA = {
+    vol.Required(ATTR_PIN): vol.Coerce(str),
+}
+SERVICES_TARGET_TEMP_SCHEMA = {
+    vol.Required(ATTR_TARGET_TEMP): vol.Coerce(int),
+}
+SERVICES_TARGET_VALUE_SCHEMA = {
+    vol.Required(ATTR_TARGET_VALUE): vol.Coerce(int),
+}
+SERVICES_CHARGE_LEVEL_SCHEMA = {
+    vol.Required(ATTR_CHARGE_LEVEL): vol.Coerce(int),
+}
+
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -56,6 +87,9 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_DISTANCE_UNIT): vol.In(
+                    [LENGTH_KILOMETERS, LENGTH_MILES]
+                ),
                 vol.Optional(CONF_PIN): cv.string,
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
                     vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
@@ -69,8 +103,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Setup JLR InConnect component"""
-    # interval = config[DOMAIN].get(CONF_SCAN_INTERVAL)
-
     data = JLRApiHandler(hass, config)
     await data.async_update()
 
@@ -84,6 +116,38 @@ async def async_setup(hass, config):
 
     for platform in PLATFORMS:
         hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
+
+    async def call_service(service):
+        # Get service info
+        if JLR_SERVICES[service.service]:
+            _LOGGER.debug(
+                "Service - {}, Data - {}".format(service.service, service.data)
+            )
+            kwargs = {}
+            kwargs["service_name"] = JLR_SERVICES[service.service].get("function_name")
+            kwargs["service_code"] = JLR_SERVICES[service.service].get("service_code")
+            for k, v in service.data.items():
+                kwargs[k] = v
+
+            jlr_service = JLRService(hass, data)
+            await jlr_service.async_call_service(**kwargs)
+
+    def get_schema(schema_list):
+        s = {}
+        for schema in schema_list:
+            s.update(eval(schema))
+        return vol.Schema(s)
+
+    # Add services
+    for service, service_info in JLR_SERVICES.items():
+        # TODO: Only add services supported by vehicle
+        _LOGGER.debug("Adding {} service".format(service))
+        hass.services.async_register(
+            DOMAIN,
+            service,
+            call_service,
+            schema=get_schema(service_info.get("schema")),
+        )
 
     return True
 
@@ -100,9 +164,10 @@ class JLRApiHandler:
         self.position = None
         self.user_info = None
         self.timer_handle = None
+        self.pin = self.config[DOMAIN].get(CONF_PIN)
         self.user_preferences = {
             "timeZone": "Europe/London",
-            "unitsOfMeasurement": "Miles Litres Celsius DistPerVol kWhPer100Dist kWh",
+            "unitsOfMeasurement": "Km Litre Celsius DistPerVol kWhPer100Dist kWh",
             "dateFormat": "DD/MM/YYYY",
             "language": "en_GB",
         }
@@ -127,7 +192,7 @@ class JLRApiHandler:
                 _LOGGER.debug("Requested user preferences returned.")
                 break
             # Pause between requests
-            asyncio.sleep(0.2)
+            self._hass.async_create_task(asyncio.sleep(0.2))
 
         _LOGGER.debug("User Preferences - {}".format(self.user_preferences))
 
@@ -143,6 +208,7 @@ class JLRApiHandler:
         self.position = self.vehicle.get_position()
         status = self.vehicle.get_status()
         self.status = {d["key"]: d["value"] for d in status["vehicleStatus"]}
+        self.status["lastUpdatedTime"] = status.get("lastUpdatedTime")
 
         # Wakeup may not be available on all models - issue #1
         try:
@@ -167,51 +233,18 @@ class JLRApiHandler:
         # by calling service status
         await self.vehicle.get_health_status()
 
+    def get_distance_units(self):
+        if self.config[DOMAIN].get(CONF_DISTANCE_UNIT):
+            return self.config[DOMAIN].get(CONF_DISTANCE_UNIT)
+        else:
+            return self._hass.config.units.length_unit
+
     def get_odometer(self):
-        if "Miles" in self.user_preferences.get("unitsOfMeasurement"):
-            return int(self.status.get("ODOMETER_MILES"))
-        else:
+        self.units = self.get_distance_units()
+        if self.units == LENGTH_KILOMETERS:
             return int(int(self.status.get("ODOMETER_METER")) / 1000)
-
-    def dist_to_user_prefs(self, kms: int) -> str:
-        if "Miles" in self.user_preferences.get("unitsOfMeasurement"):
-            return str(int(int(kms) * KMS_TO_MILES)) + LENGTH_MILES
         else:
-            return str(kms) + LENGTH_KILOMETERS
-
-    def temp_to_user_prefs(self, temp: int) -> str:
-        if "Celsius" in self.user_preferences.get("unitsOfMeasurement"):
-            return str(temp) + TEMP_CELSIUS
-        else:
-            return str((int(temp) * 1.8) + 32) + TEMP_FAHRENHEIT
-
-    # TODO: vol_to_user_prefs
-
-    """
-    --------------------------------------------------
-    Services Functions
-    --------------------------------------------------
-    """
-
-    async def async_start_vehicle(self, pin, temp=20):
-        result = await self._hass.async_add_executor_job(
-            self.vehicle.remote_engine_start(pin, temp)
-        )
-        return result
-
-    async def async_stop_vehicle(self, pin):
-        result = await self._hass.async_add_executor_job(
-            self.vehicle.remote_engine_stop(pin)
-        )
-        return result
-
-    async def async_reset_alarm(self, pin):
-        result = await self._hass.async_add_executor_job(self.vehicle.reset_alarm(pin))
-        return result
-
-    async def async_honk_blink(self, pin):
-        result = await self._hass.async_add_executor_job(self.vehicle.honk_blink())
-        return result
+            return int(self.status.get("ODOMETER_MILES"))
 
 
 class JLREntity(Entity):

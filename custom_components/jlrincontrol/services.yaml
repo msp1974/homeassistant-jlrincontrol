@@ -1,0 +1,144 @@
+update_health_status:
+  description: "Request the car to send latest sensor data."
+  fields:
+    entity_id:
+      {
+        description: "Enter the entity_id for vehcile.",
+        example: "sensor.my_car_info",
+      }
+lock_vehicle:
+  description: "Request the car to lock."
+  fields:
+    entity_id:
+      {
+        description: "Enter the entity_id for vehcile.",
+        example: "sensor.my_car_info",
+      }
+    pin:
+      { description: "The pin set for your vehicle.",
+        example: "1234",
+      }
+unlock_vehicle:
+  description: "Request the car to unlock."
+  fields:
+    entity_id:
+      {
+        description: "Enter the entity_id for vehcile.",
+        example: "sensor.my_car_info",
+      }
+    pin:
+      { description: "The pin set for your vehicle.",
+        example: "1234",
+      }
+reset_alarm:
+  description: "Reset the vehicle alarm."
+  fields:
+    entity_id:
+      {
+        description: "Enter the entity_id for vehcile.",
+        example: "sensor.my_car_info",
+      }
+    pin:
+      { description: "The pin set for your vehicle.",
+        example: "1234",
+      }
+honk_blink:
+  description: "Sound the horn and flash the lights."
+  fields:
+    entity_id:
+      {
+        description: "Enter the entity_id for vehcile.",
+        example: "sensor.my_car_info",
+      }
+start_vehicle:
+  description: "Start the vehicle engine and set climate temp."
+  fields:
+    entity_id:
+      {
+        description: "Enter the entity_id for vehcile.",
+        example: "sensor.my_car_info",
+      }
+    pin:
+      { description: "The pin set for your vehicle.",
+        example: "1234",
+      }
+    temperature:
+      { description: "The climate temperature to set (31-57).",
+        example: "42",
+      }
+stop_vehicle:
+  description: "Stop the vehicle engine."
+  fields:
+    entity_id:
+      {
+        description: "Enter the entity_id for vehcile.",
+        example: "sensor.my_car_info",
+      }
+    pin:
+      { description: "The pin set for your vehicle.",
+        example: "1234",
+      }
+start_charging:
+  description: "Start vehicle charging."
+  fields:
+    entity_id:
+      {
+        description: "Enter the entity_id for vehcile.",
+        example: "sensor.my_car_info",
+      }
+stop_charging:
+  description: "Stop vehicle charging."
+  fields:
+    entity_id:
+      {
+        description: "Enter the entity_id for vehcile.",
+        example: "sensor.my_car_info",
+      }
+start_preconditioning:
+  description: "Start vehicle preconditioning and set temp."
+  fields:
+    entity_id:
+      {
+        description: "Enter the entity_id for vehcile.",
+        example: "sensor.my_car_info",
+      }
+    temperature:
+      { description: "The temperature to set (31-57).",
+        example: "42",
+      }
+stop_preconditioning:
+  description: "Stop vehicle preconditioning."
+  fields:
+    entity_id:
+      {
+        description: "Enter the entity_id for vehcile.",
+        example: "sensor.my_car_info",
+      }
+set_max_charge_level:
+  description: "Stop vehicle preconditioning."
+  fields:
+    entity_id:
+      {
+        description: "Enter the entity_id for vehcile.",
+        example: "sensor.my_car_info",
+      }
+    charge_level:
+      {
+        description: "The percentage to charge to.",
+        example: "85",
+      }
+set_one_off_max_charge_level:
+  description: "Stop vehicle preconditioning."
+  fields:
+    entity_id:
+      {
+        description: "Enter the entity_id for vehcile.",
+        example: "sensor.my_car_info",
+      }
+    charge_level:
+      {
+        description: "The percentage to charge to.",
+        example: "85",
+      }
+
+

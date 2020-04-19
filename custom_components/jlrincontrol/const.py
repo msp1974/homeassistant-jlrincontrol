@@ -23,6 +23,11 @@ KMS_TO_MILES = 0.62137
 
 FUEL_TYPE_BATTERY = "Electric"
 
+JLR_WAKEUP_TO_HA = {
+    "RECEIVING_SCHEDULE_ACCEPTANCE_WINDOW": "Active",
+    "SLEEPING": "Sleeping",
+}
+
 JLR_USER_PREF_PARAMS = [
     "distance",
     "volume",
@@ -58,6 +63,18 @@ SENSOR_TYPES = {
 SENSOR_TYPES_ELEC = {
     "charging_status": ["Charging status", "power", "mdi:ev-station"],
     "connection_status": ["Connection status", "plug", "mdi:car-electric"],
+}
+
+DATA_ATTRS_EV_CHARGE_INFO = {
+    "charging": "EV_IS_CHARGING",
+    "charge level": "EV_STATE_OF_CHARGE",
+    "charging method": "EV_CHARGING_METHOD",
+    "charging mode": "EV_CHARGING_MODE_CHOICE",
+    "charge rate": "EV_CHARGING_RATE_{}_PER_HOUR",
+    "charge type": "EV_CHARGE_TYPE",
+    "is plugged in": "EV_IS_PLUGGED_IN",
+    "KWH used since last charge": "EV_ENERGY_CONSUMED_LAST_CHARGE_KWH",
+    "minutes to full charge": "EV_MINUTES_TO_FULLY_CHARGED",
 }
 
 DATA_ATTRS_CAR_INFO = {
@@ -120,13 +137,9 @@ DATA_ATTRS_SERVICE_STATUS = {
 }
 
 DATA_ATTRS_SERVICE_INFO = {
-    "battery": "BATTERY_STATUS",
     "distance to service": "EXT_KILOMETERS_TO_SERVICE",
-    "battery voltage": "BATTERY_VOLTAGE",
-    "crash sensors": "TU_STATUS_CRASH_INPUT",
     "exhaust fluid distance to service": "EXT_EXHAUST_FLUID_DISTANCE_TO_SERVICE_KM",
     "exhaust fluid fill": "EXT_EXHAUST_FLUID_VOLUME_REFILL_LITRESX10",
-    "engine coolant temp": "ENGINE_COOLANT_TEMP",
 }
 
 DATA_ATTRS_TYRE_STATUS = {
@@ -158,3 +171,75 @@ DATA_ATTRS_WINDOW_STATUS = {
 }
 
 SERVICE_STATUS_OK = ["CLEAR", "FUNCTIONING", "NORMAL", "NORMAL_UNBLOCKED"]
+
+JLR_SERVICES = {
+    "update_health_status": {
+        "function_name": "get_health_status",
+        "service_code": "VHS",
+        "schema": ["SERVICES_BASE_SCHEMA"],
+    },
+    "lock_vehicle": {
+        "function_name": "lock",
+        "service_code": "RDL",
+        "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
+    },
+    "unlock_vehicle": {
+        "function_name": "unlock",
+        "service_code": "RDU",
+        "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
+    },
+    "reset_alarm": {
+        "function_name": "reset_alarm",
+        "service_code": "ALOFF",
+        "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
+    },
+    "honk_blink": {
+        "function_name": "honk_blink",
+        "service_code": "HBLF",
+        "schema": ["SERVICES_BASE_SCHEMA"],
+    },
+    "start_vehicle": {
+        "function_name": "remote_engine_start",
+        "service_code": "REON",
+        "schema": [
+            "SERVICES_BASE_SCHEMA",
+            "SERVICES_PIN_SCHEMA",
+            "SERVICES_TARGET_VALUE_SCHEMA",
+        ],
+    },
+    "stop_vehicle": {
+        "function_name": "remote_engine_stop",
+        "service_code": "REOFF",
+        "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
+    },
+    "start_charging": {
+        "function_name": "charging_start",
+        "service_code": "CP",
+        "schema": ["SERVICES_BASE_SCHEMA"],
+    },
+    "stop_charging": {
+        "function_name": "charging_stop",
+        "service_code": "CP",
+        "schema": ["SERVICES_BASE_SCHEMA"],
+    },
+    "start_preconditioning": {
+        "function_name": "preconditioning_start",
+        "service_code": "ECC",
+        "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_TARGET_TEMP_SCHEMA",],
+    },
+    "stop_preconditioning": {
+        "function_name": "preconditioning_stop",
+        "service_code": "ECC",
+        "schema": ["SERVICES_BASE_SCHEMA"],
+    },
+    "set_max_charge_level": {
+        "function_name": "set_max_soc",
+        "service_code": "CP",
+        "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_CHARGE_LEVEL_SCHEMA"],
+    },
+    "set_one_off_max_charge_level": {
+        "function_name": "set_one_off_max_soc",
+        "service_code": "CP",
+        "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_CHARGE_LEVEL_SCHEMA"],
+    },
+}
