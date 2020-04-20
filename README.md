@@ -22,6 +22,7 @@ Currently this loads a series of sensors for
 * Tyres
 * Range
 * Location
+* EV Battery Sensor (EVs only)
 * Service Info
 
 And has services for
