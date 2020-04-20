@@ -153,8 +153,10 @@ Initial build of the component to read basic sensors
 
 
 ### Known Issues
-* Only works for first vehicle on account
-* Some distance sensors do not show in local units (on list to fix)
+* Only works for first vehicle on account.
+* Some distance sensors do not show in local units (on list to fix).
 * Service Info sensor shows ok even if car is needing service or adblue top up (on list to fix)
+* Tyre pressures seem to be in inconsistant units between models and therefore give strange reading.
+* Tyre pressures are not in local units.
 
 
