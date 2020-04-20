@@ -111,6 +111,7 @@ Initial build of the component to read basic sensors
 * Added: Added services as listed in functionality
 * Fixed: **BREAKING CHANGE** Issue with unique ID could cause duplicates.
 * Fixed: Renamed last updated to last contact and displayed in local time.
+* Fixed: Unlock/Lock on door sensor did not work. Need to add pin to configuration.yaml.  See additional parameters.
 * Updated: (Still WIP) Use HA metrics to display data instead of relying on InControl user prefs as not reliable.
 
 ### Known Issues
