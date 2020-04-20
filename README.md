@@ -48,18 +48,37 @@ Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations we
 ![](https://raw.githubusercontent.com/msp1974/homeassistant-jlrincontrol/dev/docs/panel1.png)
 
 ## Additional Optional Parameters
-1. pin - set this to be able to use the lock/unlock on the lock sensor.
-2. distance_units - set this to 'mi' or 'km' to override the HA default metric for milages (mainly for funny UK system of miles and litres!).
-3. debug_data: - see debugging below.
+1. scan_interval - in minutes. Default update interval is 5 minutes.  Use this to change that.  Minimum is 1 minute.
+2. pin - set this to be able to use the lock/unlock on the lock sensor.
+3. distance_units - set this to 'mi' or 'km' to override the HA default metric for milages (mainly for funny UK system of miles and litres!).
+4. health_update_interval - see health update section
+5. debug_data: - see debugging below.
 
+Required Parameters
 ```
 jlrincontrol:
   username: <your InControl email address>
   password: <your InControl password>
+```
+Optional Parameters
+```
+  scan_interval: 5
   pin: <your InControl pin>
   distance_units: <mi or km to override HA defualt>
+  health_update_interval: 60
   debug_data: <false or true - see debugging>
 ```
+
+# Health Status Update
+New in v0.5alpha
+
+This integration now has the ability to perform a scheduled health status update request from your vehicle.  By default this is disabled.  Adding the entry to your configuration.yaml as above will enable it (after a HA restart).
+
+I do not know the impact on either vehicle battery or JLRs view on running this often, so please use at your own risk.  I would certainly not set it to anything too often.
+
+Alternatively, you can make a more intelligent health update request automation using the service call available in this integration and the output of some sensors.
+
+I.e. on EV vehicles you could only call it if the vehicle is charging, or on all vehicles, only call it during the day and it was more than x period since the last update.
 
 # Code Installation
 The intention is to make this a HACS install when it has reached a decent level of functionality and stability.  For now please see manual installation instructions.
@@ -122,12 +141,16 @@ Initial build of the component to read basic sensors
 * Added: Improved debugging info to aid diagnosing differences in models
 
 ## v0.5alpha
-* Added: Alarm sensor
-* Added: Added services as listed in functionality
+* Added: Alarm sensor.
+* Added: jlrincontrol services as listed in functionality to control vehicle.
+* Added: Ability to schedule health status update - see health status section.
+* Added: Ability to set the update interval fro the JLR servers.
+* Updated: Use HA units to display data instead of relying on InControl user prefs as not reliable.
 * Fixed: **BREAKING CHANGE** Issue with unique ID could cause duplicates.
 * Fixed: Renamed last updated to last contact and displayed in local time.
 * Fixed: Unlock/Lock on door sensor did not work. Need to add pin to configuration.yaml.  See additional parameters.
-* Updated: (Still WIP) Use HA metrics to display data instead of relying on InControl user prefs as not reliable.
+
+
 
 ### Known Issues
 * Only works for first vehicle on account
