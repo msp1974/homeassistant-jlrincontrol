@@ -32,7 +32,7 @@ class JLRLock(JLREntity, LockDevice):
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        _LOGGER.debug("Getting state of vehicle lock")
+        _LOGGER.debug("Updating {}".format(self._name))
         return self._data.status.get("DOOR_IS_ALL_DOORS_LOCKED") == "TRUE"
 
     async def async_lock(self, **kwargs):

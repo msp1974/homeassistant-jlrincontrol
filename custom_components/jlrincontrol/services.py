@@ -43,9 +43,14 @@ class JLRService:
                                 )
                             )
                             # monitor service for success / failure
-                            return await self.async_monitor_service_call(
+                            monitor_status = await self.async_monitor_service_call(
                                 status.get("customerServiceId")
                             )
+
+                            # Call update on return of monitor
+                            await self.data.async_update()
+                            return monitor_status
+
                         except error.HTTPError as ex:
                             if ex.code == 401:
                                 _LOGGER.warning(
@@ -116,6 +121,7 @@ class JLRService:
                 status = result.get("status")
             if status and status == "Successful":
                 _LOGGER.debug("Service call successful")
+                return status
             else:
                 _LOGGER.warning(
                     "InControl service call failed due to {}. \r\nFull return is {}".format(

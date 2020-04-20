@@ -213,6 +213,10 @@ class JLRApiHandler:
         self._hass.async_create_task(self.async_update())
 
     async def async_update(self):
+        # Cancel any scheduled timer if this has been forced
+        if self.timer_handle:
+            self.timer_handle.cancel()
+
         self.position = self.vehicle.get_position()
         status = self.vehicle.get_status()
         self.status = {d["key"]: d["value"] for d in status["vehicleStatus"]}
