@@ -1,7 +1,7 @@
 # JLR Home Assistant Integration (v0.5alpha)
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
-## Breaking Change in 0.5alpha
+## Breaking Change in v0.5alpha
 Due to an issue in the unique ID being generated in the backend for the sensors, this fix causes HA to create new versions of these (all suffixed with _2).
 
 In order to resolve this please follow the below when updating to v0.5alpha.
@@ -11,7 +11,7 @@ In order to resolve this please follow the below when updating to v0.5alpha.
 4) Uncomment the integration in your config.yaml file.
 5) Restart HA
 
-Any cards you had setup for sensors you had in the UI and the HA name of these sensors will be the same as before.
+Any cards you had setup for sensors in the UI and the HA name of these sensors will be the same as before.
 
 # Functionality
 Currently this loads a series of sensors for
@@ -23,7 +23,7 @@ Currently this loads a series of sensors for
 * Location
 * Service Info
 
-And has servies for
+And has services for
 * Update Health Status (forces update from vehicle)
 * Honk/Flash
 * Lock/Unlock
@@ -33,7 +33,7 @@ And has servies for
 * Start Preconditioning/Stop Preconditioning
 * Set Max Charge (Always and One Off)
 
-**Note:** Not all services are available on all models and the error log with show this if not available on your vehicle.
+**Note:** Not all services are available on all models and the error log will show this if not available on your vehicle.
 
 **Note 2**: When calling a service, HA will monitor the status of the service call and report in the error log if it failed.  Debug log will show this checking and the success/failure reason.
 
@@ -43,24 +43,34 @@ As this is an alpha version, please be aware that updates could include breaking
 Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations welcome!), there maybe issues with some models not supporting some funtions.  Please raise an issue for these and say what vehcile you have and post the log.
 
 # Sample Images
-![](https://raw.githubusercontent.com/msp1974/homeassistant-jlrincontrol/master/docs/panel1.png)
+![](https://raw.githubusercontent.com/msp1974/homeassistant-jlrincontrol/dev/docs/panel1.png)
 
-## Additional Parameters
+## Additional Optional Parameters
 1. pin - set this to be able to use the lock/unlock on the lock sensor.
 2. distance_units - set this to 'mi' or 'km' to override the HA default metric for milages (mainly for funny UK system of miles and litres!).
 3. debug_data: - see debugging below.
+
+```
+jlrincontrol:
+  username: <your InControl email address>
+  password: <your InControl password>
+  pin: <your InControl pin>
+  distance_units: <mi or km to override HA defualt>
+  debug_data: <false or true - see debugging>
+```
 
 # Code Installation
 The intention is to make this a HACS install when it has reached a decent level of functionality and stability.  For now please see manual installation instructions.
 
 ## Branch Versions
-As of v0.4alpha, the dev branch is now where the very latest version is held.  Please note that there maybe issues with new functions are fixes that have not been fully tested.  It will also be updated regularly as new fixes/functions are developed, so please check you have the latest version before raising an issue.  The master branch is the current release.
+As of v0.4alpha, the dev branch is now where the very latest version is held.  Please note that there maybe issues with new functions or fixes that have not been fully tested.  It will also be updated regularly as new fixes/functions are developed, so please check you have the latest update before raising an issue.  The master branch is the current release.
 
 ## Manual Code Installation
 1. On your server clone the github repository into a suitable directory using the git clone command.<br>
 `git clone https://github.com/msp1974/homeassistant-jlrincontrol.git`
 2. Copy the jlrincontrol folder to the custom_components directory of your Home Assistant installation.
 3. In your configuration.yaml file, add the following entry.
+
 
 ```
 jlrincontrol:
