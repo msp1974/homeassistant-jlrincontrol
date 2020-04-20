@@ -53,6 +53,9 @@ Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations we
 # Code Installation
 The intention is to make this a HACS install when it has reached a decent level of functionality and stability.  For now please see manual installation instructions.
 
+## Branch Versions
+As of v0.4alpha, the dev branch is now where the very latest version is held.  Please note that there maybe issues with new functions are fixes that have not been fully tested.  It will also be updated regularly as new fixes/functions are developed, so please check you have the latest version before raising an issue.  The master branch is the current release.
+
 ## Manual Code Installation
 1. On your server clone the github repository into a suitable directory using the git clone command.<br>
 `git clone https://github.com/msp1974/homeassistant-jlrincontrol.git`
