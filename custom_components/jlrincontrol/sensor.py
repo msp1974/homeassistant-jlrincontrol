@@ -141,7 +141,7 @@ class JLRVehicleWindowSensor(JLREntity):
     def state(self):
         if all(
             [
-                self._data.status.get(v) in ["CLOSED", "FALSE"]
+                self._data.status.get(v) in ["CLOSED", "FALSE", "UNUSED"]
                 for k, v in DATA_ATTRS_WINDOW_STATUS.items()
             ]
         ):
