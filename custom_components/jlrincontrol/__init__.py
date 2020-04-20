@@ -235,7 +235,7 @@ class JLREntity(Entity):
             self._data.attributes.get("vehicleBrand")
             + self._data.attributes.get("vehicleType")
             + "-"
-            + self._data.vehicle.vin[-6]
+            + self._data.vehicle.vin[-6:]
             + "-"
         )
 
