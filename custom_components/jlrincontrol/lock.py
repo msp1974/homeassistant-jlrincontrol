@@ -88,9 +88,11 @@ class JLRLock(JLREntity, LockDevice):
         s = self._data.status
         attrs = {}
         for k, v in DATA_ATTRS_DOOR_STATUS.items():
-            attrs[k.title() + " Status"] = s.get(v).title()
+            if s.get(v) and s.get(v) != "UNKNOWN":
+                attrs[k.title() + " Status"] = s.get(v).title()
 
         for k, v in DATA_ATTRS_DOOR_POSITION.items():
-            attrs[k.title() + " Position"] = s.get(v).title()
+            if s.get(v) and s.get(v) != "UNKNOWN":
+                attrs[k.title() + " Position"] = s.get(v).title()
 
         return attrs
