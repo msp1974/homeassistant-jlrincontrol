@@ -118,8 +118,8 @@ class JLRService:
                 _LOGGER.debug("Service call successful")
             else:
                 _LOGGER.warning(
-                    "InControl service call failed due to {}".format(
-                        result.get("failureReason")
+                    "InControl service call failed due to {}. \r\nFull return is {}".format(
+                        result.get("failureReason"), result
                     )
                 )
             return status
