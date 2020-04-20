@@ -16,6 +16,7 @@ Any cards you had setup for sensors in the UI and the HA name of these sensors w
 # Functionality
 Currently this loads a series of sensors for
 * Vehicle Info
+* Alarm
 * Doors
 * Windows
 * Tyres
