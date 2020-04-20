@@ -15,10 +15,7 @@ DATA_KEY = DOMAIN
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     data = hass.data[DOMAIN]
     devices = []
-    _LOGGER.debug("Loading Locks")
-
     devices.append(JLRLock(hass, data))
-
     async_add_entities(devices, True)
 
 

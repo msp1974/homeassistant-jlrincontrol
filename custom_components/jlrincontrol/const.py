@@ -14,7 +14,10 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "jlrincontrol"
 DATA_JLR_CONFIG = "jlr_config"
 VERSION = "0.5alpha"
-SCAN_INTERVAL = 60
+
+DEFAULT_SCAN_INTERVAL = 5
+MIN_SCAN_INTERVAL = 1
+DEFAULT_HEATH_UPDATE_INTERVAL = 0  # Default disabled
 
 SIGNAL_STATE_UPDATED = f"{DOMAIN}.updated"
 

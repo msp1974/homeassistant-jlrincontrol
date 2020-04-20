@@ -41,7 +41,9 @@ from homeassistant.util import dt
 from .const import (
     DOMAIN,
     KMS_TO_MILES,
-    SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
+    DEFAULT_HEATH_UPDATE_INTERVAL,
     SIGNAL_STATE_UPDATED,
     JLR_SERVICES,
 )
@@ -60,6 +62,7 @@ ATTR_TARGET_VALUE = "target_value"
 ATTR_TARGET_TEMP = "target_temp"
 CONF_DEBUG_DATA = "debug_data"
 CONF_DISTANCE_UNIT = "distance_unit"
+CONF_HEALTH_UPDATE_INTERVAL = "health_update_interval"
 
 PLATFORMS = ["sensor", "lock", "device_tracker"]
 
@@ -92,9 +95,12 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(CONF_DEBUG_DATA, default=False): cv.boolean,
                 vol.Optional(CONF_PIN): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
-                    vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
+                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): (
+                    vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL))
                 ),
+                vol.Optional(
+                    CONF_HEALTH_UPDATE_INTERVAL, default=DEFAULT_HEATH_UPDATE_INTERVAL
+                ): vol.Coerce(int),
             }
         ),
     },
@@ -105,6 +111,8 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Setup JLR InConnect component"""
     data = JLRApiHandler(hass, config)
+
+    # Get initial update and schedule interval update
     await data.async_update()
 
     if not data.vehicle:
@@ -165,13 +173,12 @@ class JLRApiHandler:
         self.position = None
         self.user_info = None
         self.timer_handle = None
+        self.health_timer_handle = None
         self.pin = self.config[DOMAIN].get(CONF_PIN)
-        self.user_preferences = {
-            "timeZone": "Europe/London",
-            "unitsOfMeasurement": "Km Litre Celsius DistPerVol kWhPer100Dist kWh",
-            "dateFormat": "DD/MM/YYYY",
-            "language": "en_GB",
-        }
+        self.update_interval = self.config[DOMAIN].get(CONF_SCAN_INTERVAL) * 60
+        self.health_update_interval = (
+            self.config[DOMAIN].get(CONF_HEALTH_UPDATE_INTERVAL) * 60
+        )
 
         _LOGGER.debug("Creating connection to JLR InControl API")
         self.connection = jlrpy.Connection(
@@ -190,29 +197,32 @@ class JLRApiHandler:
             self.status = {d["key"]: d["value"] for d in status["vehicleStatus"]}
             _LOGGER.debug("STATUS DATA - {}".format(self.status))
 
-        # Get user preferences - inconsistant return of data - retry until fetched (max 10 times)
-        """
-        for i in range(10):
-            _LOGGER.debug("Requesting user preferences iteration {}".format(i + 1))
-            u = self.connection.get_user_info()
-            # Check for user prefs info
-            if u.get("contact").get("userPreferences"):
-                self.user_preferences = u.get("contact").get("userPreferences")
-                _LOGGER.debug("Requested user preferences returned.")
-                break
-            # Pause between requests
-            self._hass.async_create_task(asyncio.sleep(0.2))
-        
-        _LOGGER.debug("User Preferences - {}".format(self.user_preferences))
-        """
+        # Schedule health update and repeat interval
+        if self.health_update_interval > 0:
+            _LOGGER.debug(
+                "Scheduling vehicle health update on {} minute interval".format(
+                    self.health_update_interval
+                )
+            )
+            self.do_health_update()
+        else:
+            _LOGGER.debug(
+                "Scheduled vehicle health update is disabled.  Add to configuration.yaml to enable."
+            )
+
+        _LOGGER.debug(
+            "Scheduling update from InControl servers on {} minute interval".format(
+                self.update_interval
+            )
+        )
 
     @callback
     def do_status_update(self):
         self._hass.async_create_task(self.async_update())
 
     @callback
-    def schedule_next_health_update(self):
-        self._hass.async_create_task(self.async_update())
+    def do_health_update(self):
+        self._hass.async_create_task(self.async_health_update())
 
     async def async_update(self):
         # Cancel any scheduled timer if this has been forced
@@ -227,17 +237,41 @@ class JLRApiHandler:
         # Wakeup may not be available on all models - issue #1
         try:
             self.wakeup = self.vehicle.get_wakeup_time()
-        except Exception as ex:
+        except Exception:
             self.wakeup = None
 
         # Schedule next update
         self.timer_handle = self._hass.loop.call_later(
-            SCAN_INTERVAL, self.do_status_update
+            self.update_interval, self.do_status_update
         )
 
         _LOGGER.info("JLR InControl Update Received")
         # Send update notice to all components to update
         async_dispatcher_send(self._hass, SIGNAL_STATE_UPDATED)
+
+        return True
+
+    async def async_health_update(self):
+        # Cancel any scheduled timer if this has been forced
+        if self.health_timer_handle:
+            self.health_timer_handle.cancel()
+
+        _LOGGER.info("Requesting scheduled health status update")
+
+        service = JLR_SERVICES["update_health_status"]
+        kwargs = {}
+        kwargs["service_name"] = service.get("function_name")
+        kwargs["service_code"] = service.get("service_code")
+        jlr_service = JLRService(self._hass, self._hass.data[DOMAIN])
+        await jlr_service.async_call_service(**kwargs)
+
+        # Schedule next update
+        self.health_timer_handle = self._hass.loop.call_later(
+            self.health_update_interval, self.do_health_update
+        )
+
+        # Call sensor data update
+        await self.async_update()
 
         return True
 
