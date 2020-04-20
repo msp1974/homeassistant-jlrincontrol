@@ -50,7 +50,6 @@ JLR_TO_HA_UNITS = {
     "energyPerDist": {"kWhPer100Dist": ENERGY_KILO_WATT_HOUR + "/100m"},
 }
 
-
 SENSOR_TYPES = {
     "lids": ["Doors", "opening", "mdi:car-door-lock"],
     "windows": ["Windows", "opening", "mdi:car-door"],
@@ -168,6 +167,7 @@ DATA_ATTRS_WINDOW_STATUS = {
     "front right": "WINDOW_FRONT_RIGHT_STATUS",
     "rear left": "WINDOW_REAR_LEFT_STATUS",
     "rear right": "WINDOW_REAR_RIGHT_STATUS",
+    "sunroof": "IS_SUNROOF_OPEN",
 }
 
 SERVICE_STATUS_OK = ["CLEAR", "FUNCTIONING", "NORMAL", "NORMAL_UNBLOCKED"]

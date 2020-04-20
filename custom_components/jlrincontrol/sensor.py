@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     data = hass.data[DOMAIN]
     devices = []
-    _LOGGER.debug("Loading sensors")
+    _LOGGER.debug("Loading Sensors")
 
     devices.append(JLRVehicleSensor(data))
     devices.append(JLRVehicleWindowSensor(data))
@@ -33,6 +33,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     devices.append(JLRVehicleTyreSensor(data))
     devices.append(JLRVehicleServiceSensor(data))
     devices.append(JLRVehicleRangeSensor(data))
+
+    # If EV show EV sensorl otherwise show fuel sensor
+    if data.attributes.get("fuelType") == FUEL_TYPE_BATTERY:
+        devices.append(JLREVChargeSensor(data))
 
     async_add_entities(devices, True)
 

@@ -15,7 +15,7 @@ DATA_KEY = DOMAIN
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     data = hass.data[DOMAIN]
     devices = []
-    _LOGGER.debug("Loading locks")
+    _LOGGER.debug("Loading Locks")
 
     devices.append(JLRLock(hass, data))
 
@@ -25,13 +25,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class JLRLock(JLREntity, LockDevice):
     def __init__(self, hass, data):
         super().__init__(data, "vehicle")
-        _LOGGER.debug(
-            "Loading vehicle lock for {}".format(
-                self._data.attributes.get("registrationNumber")
-            )
-        )
         self._name = self._data.attributes.get("nickname") + " Doors"
         self._hass = hass
+        _LOGGER.debug("Loading {} Sensors".format(self._name))
 
     @property
     def is_locked(self):

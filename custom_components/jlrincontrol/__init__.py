@@ -90,6 +90,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_DISTANCE_UNIT): vol.In(
                     [LENGTH_KILOMETERS, LENGTH_MILES]
                 ),
+                vol.Optional(CONF_DEBUG_DATA, default=False): cv.boolean,
                 vol.Optional(CONF_PIN): cv.string,
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
                     vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
@@ -181,6 +182,13 @@ class JLRApiHandler:
         # Get one time info
         self.vehicle = self.connection.vehicles[0]
         self.attributes = self.vehicle.get_attributes()
+
+        # Add one time dump of attr and status data for debugging
+        if self.config[DOMAIN].get(CONF_DEBUG_DATA):
+            _LOGGER.debug("ATTRIBUTE DATA - {}".format(self.attributes))
+            status = self.vehicle.get_status()
+            self.status = {d["key"]: d["value"] for d in status["vehicleStatus"]}
+            _LOGGER.debug("STATUS DATA - {}".format(self.status))
 
         # Get user preferences - inconsistant return of data - retry until fetched (max 10 times)
         for i in range(10):
