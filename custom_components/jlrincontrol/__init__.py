@@ -201,7 +201,7 @@ class JLRApiHandler:
         if self.health_update_interval > 0:
             _LOGGER.debug(
                 "Scheduling vehicle health update on {} minute interval".format(
-                    self.health_update_interval
+                    int(self.health_update_interval / 60)
                 )
             )
             self.do_health_update()
@@ -212,7 +212,7 @@ class JLRApiHandler:
 
         _LOGGER.debug(
             "Scheduling update from InControl servers on {} minute interval".format(
-                self.update_interval
+                int(self.update_interval / 60)
             )
         )
 
