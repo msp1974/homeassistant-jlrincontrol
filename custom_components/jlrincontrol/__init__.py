@@ -191,6 +191,7 @@ class JLRApiHandler:
             _LOGGER.debug("STATUS DATA - {}".format(self.status))
 
         # Get user preferences - inconsistant return of data - retry until fetched (max 10 times)
+        """
         for i in range(10):
             _LOGGER.debug("Requesting user preferences iteration {}".format(i + 1))
             u = self.connection.get_user_info()
@@ -201,8 +202,9 @@ class JLRApiHandler:
                 break
             # Pause between requests
             self._hass.async_create_task(asyncio.sleep(0.2))
-
+        
         _LOGGER.debug("User Preferences - {}".format(self.user_preferences))
+        """
 
     @callback
     def do_status_update(self):
@@ -226,7 +228,6 @@ class JLRApiHandler:
         try:
             self.wakeup = self.vehicle.get_wakeup_time()
         except Exception as ex:
-            _LOGGER.debug("Unable to get wakeup info.  Error is {}".format(ex))
             self.wakeup = None
 
         # Schedule next update
