@@ -1,7 +1,7 @@
-# JLR Home Assistant Integration (v0.5alpha)
+# JLR Home Assistant Integration (v1.0.0)
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
-## Breaking Change in v0.5alpha
+## Breaking Change in v1.0.0 From Previous Alpha Versions
 Due to an issue in the unique ID being generated in the backend for the sensors, this fix causes HA to create new versions of these (all suffixed with _2).
 
 In order to resolve this please follow the below when updating to v0.5alpha.
@@ -70,7 +70,7 @@ Optional Parameters
 ```
 
 # Health Status Update
-New in v0.5alpha
+New in v1.0.0
 
 This integration now has the ability to perform a scheduled health status update request from your vehicle.  By default this is disabled.  Adding the entry to your configuration.yaml as above will enable it (after a HA restart).
 
@@ -84,7 +84,7 @@ I.e. on EV vehicles you could only call it if the vehicle is charging, or on all
 The intention is to make this a HACS install when it has reached a decent level of functionality and stability.  For now please see manual installation instructions.
 
 ## Branch Versions
-As of v0.4alpha, the dev branch is now where the very latest version is held.  Please note that there maybe issues with new functions or fixes that have not been fully tested.  It will also be updated regularly as new fixes/functions are developed, so please check you have the latest update before raising an issue.  The master branch is the current release.
+As of v1.0.0, the dev branch is now where the very latest version is held.  Please note that there maybe issues with new functions or fixes that have not been fully tested.  It will also be updated regularly as new fixes/functions are developed, so please check you have the latest update before raising an issue.  The master branch is the current release.
 
 ## Manual Code Installation
 1. On your server clone the github repository into a suitable directory using the git clone command.<br>
@@ -153,6 +153,9 @@ Initial build of the component to read basic sensors
 * Fixed: Renamed last updated to last contact and displayed in local time.
 * Fixed: Unlock/Lock on door sensor did not work. Need to add pin to configuration.yaml.  See additional parameters.
 * Fixed: Device tracker not updating state.
+
+## v1.0.0
+* First official release - yeah!
 
 
 
