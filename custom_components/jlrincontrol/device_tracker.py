@@ -1,7 +1,7 @@
 """Support for JLR InControl Device Trackers."""
 import logging
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.components.device_tracker import DeviceScanner
+from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.util import slugify
 from . import DOMAIN, SIGNAL_STATE_UPDATED
 
@@ -16,20 +16,20 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     )
 
     tracker = JLRDeviceTracker(hass, async_see, data)
-    await tracker.async_update()
+    await tracker.see_vehicle()
+    async_dispatcher_connect(hass, SIGNAL_STATE_UPDATED, tracker.see_vehicle)
     return True
 
 
-class JLRDeviceTracker(DeviceScanner):
+class JLRDeviceTracker:
     def __init__(self, hass, async_see, data) -> None:
         self._see = async_see
         self._data = data
         self._hass = hass
 
-    async def async_update(self):
+    async def see_vehicle(self):
         """Update the device info."""
         dev_id = slugify(self._data.attributes.get("nickname"))
-        attrs = {"vin": self._data.vehicle.vin}
         p = self._data.position
         gps = [
             round(p.get("position").get("latitude"), 8),
@@ -37,24 +37,13 @@ class JLRDeviceTracker(DeviceScanner):
         ]
 
         _LOGGER.debug(
-            "Updating vehicle location for {}".format(
-                self._data.attributes.get("nickname")
-            )
+            "Updating {} Device Tracker".format(self._data.attributes.get("nickname"))
         )
 
         await self._see(
             dev_id=dev_id,
             host_name=self._data.attributes.get("nickname"),
+            source_type=SOURCE_TYPE_GPS,
             gps=gps,
-            attributes=attrs,
             icon="mdi:car",
         )
-
-    async def async_added_to_hass(self):
-        """Subscribe for update from the hub"""
-
-        async def async_update_state():
-            """Update sensor state."""
-            await self.async_update()
-
-        async_dispatcher_connect(self._hass, SIGNAL_STATE_UPDATED, async_update_state)
