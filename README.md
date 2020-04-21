@@ -50,7 +50,7 @@ Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations we
 ## Additional Optional Parameters
 1. scan_interval - in minutes. Default update interval is 5 minutes.  Use this to change that.  Minimum is 1 minute.
 2. pin - set this to be able to use the lock/unlock on the lock sensor.
-3. distance_units - set this to 'mi' or 'km' to override the HA default metric for milages (mainly for funny UK system of miles and litres!).
+3. distance_unit - set this to 'mi' or 'km' to override the HA default metric for milages (mainly for funny UK system of miles and litres!).
 4. health_update_interval - see health update section
 5. debug_data: - see debugging below.
 
@@ -64,7 +64,7 @@ Optional Parameters
 ```
   scan_interval: 5
   pin: <your InControl pin>
-  distance_units: <mi or km to override HA defualt>
+  distance_unit: <mi or km to override HA defualt>
   health_update_interval: 60
   debug_data: <false or true - see debugging>
 ```
