@@ -99,6 +99,9 @@ jlrincontrol:
   password: <your InControl password>
 ```
 
+# Community Recipes
+The [recipes](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/README.md) page is a collection of ideas contributed by the community to help you get the most out of using this integration.
+
 # Suggestions
 I am looking for suggestions to improve this integration and make it useful for many people.  Please raise an issue for any functionality you would like to see.
 
