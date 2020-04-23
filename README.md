@@ -1,10 +1,10 @@
-# JLR Home Assistant Integration (v1.0.0)
+# JLR Home Assistant Integration (v1.1.0)
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
-## Breaking Change in v1.0.0 From Previous Alpha Versions
+## Breaking Change in v1.1.0 From Previous Versions
 Due to an issue in the unique ID being generated in the backend for the sensors, this fix causes HA to create new versions of these (all suffixed with _2).
 
-In order to resolve this please follow the below when updating to v0.5alpha.
+In order to resolve this please follow the below when updating to v1.1.0.
 1) Comment out the integration in your config.yaml file.
 2) Restart HA
 3) In Configuration -> Entities, delete all the jlrincontrol entities.
@@ -70,9 +70,8 @@ Optional Parameters
 ```
 
 # Health Status Update
-New in v1.0.0
 
-This integration now has the ability to perform a scheduled health status update request from your vehicle.  By default this is disabled.  Adding the entry to your configuration.yaml as above will enable it (after a HA restart).
+This integration has the ability to perform a scheduled health status update request from your vehicle.  By default this is disabled.  Adding the entry to your configuration.yaml as above will enable it (after a HA restart).
 
 I do not know the impact on either vehicle battery or JLRs view on running this often, so please use at your own risk.  I would certainly not set it to anything too often.
 
@@ -157,10 +156,12 @@ Initial build of the component to read basic sensors
 ## v1.0.0
 * First official release - yeah!
 
+## v1.1.0
+Fixed: Multiple vehicles on account only showed first one.
+
 
 
 ### Known Issues
-* Only works for first vehicle on account.
 * Some distance sensors do not show in local units (on list to fix).
 * Service Info sensor shows ok even if car is needing service or adblue top up (on list to fix)
 * Tyre pressures seem to be in inconsistant units between models and therefore give strange reading.
