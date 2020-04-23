@@ -19,7 +19,6 @@ class JLRService:
         self.attributes = self.vehicle.attributes
 
     async def async_call_service(self, **kwargs):
-        # TODO: Validate entity
         self.service_code = kwargs.get("service_code")
         self.service_name = kwargs.get("service_name")
 
@@ -41,8 +40,9 @@ class JLRService:
                         try:
                             status = service(**service_kwargs)
                             _LOGGER.debug(
-                                "Service {} called.  Awaiting feedback on success.".format(
-                                    self.service_name
+                                "Service {} called on vehicle {}.  Awaiting feedback on success.".format(
+                                    self.service_name,
+                                    self.vehicle.attributes.get("nickname"),
                                 )
                             )
                             # monitor service for success / failure
@@ -57,21 +57,26 @@ class JLRService:
                         except error.HTTPError as ex:
                             if ex.code == 401:
                                 _LOGGER.warning(
-                                    "Service: {} - not authorised error. Is your pin correct?".format(
-                                        self.service_name
+                                    "Service: {} on vehicle {} - not authorised error. Is your pin correct?".format(
+                                        self.service_name,
+                                        self.vehicle.attributes.get("nickname"),
                                     )
                                 )
                             else:
                                 _LOGGER.debug(
-                                    "Error calling service {}.  Error is {}".format(
-                                        self.service_name, ex.msg
+                                    "Error calling service {} on vehicle {}.  Error is {}".format(
+                                        self.service_name,
+                                        self.vehicle.attributes.get("nickname"),
+                                        ex.msg,
                                     )
                                 )
 
                         except Exception as ex:
                             _LOGGER.debug(
-                                "Error calling service {}.  Error is {}".format(
-                                    ex, self.service_name
+                                "Error calling service {} on vehicle {}.  Error is {}".format(
+                                    self.service_name,
+                                    self.vehicle.attributes.get("nickname"),
+                                    ex,
                                 )
                             )
 
@@ -79,16 +84,23 @@ class JLRService:
                     else:
                         # TODO: State the service that is being waited for from service status code
                         _LOGGER.warning(
-                            "Another service request is still processing. Please try again later."
+                            "Error calling service {} on vehicle {}. Another service request is still processing. Please try again later.".format(
+                                self.service_name,
+                                self.vehicle.attribute.get("nickname"),
+                            )
                         )
                 else:
                     _LOGGER.debug(
-                        "Service {} is not available on this vehicle".format(
-                            self.service_name
+                        "Service {} is not available on vehicle {}".format(
+                            self.service_name, self.vehicle.attribute.get("nickname"),
                         )
                     )
         else:
-            _LOGGER.debug("Error calling service.  Invalid parameters")
+            _LOGGER.debug(
+                "Error calling service {}.  Invalid parameters".format(
+                    self.service_name
+                )
+            )
 
     def check_service_enabled(self, service_code):
         """Check service code is capable and enabled"""
@@ -123,12 +135,19 @@ class JLRService:
                 result = await self.async_check_service_status(service_id)
                 status = result.get("status")
             if status and status == "Successful":
-                _LOGGER.debug("Service call successful")
+                _LOGGER.debug(
+                    "Service call ({}) to vehicle {} was successful".format(
+                        self.service_name, self.vehicle.attributes.get("nickname")
+                    )
+                )
                 return status
             else:
                 _LOGGER.warning(
-                    "InControl service call failed due to {}. \r\nFull return is {}".format(
-                        result.get("failureReason"), result
+                    "InControl service call ({}) to vehicle {} failed due to {}. \r\nFull return is {}".format(
+                        self.service_name,
+                        self.vehicle.attributes.get("nickname"),
+                        result.get("failureReason"),
+                        result,
                     )
                 )
             return status
