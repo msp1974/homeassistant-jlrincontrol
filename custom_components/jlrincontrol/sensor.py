@@ -3,7 +3,11 @@ import logging
 
 # from homeassistant.const import STATE_OFF, UNIT_PERCENTAGE
 from . import JLREntity, DOMAIN
-from homeassistant.const import UNIT_PERCENTAGE, LENGTH_KILOMETERS, LENGTH_MILES
+from homeassistant.const import (
+    UNIT_PERCENTAGE,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+)
 from homeassistant.util import dt, distance
 from .const import (
     DATA_ATTRS_CAR_INFO,
@@ -16,6 +20,7 @@ from .const import (
     DATA_ATTRS_SERVICE_STATUS,
     DATA_ATTRS_SERVICE_INFO,
     FUEL_TYPE_BATTERY,
+    JLR_SERVICES,
     SERVICE_STATUS_OK,
 )
 
@@ -27,63 +32,59 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     devices = []
     _LOGGER.debug("Loading Sensors")
 
-    devices.append(JLRVehicleSensor(data))
-    devices.append(JLRVehicleWindowSensor(data))
-    devices.append(JLRVehicleAlarmSensor(data))
-    devices.append(JLRVehicleTyreSensor(data))
-    devices.append(JLRVehicleServiceSensor(data))
-    devices.append(JLRVehicleRangeSensor(data))
+    if discovery_info is None:
+        return
+
+    _LOGGER.debug(
+        "Setting Up Sensors for - {}".format(
+            data.vehicles[discovery_info].attributes.get("nickname")
+        )
+    )
+
+    devices.append(JLRVehicleSensor(hass, discovery_info))
+    devices.append(JLRVehicleWindowSensor(hass, discovery_info))
+    devices.append(JLRVehicleAlarmSensor(hass, discovery_info))
+    devices.append(JLRVehicleTyreSensor(hass, discovery_info))
+    devices.append(JLRVehicleServiceSensor(hass, discovery_info))
+    devices.append(JLRVehicleRangeSensor(hass, discovery_info))
 
     # If EV show EV sensorl otherwise show fuel sensor
-    if data.attributes.get("fuelType") == FUEL_TYPE_BATTERY:
-        devices.append(JLREVChargeSensor(data))
+    if data.vehicles[discovery_info].attributes.get("fuelType") == FUEL_TYPE_BATTERY:
+        devices.append(JLREVChargeSensor(hass, discovery_info))
 
+    data.entities.extend(devices)
     async_add_entities(devices, True)
 
 
 class JLRVehicleSensor(JLREntity):
-    def __init__(self, data):
-        super().__init__(data, "vehicle")
+    def __init__(self, hass, vin, *args):
         self._icon = "mdi:car"
-        self._name = self._data.attributes.get("nickname") + " Info"
-        _LOGGER.debug("Loading {} Sensors".format(self._name))
+        self._sensor_name = "info"
+        super().__init__(hass, vin)
 
     @property
     def state(self):
-        x = self._data.attributes.get("registrationNumber")
+        x = self._vehicle.attributes.get("registrationNumber")
         return x
 
     @property
     def device_state_attributes(self):
-        a = self._data.attributes
+        a = self._vehicle.attributes
         attrs = {}
 
         for k, v in DATA_ATTRS_CAR_INFO.items():
             if a.get(v):
                 attrs[k.title()] = a.get(v)
 
-        attrs["Odometer"] = self._data.get_odometer()
+        attrs["Odometer"] = self._data.get_odometer(self._vehicle)
 
-        # If wakeup available add details
-        if self._data.wakeup:
-            if self._data.wakeup.get("state") == "RECEIVING_SCHEDULE_ACCEPTANCE_WINDOW":
-                attrs["State"] = "Active"
-                attrs["Active Until"] = self.to_local_datetime(
-                    self._data.wakeup.get("scheduleWakeup").get("scheduleAcceptanceEnd")
-                )
-            elif self._data.wakeup.get("state") == "SLEEPING":
-                attrs["State"] = self._data.wakeup.get("state").title()
-                attrs["Next Update"] = self.to_local_datetime(
-                    self._data.wakeup.get("wakeupTime")
-                )
-
-        if self._data.status.get("lastUpdatedTime"):
+        if self._vehicle.status.get("lastUpdatedTime"):
             attrs["Last Contacted"] = self.to_local_datetime(
-                self._data.status.get("lastUpdatedTime")
+                self._vehicle.status.get("lastUpdatedTime")
             )
             attrs["Last Contacted Age"] = (
                 dt.get_age(
-                    self.to_local_datetime(self._data.status.get("lastUpdatedTime"))
+                    self.to_local_datetime(self._vehicle.status.get("lastUpdatedTime"))
                 )
                 + " ago"
             )
@@ -91,18 +92,17 @@ class JLRVehicleSensor(JLREntity):
 
 
 class JLRVehicleTyreSensor(JLREntity):
-    def __init__(self, data):
-        super().__init__(data, "tyre")
+    def __init__(self, hass, vin, *args):
         self._icon = "mdi:car-tire-alert"
-        self._name = self._data.attributes.get("nickname") + " Tyres"
-        _LOGGER.debug("Loading {} Sensors".format(self._name))
+        self._sensor_name = "tyres"
+        super().__init__(hass, vin)
 
     @property
     def state(self):
         # Convert to list of values from dict
         if all(
             [
-                self._data.status.get(v) == "NORMAL"
+                self._vehicle.status.get(v) == "NORMAL"
                 for k, v in DATA_ATTRS_TYRE_STATUS.items()
             ]
         ):
@@ -112,10 +112,12 @@ class JLRVehicleTyreSensor(JLREntity):
 
     @property
     def device_state_attributes(self):
+        # TODO: Convert to local units
+        # TODO: Seems vehicles send in different units
         def __toPSI(bar):
             return round((int(bar) / 100) * 14.5038, 1)
 
-        s = self._data.status
+        s = self._vehicle.status
         attrs = {}
 
         # Statuses
@@ -131,17 +133,16 @@ class JLRVehicleTyreSensor(JLREntity):
 
 
 class JLRVehicleWindowSensor(JLREntity):
-    def __init__(self, data):
-        super().__init__(data, "window")
+    def __init__(self, hass, vin, *args):
         self._icon = "mdi:car-door"
-        self._name = self._data.attributes.get("nickname") + " Windows"
-        _LOGGER.debug("Loading {} Sensors".format(self._name))
+        self._sensor_name = "windows"
+        super().__init__(hass, vin)
 
     @property
     def state(self):
         if all(
             [
-                self._data.status.get(v) in ["CLOSED", "FALSE", "UNUSED"]
+                self._vehicle.status.get(v) in ["CLOSED", "FALSE", "UNUSED"]
                 for k, v in DATA_ATTRS_WINDOW_STATUS.items()
             ]
         ):
@@ -151,15 +152,15 @@ class JLRVehicleWindowSensor(JLREntity):
 
     @property
     def device_state_attributes(self):
-        s = self._data.status
+        s = self._vehicle.status
         attrs = {}
         for k, v in DATA_ATTRS_WINDOW_STATUS.items():
             # Add sunroof status if applicable
             if k == "sunroof":
-                if self._data.attributes.get("roofType") == "SUNROOF":
+                if self._vehicle.attributes.get("roofType") == "SUNROOF":
                     attrs[k.title()] = (
                         "Open"
-                        if self._data.status.get("IS_SUNROOF_OPEN") == "TRUE"
+                        if self._vehicle.status.get("IS_SUNROOF_OPEN") == "TRUE"
                         else "Closed"
                     )
             else:
@@ -169,15 +170,14 @@ class JLRVehicleWindowSensor(JLREntity):
 
 
 class JLRVehicleAlarmSensor(JLREntity):
-    def __init__(self, data):
-        super().__init__(data, "ev_battery")
+    def __init__(self, hass, vin, *args):
         self._icon = "mdi:security"
-        self._name = self._data.attributes.get("nickname") + " Alarm"
-        _LOGGER.debug("Loading {} Sensors".format(self._name))
+        self._sensor_name = "alarm"
+        super().__init__(hass, vin)
 
     @property
     def state(self):
-        status = self._data.status.get("THEFT_ALARM_STATUS")
+        status = self._vehicle.status.get("THEFT_ALARM_STATUS")
         if status:
             status = status.replace("ALARM_", "")
             return status.replace("_", "").title()
@@ -191,18 +191,17 @@ class JLRVehicleAlarmSensor(JLREntity):
 
 
 class JLRVehicleServiceSensor(JLREntity):
-    def __init__(self, data):
-        super().__init__(data, "service_info")
+    def __init__(self, hass, vin, *args):
         self._icon = "mdi:wrench"
-        self._name = self._data.attributes.get("nickname") + " Service Info"
-        _LOGGER.debug("Loading {} Sensors".format(self._name))
+        self._sensor_name = "service info"
+        super().__init__(hass, vin)
 
     @property
     def state(self):
         if all(
             [
-                self._data.status.get(v) in SERVICE_STATUS_OK
-                or self._data.status.get(v) == None
+                self._vehicle.status.get(v) in SERVICE_STATUS_OK
+                or self._vehicle.status.get(v) == None
                 for k, v in DATA_ATTRS_SERVICE_STATUS.items()
             ]
         ):
@@ -212,7 +211,7 @@ class JLRVehicleServiceSensor(JLREntity):
 
     @property
     def device_state_attributes(self):
-        s = self._data.status
+        s = self._vehicle.status
         attrs = {}
         for k, v in DATA_ATTRS_SERVICE_STATUS.items():
             if s.get(v):
@@ -227,71 +226,68 @@ class JLRVehicleServiceSensor(JLREntity):
 
 
 class JLRVehicleRangeSensor(JLREntity):
-    def __init__(self, data):
-        super().__init__(data, "range")
-        self.fuel = self._data.attributes.get("fuelType")
+    def __init__(self, hass, vin, *args):
+        self._sensor_name = "range"
+        super().__init__(hass, vin)
+        self._units = self._data.get_distance_units()
         self._icon = (
-            "mdi:speedometer" if self.fuel == FUEL_TYPE_BATTERY else "mdi:gas-station"
+            "mdi:speedometer" if self._fuel == FUEL_TYPE_BATTERY else "mdi:gas-station"
         )
-        self._name = self._data.attributes.get("nickname") + " Range"
-        self.units = self._data.get_distance_units()
-        _LOGGER.debug("Loading {} Sensors".format(self._name))
 
     @property
     def state(self):
-        if self.fuel == FUEL_TYPE_BATTERY:
-            if self.units == LENGTH_KILOMETERS:
-                return self._data.status.get("EV_RANGE_ON_BATTERY_KM", "0")
+        if self._fuel == FUEL_TYPE_BATTERY:
+            if self._units == LENGTH_KILOMETERS:
+                return self._vehicle.status.get("EV_RANGE_ON_BATTERY_KM", "0")
             else:
-                return self._data.status.get("EV_RANGE_ON_BATTERY_MILES", "0")
+                return self._vehicle.status.get("EV_RANGE_ON_BATTERY_MILES", "0")
         else:
             return round(
                 distance.convert(
-                    int(self._data.status.get("DISTANCE_TO_EMPTY_FUEL")),
+                    int(self._vehicle.status.get("DISTANCE_TO_EMPTY_FUEL")),
                     LENGTH_KILOMETERS,
-                    self.units,
+                    self._units,
                 )
             )
 
     @property
     def unit_of_measurement(self):
-        return self.units
+        return self._units
 
     @property
     def device_state_attributes(self):
         attrs = {}
-        attrs["Fuel Type"] = self.fuel
+        attrs["Fuel Type"] = self._fuel
 
-        if self.fuel == FUEL_TYPE_BATTERY:
+        if self._fuel == FUEL_TYPE_BATTERY:
             attrs["Battery Level"] = (
-                self._data.status.get("EV_STATE_OF_CHARGE", "0") + UNIT_PERCENTAGE
+                self._vehicle.status.get("EV_STATE_OF_CHARGE", "0") + UNIT_PERCENTAGE
             )
         else:
             # TODO: If fuelTankVolume is not none show remaining litres
             attrs["Fuel Level"] = (
-                self._data.status.get("FUEL_LEVEL_PERC", "0") + UNIT_PERCENTAGE
+                self._vehicle.status.get("FUEL_LEVEL_PERC", "0") + UNIT_PERCENTAGE
             )
         return attrs
 
 
 class JLREVChargeSensor(JLREntity):
-    def __init__(self, data):
-        super().__init__(data, "ev_battery")
+    def __init__(self, hass, vin, *args):
         self._icon = "mdi:car-electric"
-        self._name = self._data.attributes.get("nickname") + " EV Battery"
-        self.units = self._data.get_distance_units()
-        _LOGGER.debug("Loading {} Sensors".format(self._name))
+        self._sensor_name = "ev_battery"
+        self._units = self._data.get_distance_units()
+        super().__init__(hass, vin)
 
     @property
     def state(self):
-        return self._data.status.get("EV_CHARGING_STATUS", "Unknown").title()
+        return self._vehicle.status.get("EV_CHARGING_STATUS", "Unknown").title()
 
     @property
     def device_state_attributes(self):
-        s = self._data.status
+        s = self._vehicle.status
         attrs = {}
 
-        units = "KM" if self.units == LENGTH_KILOMETERS else "MILES"
+        units = "KM" if self._units == LENGTH_KILOMETERS else "MILES"
 
         for k, v in DATA_ATTRS_EV_CHARGE_INFO.items():
             if s.get(v):

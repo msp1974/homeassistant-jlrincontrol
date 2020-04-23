@@ -4,16 +4,19 @@ import asyncio
 from urllib import error
 import time
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class JLRService:
-    def __init__(self, hass, data):
+    def __init__(self, hass, vehicle):
         self._hass = hass
-        self.data = data
+        self.data = hass.data[DOMAIN]
+        self.vehicle = vehicle
         self.service_code = None
         self.service_name = None
-        self.attributes = self.data.attributes
+        self.attributes = self.vehicle.attributes
 
     async def async_call_service(self, **kwargs):
         # TODO: Validate entity
@@ -30,7 +33,7 @@ class JLRService:
                         service_kwargs = {}
 
                         # populate required parameters for service call
-                        service = getattr(self.data.vehicle, self.service_name)
+                        service = getattr(self.vehicle, self.service_name)
                         for param in inspect.signature(service).parameters:
                             service_kwargs[param] = kwargs.get(param)
 
@@ -101,12 +104,12 @@ class JLRService:
     async def async_get_services(self):
         """Check for any exisitng queued service calls to vehicle"""
         # TODO: make this return true or false if existing
-        return await self._hass.async_add_executor_job(self.data.vehicle.get_services)
+        return await self._hass.async_add_executor_job(self.vehicle.get_services)
 
     async def async_check_service_status(self, service_id):
         """Get status of current service call"""
         return await self._hass.async_add_executor_job(
-            self.data.vehicle.get_service_status, service_id
+            self.vehicle.get_service_status, service_id
         )
 
     async def async_monitor_service_call(self, service_id):
