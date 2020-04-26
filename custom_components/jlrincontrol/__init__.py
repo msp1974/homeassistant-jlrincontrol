@@ -247,6 +247,9 @@ class JLRApiHandler:
             self.vehicles[vehicle].status = status
 
             self.vehicles[vehicle].position = self.vehicles[vehicle].get_position()
+            self.vehicles[vehicle].last_trip = (
+                self.vehicles[vehicle].get_trips(count=1).get("trips")[0]
+            )
 
         _LOGGER.info("JLR InControl Update Received")
         # Send update notice to all components to update
