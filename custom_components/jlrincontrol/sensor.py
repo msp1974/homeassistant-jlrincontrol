@@ -336,8 +336,8 @@ class JLRVehicleLastTripSensor(JLREntity):
             attrs["destination_latitude"] = t.get("endPosition").get("latitude")
             attrs["destination_longitude"] = t.get("endPosition").get("longitude")
             attrs["destination"] = t.get("endPosition").get("address")
-
-            attrs["eco_score"] = t.get("totalEcoScore").get("score")
+            if t.get("totalEcoScore"):
+                attrs["eco_score"] = t.get("totalEcoScore").get("score")
             attrs["average_speed"] = round(
                 distance.convert(
                     int(t.get("averageSpeed")), LENGTH_KILOMETERS, self._units,
