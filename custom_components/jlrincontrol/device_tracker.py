@@ -47,8 +47,11 @@ class JLRDeviceTracker:
             ]
 
             attrs = {}
-            loc_name = self._data.connection.reverse_geocode(gps[0], gps[1])
-            attrs["location"] = loc_name.get("formattedAddress")
+            try:
+                loc_name = self._data.connection.reverse_geocode(gps[0], gps[1])
+                attrs["location"] = loc_name.get("formattedAddress")
+            except:
+                pass
             attrs["speed"] = p.get("speed")
             attrs["heading"] = p.get("heading")
 
