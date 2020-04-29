@@ -24,6 +24,7 @@ Currently this loads a series of sensors for
 * Location
 * EV Battery Sensor (EVs only)
 * Service Info
+* Last Trip
 
 And has services for
 * Update Health Status (forces update from vehicle)
