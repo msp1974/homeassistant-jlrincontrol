@@ -1,5 +1,9 @@
 This component provides integration to the JLR InControl functionality to homeassistant. 
 
+## BREAKING CHANGE from v1.0.0 - Please see [Readme.md](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Readme.Md)
+
+## Now works for multiple vehciles!
+
 # Functionality
 **Currently this loads a series of sensors for**
 * Vehicle Info
@@ -11,6 +15,7 @@ This component provides integration to the JLR InControl functionality to homeas
 * Location
 * EV Battery Sensor (EVs only)
 * Service Info
+* Last Trip
 
 Each sensor has a series of attributes to show related sensor information.  Which attributes are show is dependant on support by your vehicle.
 
@@ -67,7 +72,6 @@ Alternatively, you can make a more intelligent health update request automation 
 I.e. on EV vehicles you could only call it if the vehicle is charging, or on all vehicles, only call it during the day and it was more than x period since the last update.
 
 ### Known Issues
-* Only works for first vehicle on account.
 * Some distance sensors do not show in local units (on list to fix).
 * Service Info sensor shows ok even if car is needing service or adblue top up (on list to fix)
 * Tyre pressures seem to be in inconsistant units between models and therefore give strange reading.
