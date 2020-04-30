@@ -38,7 +38,9 @@ class JLRService:
 
                         # Call service
                         try:
-                            status = service(**service_kwargs)
+                            status = await self._hass.async_add_executor_job(
+                                service(**service_kwargs)
+                            )
                             _LOGGER.debug(
                                 "Service {} called on vehicle {}.  Awaiting feedback on success.".format(
                                     self.service_name,

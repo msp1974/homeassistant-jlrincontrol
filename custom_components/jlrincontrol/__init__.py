@@ -10,6 +10,7 @@ import asyncio
 import json
 import logging
 from datetime import timedelta
+from functools import partial
 
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.event import async_track_time_interval
@@ -110,26 +111,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Setup JLR InConnect component"""
-    data = JLRApiHandler(hass, config)
-
-    # Get initial update and schedule interval update
-    await data.async_update()
-
-    if not data.connection.vehicles:
-        # No vehicles or wrong credentials
-        _LOGGER.error("Unable to get vehicles from api.  Check credentials")
-        return False
-
-    _LOGGER.debug("Connected to API")
-    hass.data[DOMAIN] = data
-
-    for vehicle in data.vehicles:
-        for platform in PLATFORMS:
-            hass.async_create_task(
-                async_load_platform(
-                    hass, platform, DOMAIN, data.vehicles[vehicle].vin, config
-                )
-            )
 
     async def call_service(service):
         entity_id = service.data.get(ATTR_ENTITY_ID)
@@ -159,15 +140,37 @@ async def async_setup(hass, config):
             s.update(eval(schema))
         return vol.Schema(s)
 
-    # Add services
-    for service, service_info in JLR_SERVICES.items():
-        _LOGGER.debug("Adding {} service".format(service))
-        hass.services.async_register(
-            DOMAIN,
-            service,
-            call_service,
-            schema=get_schema(service_info.get("schema")),
-        )
+    data = JLRApiHandler(hass, config)
+
+    if await data.async_connect():
+        # Get initial update and schedule interval update
+        await data.async_update()
+
+        if not data.connection.vehicles:
+            # No vehicles or wrong credentials
+            _LOGGER.error("Unable to get vehicles from api.  Check credentials")
+            return False
+
+        _LOGGER.debug("Connected to API")
+        hass.data[DOMAIN] = data
+
+        for vehicle in data.vehicles:
+            for platform in PLATFORMS:
+                hass.async_create_task(
+                    async_load_platform(
+                        hass, platform, DOMAIN, data.vehicles[vehicle].vin, config
+                    )
+                )
+
+        # Add services
+        for service, service_info in JLR_SERVICES.items():
+            _LOGGER.debug("Adding {} service".format(service))
+            hass.services.async_register(
+                DOMAIN,
+                service,
+                call_service,
+                schema=get_schema(service_info.get("schema")),
+            )
 
     return True
 
@@ -182,24 +185,41 @@ class JLRApiHandler:
         self.pin = self.config.get(CONF_PIN)
         self.update_interval = self.config.get(CONF_SCAN_INTERVAL)
         self.health_update_interval = self.config.get(CONF_HEALTH_UPDATE_INTERVAL)
+        self.email = self.config.get(CONF_USERNAME)
+        self.password = self.config.get(CONF_PASSWORD)
+
+    @callback
+    def do_status_update(self, *args):
+        self.hass.async_create_task(self.async_update())
+
+    @callback
+    def do_health_update(self, *args):
+        self.hass.async_create_task(self.async_health_update())
+
+    async def async_connect(self):
 
         _LOGGER.debug("Creating connection to JLR InControl API")
-        self.connection = jlrpy.Connection(
-            email=self.config.get(CONF_USERNAME),
-            password=self.config.get(CONF_PASSWORD),
-        )
+        try:
+            self.connection = await self.hass.async_add_executor_job(
+                partial(jlrpy.Connection, self.email, self.password)
+            )
+        except Exception as ex:
+            _LOGGER.warning("Error connecting to JLRInControl.  Error is {}".format(ex))
+            return False
 
         # Discover all vehicles and get one time info
         for vehicle in self.connection.vehicles:
             _LOGGER.debug("Discovered vehicle - {}".format(vehicle.vin))
             # Get attributes
-            vehicle.attributes = vehicle.get_attributes()
+            vehicle.attributes = await self.hass.async_add_executor_job(
+                vehicle.get_attributes
+            )
             self.vehicles[vehicle.vin] = vehicle
 
             # Add one time dump of attr and status data for debugging
             if self.config.get(CONF_DEBUG_DATA):
                 _LOGGER.debug("ATTRIBUTE DATA - {}".format(vehicle.attributes))
-                status = vehicle.get_status()
+                status = await self.hass.async_add_executor_job(vehicle.get_status)
                 status = {d["key"]: d["value"] for d in status["vehicleStatus"]}
                 _LOGGER.debug("STATUS DATA - {}".format(status))
 
@@ -211,7 +231,7 @@ class JLRApiHandler:
                 )
             )
             async_track_time_interval(
-                hass,
+                self.hass,
                 self.do_health_update,
                 timedelta(minutes=self.health_update_interval),
             )
@@ -226,30 +246,30 @@ class JLRApiHandler:
             )
         )
         async_track_time_interval(
-            hass, self.do_status_update, timedelta(minutes=self.update_interval)
+            self.hass, self.do_status_update, timedelta(minutes=self.update_interval)
         )
-
-    @callback
-    def do_status_update(self, *args):
-        self.hass.async_create_task(self.async_update())
-
-    @callback
-    def do_health_update(self, *args):
-        self.hass.async_create_task(self.async_health_update())
+        return True
 
     async def async_update(self):
 
         for vehicle in self.vehicles:
-            status = self.vehicles[vehicle].get_status()
+            status = await self.hass.async_add_executor_job(
+                self.vehicles[vehicle].get_status
+            )
             last_updated = status.get("lastUpdatedTime")
             status = {d["key"]: d["value"] for d in status["vehicleStatus"]}
             status["lastUpdatedTime"] = last_updated
             self.vehicles[vehicle].status = status
 
-            self.vehicles[vehicle].position = self.vehicles[vehicle].get_position()
-            self.vehicles[vehicle].last_trip = (
-                self.vehicles[vehicle].get_trips(count=1).get("trips")[0]
+            self.vehicles[vehicle].position = await self.hass.async_add_executor_job(
+                self.vehicles[vehicle].get_position
             )
+
+            trips = await self.hass.async_add_executor_job(
+                self.vehicles[vehicle].get_trips, 1
+            )
+            if trips:
+                self.vehicles[vehicle].last_trip = trips.get("trips")[0]
 
         _LOGGER.info("JLR InControl Update Received")
         # Send update notice to all components to update

@@ -48,7 +48,9 @@ class JLRDeviceTracker:
 
             attrs = {}
             try:
-                loc_name = self._data.connection.reverse_geocode(gps[0], gps[1])
+                loc_name = self._hass.async_add_exexutor_job(
+                    self._data.connection.reverse_geocode, (gps[0], gps[1])
+                )
                 attrs["location"] = loc_name.get("formattedAddress")
             except:
                 pass
