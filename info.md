@@ -1,6 +1,6 @@
 This component provides integration to the JLR InControl functionality to homeassistant. 
 
-## BREAKING CHANGE from v1.0.0 - Please see [Readme.md](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Readme.Md)
+## BREAKING CHANGE from v1.0.0 - Please see [Readme.md](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/README.md)
 
 ## Now works for multiple vehciles!
 
@@ -95,4 +95,4 @@ jlrincontrol:
 ```
 
 # More Information
-For more information please see the [Readme.md](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Readme.Md)
+For more information please see the [Readme.md](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/README.md)

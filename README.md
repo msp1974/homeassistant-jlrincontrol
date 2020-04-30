@@ -160,6 +160,9 @@ Initial build of the component to read basic sensors
 ## v1.1.0
 Fixed: Multiple vehicles on account only showed first one.
 
+## v1.1.1
+Fixed: Errors in HA v109.0 due to new IO monitoring in event loop
+
 
 
 ### Known Issues
