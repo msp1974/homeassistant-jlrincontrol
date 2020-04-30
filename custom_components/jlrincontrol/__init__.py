@@ -312,7 +312,7 @@ class JLRApiHandler:
 
 class JLREntity(Entity):
     def __init__(self, hass, vin):
-        """Create a new generic Dyson sensor."""
+        """Create a new generic JLR sensor."""
         self._hass = hass
         self._data = self._hass.data[DOMAIN]
         self._vin = vin

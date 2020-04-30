@@ -275,10 +275,10 @@ class JLRVehicleRangeSensor(JLREntity):
 
 class JLREVChargeSensor(JLREntity):
     def __init__(self, hass, vin, *args):
-        self._icon = "mdi:car-electric"
         self._sensor_name = "ev_battery"
-        self._units = self._data.get_distance_units()
         super().__init__(hass, vin)
+        self._units = self._data.get_distance_units()
+        self._icon = "mdi:car-electric"
 
     @property
     def state(self):
