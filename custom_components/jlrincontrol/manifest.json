@@ -1,7 +1,7 @@
 {
   "domain": "jlrincontrol",
-  "name": "Jaguar InControl Component for Home Assistant",
-  "documentation": "https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Readme.Md",
+  "name": "Jaguar Landrover InControl",
+  "documentation": "https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/README.Md",
   "dependencies": [],
   "codeowners": [
     "@msp1974"

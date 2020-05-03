@@ -155,8 +155,8 @@ jlrincontrol:
 Initial build of the component to read basic sensors
 
 ### Known Issues
-* Some distance sensors do not show in local units (on list to fix).
-* Service Info sensor shows ok even if car is needing service or adblue top up (on list to fix)
+* Some distance sensors do not show in local units.
+* Service Info sensor shows ok even if car is needing service or adblue top up.
 * Tyre pressures seem to be in inconsistant units between models and therefore give strange reading.
 * Tyre pressures are not in local units.
 
