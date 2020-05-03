@@ -408,7 +408,7 @@ class JLREntity(Entity):
             await self.async_update_ha_state(True)
 
         async_dispatcher_connect(
-            self.hass, SIGNAL_STATE_UPDATED, async_update_state
+            self._hass, SIGNAL_STATE_UPDATED, async_update_state
         )
 
     def to_local_datetime(self, datetime: str):
@@ -421,7 +421,7 @@ class JLREntity(Entity):
         if self._data.config.get(CONF_DISTANCE_UNIT):
             return self._data.config.get(CONF_DISTANCE_UNIT)
         else:
-            return self.hass.config.units.length_unit
+            return self._hass.config.units.length_unit
 
     def get_odometer(self, vehicle):
         self.units = self.get_distance_units()
