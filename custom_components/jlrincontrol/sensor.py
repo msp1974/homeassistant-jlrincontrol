@@ -78,18 +78,14 @@ class JLRVehicleSensor(JLREntity):
             if a.get(v):
                 attrs[k.title()] = a.get(v)
 
-        attrs["Odometer"] = self._data.get_odometer(self._vehicle)
+        attrs["Odometer"] = self.get_odometer(self._vehicle)
 
         if self._vehicle.status.get("lastUpdatedTime"):
-            attrs["Last Contacted"] = self.to_local_datetime(
+            last_contacted = self.to_local_datetime(
                 self._vehicle.status.get("lastUpdatedTime")
             )
-            attrs["Last Contacted Age"] = (
-                dt.get_age(
-                    self.to_local_datetime(self._vehicle.status.get("lastUpdatedTime"))
-                )
-                + " ago"
-            )
+            attrs["Last Contacted"] = last_contacted
+            attrs["Last Contacted Age"] = dt.get_age(last_contacted) + " ago"
         return attrs
 
 
@@ -231,7 +227,7 @@ class JLRVehicleRangeSensor(JLREntity):
     def __init__(self, hass, vin, *args):
         self._sensor_name = "range"
         super().__init__(hass, vin)
-        self._units = self._data.get_distance_units()
+        self._units = self.get_distance_units()
         self._icon = (
             "mdi:speedometer" if self._fuel == FUEL_TYPE_BATTERY else "mdi:gas-station"
         )
@@ -277,7 +273,7 @@ class JLREVChargeSensor(JLREntity):
     def __init__(self, hass, vin, *args):
         self._sensor_name = "ev_battery"
         super().__init__(hass, vin)
-        self._units = self._data.get_distance_units()
+        self._units = self.get_distance_units()
         self._icon = "mdi:car-electric"
 
     @property
@@ -304,18 +300,23 @@ class JLRVehicleLastTripSensor(JLREntity):
     def __init__(self, hass, vin, *args):
         self._sensor_name = "last trip"
         super().__init__(hass, vin)
-        self._units = self._data.get_distance_units()
+        self._units = self.get_distance_units()
         self._icon = "mdi:map"
 
     @property
     def state(self):
-        return round(
-            distance.convert(
-                int(self._vehicle.last_trip.get("tripDetails", "{}").get("distance")),
-                LENGTH_METERS,
-                self._units,
+        if self._vehicle.last_trip and self._vehicle.last_trip.get("tripDetails"):
+            return round(
+                distance.convert(
+                    int(
+                        self._vehicle.last_trip.get("tripDetails", "{}").get("distance")
+                    ),
+                    LENGTH_METERS,
+                    self._units,
+                )
             )
-        )
+        else:
+            return 0
 
     @property
     def unit_of_measurement(self):
@@ -323,39 +324,40 @@ class JLRVehicleLastTripSensor(JLREntity):
 
     @property
     def device_state_attributes(self):
-        t = self._vehicle.last_trip.get("tripDetails")
+        attrs = {}
+        if self._vehicle.last_trip:
+            t = self._vehicle.last_trip.get("tripDetails")
 
-        if t:
-            attrs = {}
-            attrs["start"] = self.to_local_datetime(t.get("startTime"))
-            attrs["origin_latitude"] = t.get("startPosition").get("latitude")
-            attrs["origin_longitude"] = t.get("startPosition").get("longitude")
-            attrs["origin"] = t.get("startPosition").get("address")
+            if t:
+                attrs["start"] = self.to_local_datetime(t.get("startTime"))
+                attrs["origin_latitude"] = t.get("startPosition").get("latitude")
+                attrs["origin_longitude"] = t.get("startPosition").get("longitude")
+                attrs["origin"] = t.get("startPosition").get("address")
 
-            attrs["end"] = self.to_local_datetime(t.get("endTime"))
-            attrs["destination_latitude"] = t.get("endPosition").get("latitude")
-            attrs["destination_longitude"] = t.get("endPosition").get("longitude")
-            attrs["destination"] = t.get("endPosition").get("address")
-            if t.get("totalEcoScore"):
-                attrs["eco_score"] = t.get("totalEcoScore").get("score")
-            attrs["average_speed"] = round(
-                distance.convert(
-                    int(t.get("averageSpeed")), LENGTH_KILOMETERS, self._units,
+                attrs["end"] = self.to_local_datetime(t.get("endTime"))
+                attrs["destination_latitude"] = t.get("endPosition").get("latitude")
+                attrs["destination_longitude"] = t.get("endPosition").get("longitude")
+                attrs["destination"] = t.get("endPosition").get("address")
+                if t.get("totalEcoScore"):
+                    attrs["eco_score"] = t.get("totalEcoScore").get("score")
+                attrs["average_speed"] = round(
+                    distance.convert(
+                        int(t.get("averageSpeed")), LENGTH_KILOMETERS, self._units,
+                    )
                 )
-            )
 
-            if self._fuel == FUEL_TYPE_BATTERY:
-                attrs["average_consumption"] = round(
-                    t.get("averageEnergyConsumption"), 1
-                )
-            else:
-                if self._units == LENGTH_KILOMETERS:
+                if self._fuel == FUEL_TYPE_BATTERY:
                     attrs["average_consumption"] = round(
-                        t.get("averageFuelConsumption"), 1
+                        t.get("averageEnergyConsumption"), 1
                     )
                 else:
-                    attrs["average_consumption"] = round(
-                        int(t.get("averageFuelConsumption")) * 2.35215, 1
-                    )
+                    if self._units == LENGTH_KILOMETERS:
+                        attrs["average_consumption"] = round(
+                            t.get("averageFuelConsumption"), 1
+                        )
+                    else:
+                        attrs["average_consumption"] = round(
+                            int(t.get("averageFuelConsumption")) * 2.35215, 1
+                        )
 
             return attrs

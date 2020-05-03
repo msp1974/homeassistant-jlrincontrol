@@ -13,7 +13,10 @@ from datetime import timedelta
 from functools import partial
 
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_time_interval,
+    async_call_later,
+)
 import jlrpy
 import voluptuous as vol
 from homeassistant.const import (
@@ -96,11 +99,14 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(CONF_DEBUG_DATA, default=False): cv.boolean,
                 vol.Optional(CONF_PIN): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): (
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                ): (
                     vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL))
                 ),
                 vol.Optional(
-                    CONF_HEALTH_UPDATE_INTERVAL, default=DEFAULT_HEATH_UPDATE_INTERVAL
+                    CONF_HEALTH_UPDATE_INTERVAL,
+                    default=DEFAULT_HEATH_UPDATE_INTERVAL,
                 ): vol.Coerce(int),
             }
         ),
@@ -112,28 +118,6 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Setup JLR InConnect component"""
 
-    async def call_service(service):
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-        entity = next(
-            (
-                entity
-                for entity in hass.data[DOMAIN].entities
-                if entity.entity_id == entity_id
-            ),
-            None,
-        )
-
-        # Get service info
-        if entity and JLR_SERVICES[service.service]:
-            vehicle = data.vehicles[entity._vin]
-            kwargs = {}
-            kwargs["service_name"] = JLR_SERVICES[service.service].get("function_name")
-            kwargs["service_code"] = JLR_SERVICES[service.service].get("service_code")
-            for k, v in service.data.items():
-                kwargs[k] = v
-            jlr_service = JLRService(hass, vehicle)
-            await jlr_service.async_call_service(**kwargs)
-
     def get_schema(schema_list):
         s = {}
         for schema in schema_list:
@@ -141,24 +125,25 @@ async def async_setup(hass, config):
         return vol.Schema(s)
 
     data = JLRApiHandler(hass, config)
+    hass.data[DOMAIN] = data
 
     if await data.async_connect():
-        # Get initial update and schedule interval update
-        await data.async_update()
-
         if not data.connection.vehicles:
             # No vehicles or wrong credentials
-            _LOGGER.error("Unable to get vehicles from api.  Check credentials")
+            _LOGGER.error(
+                "Unable to get vehicles from api.  Check credentials"
+            )
             return False
-
-        _LOGGER.debug("Connected to API")
-        hass.data[DOMAIN] = data
 
         for vehicle in data.vehicles:
             for platform in PLATFORMS:
                 hass.async_create_task(
                     async_load_platform(
-                        hass, platform, DOMAIN, data.vehicles[vehicle].vin, config
+                        hass,
+                        platform,
+                        DOMAIN,
+                        data.vehicles[vehicle].vin,
+                        config,
                     )
                 )
 
@@ -168,8 +153,31 @@ async def async_setup(hass, config):
             hass.services.async_register(
                 DOMAIN,
                 service,
-                call_service,
+                data.async_call_service,
                 schema=get_schema(service_info.get("schema")),
+            )
+
+        # Schedule health update and repeat interval
+        if data.health_update_interval > 0:
+            _LOGGER.debug(
+                "Scheduling vehicle health update on {} minute interval.  First call will be in 30 seconds.".format(
+                    int(data.health_update_interval)
+                )
+            )
+
+            # Do initial call to health_update service after HASS has started up.
+            # This speeds up restart.
+            # 30 seconds should do it.
+            async_call_later(hass, 30, data.do_health_update)
+
+            async_track_time_interval(
+                hass,
+                data.do_health_update,
+                timedelta(minutes=data.health_update_interval),
+            )
+        else:
+            _LOGGER.debug(
+                "Scheduled vehicle health update is disabled.  Add to configuration.yaml to enable."
             )
 
     return True
@@ -184,7 +192,9 @@ class JLRApiHandler:
         self.entities = []
         self.pin = self.config.get(CONF_PIN)
         self.update_interval = self.config.get(CONF_SCAN_INTERVAL)
-        self.health_update_interval = self.config.get(CONF_HEALTH_UPDATE_INTERVAL)
+        self.health_update_interval = self.config.get(
+            CONF_HEALTH_UPDATE_INTERVAL
+        )
         self.email = self.config.get(CONF_USERNAME)
         self.password = self.config.get(CONF_PASSWORD)
 
@@ -204,8 +214,12 @@ class JLRApiHandler:
                 partial(jlrpy.Connection, self.email, self.password)
             )
         except Exception as ex:
-            _LOGGER.warning("Error connecting to JLRInControl.  Error is {}".format(ex))
+            _LOGGER.warning(
+                "Error connecting to JLRInControl.  Error is {}".format(ex)
+            )
             return False
+
+        _LOGGER.debug("Connected to API")
 
         # Discover all vehicles and get one time info
         for vehicle in self.connection.vehicles:
@@ -219,26 +233,16 @@ class JLRApiHandler:
             # Add one time dump of attr and status data for debugging
             if self.config.get(CONF_DEBUG_DATA):
                 _LOGGER.debug("ATTRIBUTE DATA - {}".format(vehicle.attributes))
-                status = await self.hass.async_add_executor_job(vehicle.get_status)
-                status = {d["key"]: d["value"] for d in status["vehicleStatus"]}
+                status = await self.hass.async_add_executor_job(
+                    vehicle.get_status
+                )
+                status = {
+                    d["key"]: d["value"] for d in status["vehicleStatus"]
+                }
                 _LOGGER.debug("STATUS DATA - {}".format(status))
 
-        # Schedule health update and repeat interval
-        if self.health_update_interval > 0:
-            _LOGGER.debug(
-                "Scheduling vehicle health update on {} minute interval".format(
-                    int(self.health_update_interval)
-                )
-            )
-            async_track_time_interval(
-                self.hass,
-                self.do_health_update,
-                timedelta(minutes=self.health_update_interval),
-            )
-        else:
-            _LOGGER.debug(
-                "Scheduled vehicle health update is disabled.  Add to configuration.yaml to enable."
-            )
+        # Get initial update and schedule interval update
+        await self.async_update()
 
         _LOGGER.debug(
             "Scheduling update from InControl servers on {} minute interval".format(
@@ -246,68 +250,100 @@ class JLRApiHandler:
             )
         )
         async_track_time_interval(
-            self.hass, self.do_status_update, timedelta(minutes=self.update_interval)
+            self.hass,
+            self.do_status_update,
+            timedelta(minutes=self.update_interval),
         )
         return True
+
+    async def async_call_service(self, service):
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        entity = next(
+            (
+                entity
+                for entity in self.hass.data[DOMAIN].entities
+                if entity.entity_id == entity_id
+            ),
+            None,
+        )
+
+        # Get service info
+        if entity and JLR_SERVICES[service.service]:
+            vin = entity._vin
+            kwargs = {}
+            kwargs["service_name"] = JLR_SERVICES[service.service].get(
+                "function_name"
+            )
+            kwargs["service_code"] = JLR_SERVICES[service.service].get(
+                "service_code"
+            )
+            for k, v in service.data.items():
+                kwargs[k] = v
+            jlr_service = JLRService(self.hass, vin)
+            status = await jlr_service.async_call_service(**kwargs)
+
+            # Call update on return of monitorif successful
+            if status and status == "Successful":
+                _LOGGER.debug(
+                    "Service call {} on vehicle {} successful. Updating entities from server.".format(
+                        kwargs["service_name"],
+                        self.vehicles[vin].attributes.get("nickname"),
+                    )
+                )
+                await self.async_update()
 
     async def async_update(self):
+        try:
+            for vehicle in self.vehicles:
+                status = await self.hass.async_add_executor_job(
+                    self.vehicles[vehicle].get_status
+                )
+                last_updated = status.get("lastUpdatedTime")
+                status = {
+                    d["key"]: d["value"] for d in status["vehicleStatus"]
+                }
+                status["lastUpdatedTime"] = last_updated
+                self.vehicles[vehicle].status = status
 
-        for vehicle in self.vehicles:
-            status = await self.hass.async_add_executor_job(
-                self.vehicles[vehicle].get_status
+                self.vehicles[
+                    vehicle
+                ].position = await self.hass.async_add_executor_job(
+                    self.vehicles[vehicle].get_position
+                )
+
+                trips = await self.hass.async_add_executor_job(
+                    self.vehicles[vehicle].get_trips, 1
+                )
+                if trips:
+                    self.vehicles[vehicle].last_trip = trips.get("trips")[0]
+
+            _LOGGER.info("JLR InControl Update Received.")
+
+            # Send update notice to all components to update
+            async_dispatcher_send(self.hass, SIGNAL_STATE_UPDATED)
+        except Exception as ex:
+            _LOGGER.debug(
+                "Unable to update from JLRInControl servers. They may be down or you have a internet connectivity issue.  Error is : {}".format(
+                    ex
+                )
             )
-            last_updated = status.get("lastUpdatedTime")
-            status = {d["key"]: d["value"] for d in status["vehicleStatus"]}
-            status["lastUpdatedTime"] = last_updated
-            self.vehicles[vehicle].status = status
-
-            self.vehicles[vehicle].position = await self.hass.async_add_executor_job(
-                self.vehicles[vehicle].get_position
-            )
-
-            trips = await self.hass.async_add_executor_job(
-                self.vehicles[vehicle].get_trips, 1
-            )
-            if trips:
-                self.vehicles[vehicle].last_trip = trips.get("trips")[0]
-
-        _LOGGER.info("JLR InControl Update Received")
-        # Send update notice to all components to update
-        async_dispatcher_send(self.hass, SIGNAL_STATE_UPDATED)
 
     async def async_health_update(self):
-        # TODO: Work out how to do this for each vehicle
-        _LOGGER.info("Requesting scheduled health status update")
-        for vehicle in self.vehicles:
-            service = JLR_SERVICES["update_health_status"]
-            kwargs = {}
-            kwargs["service_name"] = service.get("function_name")
-            kwargs["service_code"] = service.get("service_code")
-            jlr_service = JLRService(self.hass, vehicle)
-            await jlr_service.async_call_service(**kwargs)
-
-        # Schedule next update
-        self.health_timer_handle = self.hass.loop.call_later(
-            self.health_update_interval, self.do_health_update
-        )
-
-        # Call sensor data update
-        await self.async_update()
-
-        return True
-
-    def get_distance_units(self):
-        if self.config.get(CONF_DISTANCE_UNIT):
-            return self.config.get(CONF_DISTANCE_UNIT)
-        else:
-            return self.hass.config.units.length_unit
-
-    def get_odometer(self, vehicle):
-        self.units = self.get_distance_units()
-        if self.units == LENGTH_KILOMETERS:
-            return int(int(vehicle.status.get("ODOMETER_METER")) / 1000)
-        else:
-            return int(vehicle.status.get("ODOMETER_MILES"))
+        try:
+            for vehicle in self.vehicles:
+                service = JLR_SERVICES["update_health_status"]
+                kwargs = {}
+                kwargs["service_name"] = service.get("function_name")
+                kwargs["service_code"] = service.get("service_code")
+                jlr_service = JLRService(self.hass, vehicle)
+                await jlr_service.async_call_service(**kwargs)
+            return True
+        except Exception as ex:
+            _LOGGER.debug(
+                "Error when requesting health status update.  Error is {}".format(
+                    ex
+                )
+            )
 
 
 class JLREntity(Entity):
@@ -318,7 +354,9 @@ class JLREntity(Entity):
         self._vin = vin
         self._vehicle = self._hass.data[DOMAIN].vehicles[self._vin]
         self._name = (
-            self._vehicle.attributes.get("nickname") + " " + self._sensor_name.title()
+            self._vehicle.attributes.get("nickname")
+            + " "
+            + self._sensor_name.title()
         )
         self._fuel = self._vehicle.attributes.get("fuelType")
         self._entity_prefix = (
@@ -369,10 +407,25 @@ class JLREntity(Entity):
             """Update sensor state."""
             await self.async_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, SIGNAL_STATE_UPDATED, async_update_state)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_STATE_UPDATED, async_update_state
+        )
 
     def to_local_datetime(self, datetime: str):
         try:
             return dt.as_local(dt.parse_datetime(datetime))
         except Exception:
             return None
+
+    def get_distance_units(self):
+        if self._data.config.get(CONF_DISTANCE_UNIT):
+            return self._data.config.get(CONF_DISTANCE_UNIT)
+        else:
+            return self.hass.config.units.length_unit
+
+    def get_odometer(self, vehicle):
+        self.units = self.get_distance_units()
+        if self.units == LENGTH_KILOMETERS:
+            return int(int(vehicle.status.get("ODOMETER_METER")) / 1000)
+        else:
+            return int(vehicle.status.get("ODOMETER_MILES"))
