@@ -1,8 +1,8 @@
 This component provides integration to the JLR InControl functionality to homeassistant. 
 
-## Now works for multiple vehciles!
+**Now works for multiple vehciles!**
 
-# Functionality
+## Functionality
 **Currently this loads a series of sensors for**
 * Vehicle Info
 * Alarm
@@ -32,12 +32,12 @@ Each sensor has a series of attributes to show related sensor information.  Whic
 **Note 2**: When calling a service, HA will monitor the status of the service call and report in the error log if it failed.  Debug log will show this checking and the success/failure reason.
 
 
-# Sample Images
+## Sample Images
 ![](https://raw.githubusercontent.com/msp1974/homeassistant-jlrincontrol/master/docs/panel1.png)
 
 
-# Configuration
-## Additional Optional Parameters
+## Configuration
+### Additional Optional Parameters
 
 **Required Parameters**
 ```
@@ -59,7 +59,7 @@ jlrincontrol:
   debug_data: <false or true - see debugging>
 ```
 
-# Vehicle Health Status Update
+## Vehicle Health Status Update
 
 This integration has the ability to perform a scheduled health status update request from your vehicle.  By default this is disabled.  Adding the entry to your configuration.yaml as above will enable it (after a HA restart).
 
@@ -69,13 +69,7 @@ Alternatively, you can make a more intelligent health update request automation 
 
 I.e. on EV vehicles you could only call it if the vehicle is charging, or on all vehicles, only call it during the day and it was more than x period since the last update.
 
-### Known Issues
-* Some distance sensor attributes do not show in local units.
-* Service Info sensor shows ok even if car is needing service or adblue top up.
-* Tyre pressures seem to be in inconsistant units between models and therefore give strange reading.
-* Tyre pressures are not in local units.
-
-# Debugging
+## Debugging
 1. To enable debug logging for this component, add the following to your configuration.yaml
 ```
 logger:
@@ -92,5 +86,11 @@ jlrincontrol:
   debug_data: true
 ```
 
-# More Information
+## Known Issues
+* Some distance sensor attributes do not show in local units.
+* Service Info sensor shows ok even if car is needing service or adblue top up.
+* Tyre pressures seem to be in inconsistant units between models and therefore give strange reading.
+* Tyre pressures are not in local units.
+
+## More Information
 For more information please see the [Readme.md](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/README.md)
