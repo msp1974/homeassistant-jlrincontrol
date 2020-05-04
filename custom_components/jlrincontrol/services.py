@@ -3,6 +3,7 @@ import logging
 import asyncio
 from urllib import error
 import time
+from functools import partial
 
 from .const import DOMAIN
 
@@ -10,13 +11,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class JLRService:
-    def __init__(self, hass, vehicle):
-        self._hass = hass
+    def __init__(self, hass, vin):
+        self.hass = hass
         self.data = hass.data[DOMAIN]
-        self.vehicle = vehicle
+        self.vin = vin
+        self.vehicle = self.data.vehicles[vin]
         self.service_code = None
         self.service_name = None
         self.attributes = self.vehicle.attributes
+        self.nickname = self.attributes.get("nickname")
 
     async def async_call_service(self, **kwargs):
         self.service_code = kwargs.get("service_code")
@@ -38,11 +41,12 @@ class JLRService:
 
                         # Call service
                         try:
-                            status = service(**service_kwargs)
+                            status = await self.hass.async_add_executor_job(
+                                partial(service, **service_kwargs)
+                            )
                             _LOGGER.debug(
                                 "Service {} called on vehicle {}.  Awaiting feedback on success.".format(
-                                    self.service_name,
-                                    self.vehicle.attributes.get("nickname"),
+                                    self.service_name, self.nickname,
                                 )
                             )
                             # monitor service for success / failure
@@ -50,23 +54,20 @@ class JLRService:
                                 status.get("customerServiceId")
                             )
 
-                            # Call update on return of monitor
-                            await self.data.async_update()
                             return monitor_status
 
                         except error.HTTPError as ex:
                             if ex.code == 401:
                                 _LOGGER.warning(
                                     "Service: {} on vehicle {} - not authorised error. Is your pin correct?".format(
-                                        self.service_name,
-                                        self.vehicle.attributes.get("nickname"),
+                                        self.service_name, self.nickname,
                                     )
                                 )
                             else:
                                 _LOGGER.debug(
                                     "Error calling service {} on vehicle {}.  Error is {}".format(
                                         self.service_name,
-                                        self.vehicle.attributes.get("nickname"),
+                                        self.nickname,
                                         ex.msg,
                                     )
                                 )
@@ -74,25 +75,19 @@ class JLRService:
                         except Exception as ex:
                             _LOGGER.debug(
                                 "Error calling service {} on vehicle {}.  Error is {}".format(
-                                    self.service_name,
-                                    self.vehicle.attributes.get("nickname"),
-                                    ex,
+                                    self.service_name, self.nickname, ex,
                                 )
                             )
-
-                        # log in debug for success. log in warn for failure
                     else:
-                        # TODO: State the service that is being waited for from service status code
-                        _LOGGER.warning(
-                            "Error calling service {} on vehicle {}. Another service request is still processing. Please try again later.".format(
-                                self.service_name,
-                                self.vehicle.attribute.get("nickname"),
+                        _LOGGER.debug(
+                            "Error calling service {} on vehicle {}. Another request is still processing. Please try again later.".format(
+                                self.service_name, self.nickname,
                             )
                         )
                 else:
                     _LOGGER.debug(
                         "Service {} is not available on vehicle {}".format(
-                            self.service_name, self.vehicle.attribute.get("nickname"),
+                            self.service_name, self.nickname,
                         )
                     )
         else:
@@ -109,18 +104,44 @@ class JLRService:
         else:
             for service in self.attributes.get("availableServices"):
                 if service.get("serviceType") == service_code:
-                    if service.get("vehicleCapable") and service.get("serviceEnabled"):
+                    if service.get("vehicleCapable") and service.get(
+                        "serviceEnabled"
+                    ):
                         return True
         return False
 
     async def async_get_services(self):
         """Check for any exisitng queued service calls to vehicle"""
-        # TODO: make this return true or false if existing
-        return await self._hass.async_add_executor_job(self.vehicle.get_services)
+        services = await self.hass.async_add_executor_job(
+            self.vehicle.get_services
+        )
+        if services:
+            services = services.get("services")
+            # Check if duplicate
+            for service in services:
+                service_id = service.replace(
+                    "/vehicles/{}/services/".format(self.vin), ""
+                )
+                # Check service to see if matched to this service call
+                # TODO: need to test for equivalents like RDL and RDU
+                try:
+                    status = await self.hass.async_add_executor_job(
+                        partial(self.vehicle.get_service_status, service_id)
+                    )
+                    if status:
+                        if status.get("serviceType") == self.service_code:
+                            return True
+                except:
+                    pass
+
+                return False
+
+        else:
+            return False
 
     async def async_check_service_status(self, service_id):
         """Get status of current service call"""
-        return await self._hass.async_add_executor_job(
+        return await self.hass.async_add_executor_job(
             self.vehicle.get_service_status, service_id
         )
 
@@ -130,22 +151,26 @@ class JLRService:
         if result:
             status = result.get("status")
             while status == "Started":
-                _LOGGER.debug("Checking for service call result status.")
+                _LOGGER.debug(
+                    "Checking for {} service call result status.".format(
+                        self.service_name
+                    )
+                )
                 await asyncio.sleep(5)
                 result = await self.async_check_service_status(service_id)
                 status = result.get("status")
             if status and status == "Successful":
                 _LOGGER.debug(
                     "Service call ({}) to vehicle {} was successful".format(
-                        self.service_name, self.vehicle.attributes.get("nickname")
+                        self.service_name, self.nickname
                     )
                 )
                 return status
             else:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "InControl service call ({}) to vehicle {} failed due to {}. \r\nFull return is {}".format(
                         self.service_name,
-                        self.vehicle.attributes.get("nickname"),
+                        self.nickname,
                         result.get("failureReason"),
                         result,
                     )

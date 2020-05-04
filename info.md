@@ -1,7 +1,5 @@
 This component provides integration to the JLR InControl functionality to homeassistant. 
 
-## BREAKING CHANGE from v1.0.0 - Please see [Readme.md](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Readme.Md)
-
 ## Now works for multiple vehciles!
 
 # Functionality
@@ -17,7 +15,7 @@ This component provides integration to the JLR InControl functionality to homeas
 * Service Info
 * Last Trip
 
-Each sensor has a series of attributes to show related sensor information.  Which attributes are show is dependant on support by your vehicle.
+Each sensor has a series of attributes to show related sensor information.  Which attributes are shown is dependant on support by your vehicle.
 
 **And has services for**
 * Update Health Status (forces update from vehicle)
@@ -50,13 +48,13 @@ jlrincontrol:
 **Optional Parameters**
 1. scan_interval - in minutes. Default update interval is 5 minutes.  Use this to change that.  Minimum is 1 minute.
 2. pin - set this to be able to use the lock/unlock on the lock sensor.
-3. distance_unit - set this to 'mi' or 'km' to override the HA default metric for milages (mainly for funny UK system of miles and litres!).
+3. distance_unit - set this to 'mi' or 'km' to override the HA default metric for mileages (mainly for funny UK system of miles and litres!).
 4. health_update_interval - see vehcile health status update section
 5. debug_data: - see debugging below.
 ```
   scan_interval: 5
   pin: <your InControl pin>
-  distance_unit: <mi or km to override HA defualt>
+  distance_unit: <mi or km to override HA default>
   health_update_interval: 60
   debug_data: <false or true - see debugging>
 ```
@@ -72,8 +70,8 @@ Alternatively, you can make a more intelligent health update request automation 
 I.e. on EV vehicles you could only call it if the vehicle is charging, or on all vehicles, only call it during the day and it was more than x period since the last update.
 
 ### Known Issues
-* Some distance sensors do not show in local units (on list to fix).
-* Service Info sensor shows ok even if car is needing service or adblue top up (on list to fix)
+* Some distance sensor attributes do not show in local units.
+* Service Info sensor shows ok even if car is needing service or adblue top up.
 * Tyre pressures seem to be in inconsistant units between models and therefore give strange reading.
 * Tyre pressures are not in local units.
 
@@ -95,4 +93,4 @@ jlrincontrol:
 ```
 
 # More Information
-For more information please see the [Readme.md](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Readme.Md)
+For more information please see the [Readme.md](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/README.md)
