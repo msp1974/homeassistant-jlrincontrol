@@ -31,12 +31,12 @@ And has services for
 Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations welcome!), there maybe issues with some models not supporting some funtions.  Please raise an issue for these and say what vehcile you have and post the log.
 
 # Sample Images
-![](https://raw.githubusercontent.com/msp1974/homeassistant-jlrincontrol/dev/docs/panel1.png)
+![](https://raw.githubusercontent.com/msp1974/homeassistant-jlrincontrol/master/docs/panel1.png)
 
 ## Additional Optional Parameters
 1. scan_interval - in minutes. Default update interval is 5 minutes.  Use this to change that.  Minimum is 1 minute.
 2. pin - set this to be able to use the lock/unlock on the lock sensor.
-3. distance_unit - set this to 'mi' or 'km' to override the HA default metric for milages (mainly for funny UK system of miles and litres!).
+3. distance_unit - set this to 'mi' or 'km' to override the HA default metric for mileages (mainly for funny UK system of miles and litres!).
 4. health_update_interval - see health update section
 5. debug_data: - see debugging below.
 
