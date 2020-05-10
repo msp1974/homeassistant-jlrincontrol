@@ -62,7 +62,7 @@ start_vehicle:
       { description: "The pin set for your vehicle.",
         example: "1234",
       }
-    temperature:
+    target_value:
       { description: "The climate temperature to set (31-57).",
         example: "42",
       }
@@ -102,7 +102,7 @@ start_preconditioning:
         description: "Enter the entity_id for vehcile.",
         example: "sensor.my_car_info",
       }
-    temperature:
+    target_temp:
       { description: "The temperature to set (31-57).",
         example: "42",
       }
