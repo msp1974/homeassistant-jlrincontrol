@@ -1,3 +1,8 @@
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
+
+[![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
+[![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
+
 # JLR Home Assistant Integration (v1.2.0)
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
@@ -65,11 +70,9 @@ Alternatively, you can make a more intelligent health update request automation 
 
 I.e. on EV vehicles you could only call it if the vehicle is charging, or on all vehicles, only call it during the day and it was more than x period since the last update.
 
-# Code Installation
-The intention is to make this a HACS install when it has reached a decent level of functionality and stability.  For now please see manual installation instructions.
+# Installation
 
-## Branch Versions
-As of v1.0.0, the dev branch is now where the very latest version is held.  Please note that there maybe issues with new functions or fixes that have not been fully tested.  It will also be updated regularly as new fixes/functions are developed, so please check you have the latest update before raising an issue.  The master branch is the current release.
+Installing via HACS is the recommended method.
 
 ## Manual Code Installation
 1. On your server clone the github repository into a suitable directory using the git clone command.<br>
@@ -83,6 +86,10 @@ jlrincontrol:
   username: <your InControl email address>
   password: <your InControl password>
 ```
+
+## Branch Versions
+As of v1.0.0, the dev branch is now where the very latest version is held.  Please note that there maybe issues with new functions or fixes that have not been fully tested.  It will also be updated regularly as new fixes/functions are developed, so please check you have the latest update before raising an issue.  The master branch is the current release.
+
 
 # Community Recipes
 The [recipes](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Recipes.md) page is a collection of ideas contributed by the community to help you get the most out of using this integration.
@@ -112,6 +119,9 @@ jlrincontrol:
 
 
 # Change Log
+
+## v1.2.1
+*Fixed: Error in service descriptions
 
 ## v1.2.0
 *Updated: Improved debug logging messages
