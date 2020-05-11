@@ -2,7 +2,7 @@
 import logging
 
 # from homeassistant.const import STATE_OFF, UNIT_PERCENTAGE
-from homeassistant.components.lock import LockEntity
+from homeassistant.components.lock import LockDevice
 from . import JLREntity, DOMAIN
 from .services import JLRService
 from .const import DATA_ATTRS_DOOR_POSITION, DATA_ATTRS_DOOR_STATUS
@@ -31,7 +31,7 @@ async def async_setup_platform(
     async_add_entities(devices, True)
 
 
-class JLRLock(JLREntity, LockEntity):
+class JLRLock(JLREntity, LockDevice):
     def __init__(self, hass, vin, *args):
         self._icon = "mdi:car-key"
         self._sensor_name = "doors"
