@@ -2,7 +2,7 @@
 import logging
 
 # from homeassistant.const import STATE_OFF, UNIT_PERCENTAGE
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 from . import JLREntity, DOMAIN
 from .services import JLRService
 from .const import DATA_ATTRS_DOOR_POSITION, DATA_ATTRS_DOOR_STATUS
@@ -12,7 +12,9 @@ _LOGGER = logging.getLogger(__name__)
 DATA_KEY = DOMAIN
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+):
     data = hass.data[DOMAIN]
     if discovery_info is None:
         return
@@ -29,7 +31,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices, True)
 
 
-class JLRLock(JLREntity, LockDevice):
+class JLRLock(JLREntity, LockEntity):
     def __init__(self, hass, vin, *args):
         self._icon = "mdi:car-key"
         self._sensor_name = "doors"
@@ -52,7 +54,9 @@ class JLRLock(JLREntity, LockDevice):
             jlr_service = JLRService(self._hass, self._vin)
             await jlr_service.async_call_service(**kwargs)
         else:
-            _LOGGER.warning("Cannot lock vehicle - pin not set in configuration.yaml")
+            _LOGGER.warning(
+                "Cannot lock vehicle - pin not set in configuration.yaml"
+            )
 
     async def async_unlock(self, **kwargs):
         """Unlock the car."""
@@ -66,7 +70,9 @@ class JLRLock(JLREntity, LockDevice):
             jlr_service = JLRService(self._hass, self._vin)
             await jlr_service.async_call_service(**kwargs)
         else:
-            _LOGGER.warning("Cannot unlock vehicle - pin not set in configuration.yaml")
+            _LOGGER.warning(
+                "Cannot unlock vehicle - pin not set in configuration.yaml"
+            )
 
     @property
     def device_state_attributes(self):
