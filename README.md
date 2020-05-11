@@ -121,22 +121,22 @@ jlrincontrol:
 # Change Log
 
 ## v1.2.1
-*Added: New recipes
-*Fixed: Error in service descriptions
-*Fixed: HA 0.110 gives deprecated messages for device classes
+* Added: New recipes
+* Fixed: Error in service descriptions
+* Fixed: HA 0.110 gives deprecated messages for device classes
 
 
 ## v1.2.0
-*Updated: Improved debug logging messages
-*Updated: Handled errors from service calls are now debug instead of warning
-*Fixed: Errors in HA v109.0 due to new IO monitoring in event loop
-*Fixed: Better handling of multiple concurrent service calls
-*Fixed: Scheduled health update now calls 30s after HA start
+* Updated: Improved debug logging messages
+* Updated: Handled errors from service calls are now debug instead of warning
+* Fixed: Errors in HA v109.0 due to new IO monitoring in event loop
+* Fixed: Better handling of multiple concurrent service calls
+* Fixed: Scheduled health update now calls 30s after HA start
 
 
 ## v1.1.0
-*Added: Last trip sensor
-*Fixed: Multiple vehicles on account only showed first one.
+* Added: Last trip sensor
+* Fixed: Multiple vehicles on account only showed first one.
 
 ## v1.0.0
 * First official release - yeah!
