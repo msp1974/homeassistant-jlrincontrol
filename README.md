@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v1.2.0)
+# JLR Home Assistant Integration (v1.2.1)
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
 # Functionality
@@ -72,7 +72,7 @@ I.e. on EV vehicles you could only call it if the vehicle is charging, or on all
 
 # Installation
 
-Installing via HACS is the recommended method.
+**Installing via HACS is the recommended method.**
 
 ## Manual Code Installation
 1. On your server clone the github repository into a suitable directory using the git clone command.<br>
@@ -121,7 +121,10 @@ jlrincontrol:
 # Change Log
 
 ## v1.2.1
+*Added: New recipes
 *Fixed: Error in service descriptions
+*Fixed: HA 0.110 gives deprecated messages for device classes
+
 
 ## v1.2.0
 *Updated: Improved debug logging messages
