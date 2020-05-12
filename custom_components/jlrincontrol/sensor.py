@@ -8,8 +8,11 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     LENGTH_METERS,
+    PRESSURE_PA,
+    PRESSURE_BAR,
+    PRESSURE_PSI,
 )
-from homeassistant.util import dt, distance
+from homeassistant.util import dt, distance, pressure
 from .const import (
     DATA_ATTRS_CAR_INFO,
     DATA_ATTRS_EV_CHARGE_INFO,
@@ -28,7 +31,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+):
     data = hass.data[DOMAIN]
     devices = []
     _LOGGER.debug("Loading Sensors")
@@ -49,9 +54,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     devices.append(JLRVehicleServiceSensor(hass, discovery_info))
     devices.append(JLRVehicleRangeSensor(hass, discovery_info))
     devices.append(JLRVehicleLastTripSensor(hass, discovery_info))
+    devices.append(JLRVehicleStatusSensor(hass, discovery_info))
 
     # If EV show EV sensorl otherwise show fuel sensor
-    if data.vehicles[discovery_info].attributes.get("fuelType") == FUEL_TYPE_BATTERY:
+    if (
+        data.vehicles[discovery_info].attributes.get("fuelType")
+        == FUEL_TYPE_BATTERY
+    ):
         devices.append(JLREVChargeSensor(hass, discovery_info))
 
     data.entities.extend(devices)
@@ -60,7 +69,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class JLRVehicleSensor(JLREntity):
     def __init__(self, hass, vin, *args):
-        self._icon = "mdi:car"
+        self._icon = "mdi:car-info"
         self._sensor_name = "info"
         super().__init__(hass, vin)
 
@@ -94,6 +103,7 @@ class JLRVehicleTyreSensor(JLREntity):
         self._icon = "mdi:car-tire-alert"
         self._sensor_name = "tyres"
         super().__init__(hass, vin)
+        self._units = self.get_pressure_units()
 
     @property
     def state(self):
@@ -110,11 +120,6 @@ class JLRVehicleTyreSensor(JLREntity):
 
     @property
     def device_state_attributes(self):
-        # TODO: Convert to local units
-        # TODO: Seems vehicles send in different units
-        def __toPSI(bar):
-            return round((int(bar) / 100) * 14.5038, 1)
-
         s = self._vehicle.status
         attrs = {}
 
@@ -122,10 +127,31 @@ class JLRVehicleTyreSensor(JLREntity):
         for k, v in DATA_ATTRS_TYRE_STATUS.items():
             if s.get(v):
                 attrs[k.title() + " Status"] = s.get(v).title()
+
+        # Hass lacks proper pressure conversions/units definitions so need to deal with here
         # Pressures
         for k, v in DATA_ATTRS_TYRE_PRESSURE.items():
+
             if s.get(v):
-                attrs[k.title() + " Pressure (PSI)"] = __toPSI(s.get(v))
+                tyre_pressure = int(s.get(v))
+                # Some vehicles send in kPa*10, others in kPa. Ensure in kPa
+                if tyre_pressure > 1000:
+                    tyre_pressure = tyre_pressure / 10
+
+                # Convert to local units - metric = bar, imperial = psi
+                if self._units == PRESSURE_BAR:
+                    attrs[
+                        k.title() + " Pressure ({})".format(self._units)
+                    ] = round(tyre_pressure / 100, 1)
+                else:
+                    attrs[
+                        k.title() + " Pressure ({})".format(self._units)
+                    ] = round(
+                        pressure.convert(
+                            tyre_pressure * 1000, PRESSURE_PA, self._units
+                        ),
+                        1,
+                    )
 
         return attrs
 
@@ -158,7 +184,8 @@ class JLRVehicleWindowSensor(JLREntity):
                 if self._vehicle.attributes.get("roofType") == "SUNROOF":
                     attrs[k.title()] = (
                         "Open"
-                        if self._vehicle.status.get("IS_SUNROOF_OPEN") == "TRUE"
+                        if self._vehicle.status.get("IS_SUNROOF_OPEN")
+                        == "TRUE"
                         else "Closed"
                     )
             else:
@@ -213,7 +240,7 @@ class JLRVehicleServiceSensor(JLREntity):
         attrs = {}
         for k, v in DATA_ATTRS_SERVICE_STATUS.items():
             if s.get(v):
-                attrs[k.title()] = s.get(v).title()
+                attrs[k.title()] = s.get(v).replace("_", " ").title()
 
         # Add metric sensors
         # TODO: Convert to local units
@@ -229,7 +256,9 @@ class JLRVehicleRangeSensor(JLREntity):
         super().__init__(hass, vin)
         self._units = self.get_distance_units()
         self._icon = (
-            "mdi:speedometer" if self._fuel == FUEL_TYPE_BATTERY else "mdi:gas-station"
+            "mdi:speedometer"
+            if self._fuel == FUEL_TYPE_BATTERY
+            else "mdi:gas-station"
         )
 
     @property
@@ -238,7 +267,9 @@ class JLRVehicleRangeSensor(JLREntity):
             if self._units == LENGTH_KILOMETERS:
                 return self._vehicle.status.get("EV_RANGE_ON_BATTERY_KM", "0")
             else:
-                return self._vehicle.status.get("EV_RANGE_ON_BATTERY_MILES", "0")
+                return self._vehicle.status.get(
+                    "EV_RANGE_ON_BATTERY_MILES", "0"
+                )
         else:
             return round(
                 distance.convert(
@@ -259,12 +290,14 @@ class JLRVehicleRangeSensor(JLREntity):
 
         if self._fuel == FUEL_TYPE_BATTERY:
             attrs["Battery Level"] = (
-                self._vehicle.status.get("EV_STATE_OF_CHARGE", "0") + UNIT_PERCENTAGE
+                self._vehicle.status.get("EV_STATE_OF_CHARGE", "0")
+                + UNIT_PERCENTAGE
             )
         else:
             # TODO: If fuelTankVolume is not none show remaining litres
             attrs["Fuel Level"] = (
-                self._vehicle.status.get("FUEL_LEVEL_PERC", "0") + UNIT_PERCENTAGE
+                self._vehicle.status.get("FUEL_LEVEL_PERC", "0")
+                + UNIT_PERCENTAGE
             )
         return attrs
 
@@ -278,7 +311,9 @@ class JLREVChargeSensor(JLREntity):
 
     @property
     def state(self):
-        return self._vehicle.status.get("EV_CHARGING_STATUS", "Unknown").title()
+        return self._vehicle.status.get(
+            "EV_CHARGING_STATUS", "Unknown"
+        ).title()
 
     @property
     def device_state_attributes(self):
@@ -305,11 +340,15 @@ class JLRVehicleLastTripSensor(JLREntity):
 
     @property
     def state(self):
-        if self._vehicle.last_trip and self._vehicle.last_trip.get("tripDetails"):
+        if self._vehicle.last_trip and self._vehicle.last_trip.get(
+            "tripDetails"
+        ):
             return round(
                 distance.convert(
                     int(
-                        self._vehicle.last_trip.get("tripDetails", "{}").get("distance")
+                        self._vehicle.last_trip.get("tripDetails", "{}").get(
+                            "distance"
+                        )
                     ),
                     LENGTH_METERS,
                     self._units,
@@ -330,19 +369,29 @@ class JLRVehicleLastTripSensor(JLREntity):
 
             if t:
                 attrs["start"] = self.to_local_datetime(t.get("startTime"))
-                attrs["origin_latitude"] = t.get("startPosition").get("latitude")
-                attrs["origin_longitude"] = t.get("startPosition").get("longitude")
+                attrs["origin_latitude"] = t.get("startPosition").get(
+                    "latitude"
+                )
+                attrs["origin_longitude"] = t.get("startPosition").get(
+                    "longitude"
+                )
                 attrs["origin"] = t.get("startPosition").get("address")
 
                 attrs["end"] = self.to_local_datetime(t.get("endTime"))
-                attrs["destination_latitude"] = t.get("endPosition").get("latitude")
-                attrs["destination_longitude"] = t.get("endPosition").get("longitude")
+                attrs["destination_latitude"] = t.get("endPosition").get(
+                    "latitude"
+                )
+                attrs["destination_longitude"] = t.get("endPosition").get(
+                    "longitude"
+                )
                 attrs["destination"] = t.get("endPosition").get("address")
                 if t.get("totalEcoScore"):
                     attrs["eco_score"] = t.get("totalEcoScore").get("score")
                 attrs["average_speed"] = round(
                     distance.convert(
-                        int(t.get("averageSpeed")), LENGTH_KILOMETERS, self._units,
+                        int(t.get("averageSpeed")),
+                        LENGTH_KILOMETERS,
+                        self._units,
                     )
                 )
 
@@ -361,3 +410,24 @@ class JLRVehicleLastTripSensor(JLREntity):
                         )
 
             return attrs
+
+
+class JLRVehicleStatusSensor(JLREntity):
+    def __init__(self, hass, vin, *args):
+        self._sensor_name = "status"
+        super().__init__(hass, vin)
+        self._icon = "mdi:car"
+
+    @property
+    def state(self):
+        status = self._vehicle.status.get("VEHICLE_STATE_TYPE")
+
+        if status:
+            return status.replace("_", " ").title()
+        else:
+            return "Unknown"
+
+    @property
+    def device_state_attributes(self):
+        attrs = {}
+        return attrs

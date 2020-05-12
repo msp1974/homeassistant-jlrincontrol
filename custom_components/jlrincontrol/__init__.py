@@ -30,6 +30,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    PRESSURE_BAR,
+    PRESSURE_PA,
     PRESSURE_PSI,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -63,6 +65,7 @@ DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
 CONF_DEBUG_DATA = "debug_data"
 CONF_DISTANCE_UNIT = "distance_unit"
+CONF_PRESSURE_UNIT = "pressure_unit"
 CONF_HEALTH_UPDATE_INTERVAL = "health_update_interval"
 
 PLATFORMS = ["sensor", "lock", "device_tracker"]
@@ -96,6 +99,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_DISTANCE_UNIT): vol.In(
                     [LENGTH_KILOMETERS, LENGTH_MILES]
+                ),
+                vol.Optional(CONF_PRESSURE_UNIT): vol.In(
+                    [PRESSURE_BAR, PRESSURE_PSI]
                 ),
                 vol.Optional(CONF_DEBUG_DATA, default=False): cv.boolean,
                 vol.Optional(CONF_PIN): cv.string,
@@ -422,6 +428,15 @@ class JLREntity(Entity):
             return self._data.config.get(CONF_DISTANCE_UNIT)
         else:
             return self._hass.config.units.length_unit
+
+    def get_pressure_units(self):
+        if self._data.config.get(CONF_PRESSURE_UNIT):
+            return self._data.config.get(CONF_PRESSURE_UNIT)
+        else:
+            if self._hass.config.units.pressure_unit == PRESSURE_PA:
+                return PRESSURE_BAR
+            else:
+                return PRESSURE_PSI
 
     def get_odometer(self, vehicle):
         self.units = self.get_distance_units()

@@ -1,10 +1,9 @@
 This component provides integration to the JLR InControl functionality to homeassistant. 
 
-**Now works for multiple vehciles!**
-
 ## Functionality
 **Currently this loads a series of sensors for**
 * Vehicle Info
+* Status
 * Alarm
 * Doors
 * Windows
@@ -49,12 +48,15 @@ jlrincontrol:
 1. scan_interval - in minutes. Default update interval is 5 minutes.  Use this to change that.  Minimum is 1 minute.
 2. pin - set this to be able to use the lock/unlock on the lock sensor.
 3. distance_unit - set this to 'mi' or 'km' to override the HA default metric for mileages (mainly for funny UK system of miles and litres!).
-4. health_update_interval - see vehcile health status update section
-5. debug_data: - see debugging below.
+4. pressure_unit - set this to 'bar' or 'psi' to override the HA default unit for pressure (mainly for UK also).
+5. health_update_interval - see health update section.
+6. debug_data: - see debugging below.
+
 ```
   scan_interval: 5
   pin: <your InControl pin>
   distance_unit: <mi or km to override HA default>
+  pressure_unit: <bar or psi to override HA default>
   health_update_interval: 60
   debug_data: <false or true - see debugging>
 ```
@@ -86,11 +88,9 @@ jlrincontrol:
   debug_data: true
 ```
 
-## Known Issues
-* Some distance sensor attributes do not show in local units.
+### Known Issues
+* Distance to service only shows in KMs.
 * Service Info sensor shows ok even if car is needing service or adblue top up.
-* Tyre pressures seem to be in inconsistant units between models and therefore give strange reading.
-* Tyre pressures are not in local units.
 
 ## More Information
 For more information please see the [Readme.md](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/README.md)

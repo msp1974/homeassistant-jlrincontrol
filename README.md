@@ -3,12 +3,13 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v1.2.1)
+# JLR Home Assistant Integration (v1.3.0)
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
 # Functionality
 Currently this loads a series of sensors for
 * Vehicle Info
+* Status
 * Alarm
 * Doors
 * Windows
@@ -42,8 +43,9 @@ Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations we
 1. scan_interval - in minutes. Default update interval is 5 minutes.  Use this to change that.  Minimum is 1 minute.
 2. pin - set this to be able to use the lock/unlock on the lock sensor.
 3. distance_unit - set this to 'mi' or 'km' to override the HA default metric for mileages (mainly for funny UK system of miles and litres!).
-4. health_update_interval - see health update section
-5. debug_data: - see debugging below.
+4. pressure_unit - set this to 'bar' or 'psi' to override the HA default unit for pressure (mainly for UK also).
+5. health_update_interval - see health update section.
+6. debug_data: - see debugging below.
 
 Required Parameters
 ```
@@ -56,6 +58,7 @@ Optional Parameters
   scan_interval: 5
   pin: <your InControl pin>
   distance_unit: <mi or km to override HA defualt>
+  pressure_unit: <bar or psi to override HA default>
   health_update_interval: 60
   debug_data: <false or true - see debugging>
 ```
@@ -120,10 +123,15 @@ jlrincontrol:
 
 # Change Log
 
-## v1.2.1
+## v1.3.0
+* Added: New status sensor to show engine running status
+* Added: Tyre pressure unit override to cope with UK units system
 * Added: New recipes
+* Updated: Icon for vehicle info sensor
+* Updated: Now available as HACS integration
 * Fixed: Error in service descriptions
-* Fixed: HA 0.110 gives deprecated messages for device classes
+* Fixed: Tyre pressure units should now show correctly - feedback wanted for your vehicle
+* Fixed: Tidy up of attribute values in service sensor
 
 
 ## v1.2.0
@@ -168,9 +176,8 @@ jlrincontrol:
 Initial build of the component to read basic sensors
 
 ### Known Issues
-* Some distance sensors do not show in local units.
+* Distance to service only shows in KMs.
 * Service Info sensor shows ok even if car is needing service or adblue top up.
-* Tyre pressures seem to be in inconsistant units between models and therefore give strange reading.
-* Tyre pressures are not in local units.
+
 
 
