@@ -4,6 +4,7 @@ import logging
 # from homeassistant.const import STATE_OFF, UNIT_PERCENTAGE
 from . import JLREntity, DOMAIN
 from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
     UNIT_PERCENTAGE,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -12,6 +13,7 @@ from homeassistant.const import (
     PRESSURE_BAR,
     PRESSURE_PSI,
 )
+from homeassistant.helpers import icon
 from homeassistant.util import dt, distance, pressure
 from .const import (
     DATA_ATTRS_CAR_INFO,
@@ -24,6 +26,8 @@ from .const import (
     DATA_ATTRS_SERVICE_STATUS,
     DATA_ATTRS_SERVICE_INFO,
     FUEL_TYPE_BATTERY,
+    JLR_CHARGE_METHOD_TO_HA,
+    JLR_CHARGE_STATUS_TO_HA,
     JLR_SERVICES,
     SERVICE_STATUS_OK,
 )
@@ -61,8 +65,10 @@ async def async_setup_platform(
         == FUEL_TYPE_BATTERY
     ):
         devices.append(JLREVChargeSensor(hass, discovery_info))
+    # TODO: Add back into IF statements
+    devices.append(JLREVBatterySensor(hass, discovery_info))
 
-    # Show last trip sensor is privacy mode off and data exists
+    # Show last trip sensor if privacy mode off and data exists
     if data.vehicles[discovery_info].last_trip:
         devices.append(JLRVehicleLastTripSensor(hass, discovery_info))
     else:
@@ -335,6 +341,92 @@ class JLREVChargeSensor(JLREntity):
                     attrs[k.title()] = s.get(v).format(units).title()
                 except AttributeError:
                     attrs[k.title()] = s.get(v).title()
+        return attrs
+
+
+class JLREVBatterySensor(JLREntity):
+    def __init__(self, hass, vin, *args):
+        self._sensor_name = "battery"
+        super().__init__(hass, vin)
+        self._units = self.get_distance_units()
+
+    @property
+    def state(self):
+        return self._vehicle.status.get("EV_STATE_OF_CHARGE", 0)
+
+    @property
+    def device_class(self):
+        """Return the class of the sensor."""
+        return DEVICE_CLASS_BATTERY
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return "%"
+
+    @property
+    def icon(self):
+        return icon.icon_for_battery_level(
+            self._vehicle.status.get("EV_STATE_OF_CHARGE", 0), True
+        )
+
+    @property
+    def device_state_attributes(self):
+        attrs = {}
+        units = "KM" if self._units == LENGTH_KILOMETERS else "MILES"
+        s = self._vehicle.status
+
+        # Charging status
+        attrs["Charging"] = (
+            True
+            if s.get("EV_CHARGING_STATUS")
+            in ["CHARGING", "WAITINGTOCHARGE", "INITIALIZATION"]
+            else False
+        )
+
+        # Max SOC Values Set
+        if (
+            s.get("EV_ONE_OFF_MAX_SOC_CHARGE_SETTING_CHOICE")
+            and s.get("EV_ONE_OFF_MAX_SOC_CHARGE_SETTING_CHOICE") != "CLEAR"
+        ):
+            attrs["Max SOC"] = s.get(
+                "EV_ONE_OFF_MAX_SOC_CHARGE_SETTING_CHOICE"
+            )
+        elif (
+            s.get("EV_PERMANENT_MAX_SOC_CHARGE_SETTING_CHOICE")
+            and s.get("EV_PERMANENT_MAX_SOC_CHARGE_SETTING_CHOICE") != "CLEAR"
+        ):
+            attrs["Max SOC"] = s.get(
+                "EV_PERMANENT_MAX_SOC_CHARGE_SETTING_CHOICE"
+            )
+
+        attrs["Charging State"] = JLR_CHARGE_STATUS_TO_HA.get(
+            s.get("EV_CHARGING_STATUS"),
+            s.get("EV_CHARGING_STATUS", "Unknown").title(),
+        )
+
+        attrs["Charging Method"] = JLR_CHARGE_METHOD_TO_HA.get(
+            s.get("EV_CHARGING_METHOD"),
+            s.get("EV_CHARGING_METHOD", "Unknown").title(),
+        )
+
+        attrs["Minutes to Full Charge"] = s.get(
+            "EV_MINUTES_TO_FULLY_CHARGED", "Unknown"
+        )
+
+        attrs["Charging Rate ({}/h)".format(units.lower())] = s.get(
+            "EV_CHARGING_RATE_{}_PER_HOUR".format(units), "Unknown"
+        )
+
+        attrs["Charging Rate (%/h)"] = s.get(
+            "EV_CHARGING_RATE_SOC_PER_HOUR", "Unknown"
+        )
+
+        # Last Charge Amount
+        attrs["Last Charge Energy (kWh)"] = s.get(
+            "EV_ENERGY_CONSUMED_LAST_CHARGE_KWH", "Unknown"
+        )
+
         return attrs
 
 

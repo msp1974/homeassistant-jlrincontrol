@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "jlrincontrol"
 DATA_JLR_CONFIG = "jlr_config"
-VERSION = "0.5alpha"
+VERSION = "1.3.1"
 
 DEFAULT_SCAN_INTERVAL = 5
 MIN_SCAN_INTERVAL = 1
@@ -29,6 +29,26 @@ FUEL_TYPE_BATTERY = "Electric"
 JLR_WAKEUP_TO_HA = {
     "RECEIVING_SCHEDULE_ACCEPTANCE_WINDOW": "Active",
     "SLEEPING": "Sleeping",
+}
+
+JLR_CHARGE_STATUS_TO_HA = {
+    "FULLYCHARGED": "Fully Charged",
+    "BULKCHARGED": "Bulk Charged",
+    "CHARGING": "Charging",
+    "WAITINGTOCHARGE": "Waiting to Charge",
+    "INITIALIZATION": "Initialising",
+    "NOTCONNECTED": "Not Connected",
+    "PAUSED": "Paused",
+    "FAULT": "Fault",
+    "UNKNOWN": "Unknown",
+    "No Message": "Not Charging",
+}
+
+JLR_CHARGE_METHOD_TO_HA = {
+    "WIRED": "Wired",
+    "NOTCONNECTED": "Not Connected",
+    "DEFAULT": "Default",
+    "UNKNOWN": "Unknown",
 }
 
 JLR_USER_PREF_PARAMS = [
@@ -58,8 +78,16 @@ SENSOR_TYPES = {
     "windows": ["Windows", "opening", "mdi:car-door"],
     "door_lock_state": ["Door lock state", "lock", "mdi:car-key"],
     "lights_parking": ["Parking lights", "light", "mdi:car-parking-lights"],
-    "condition_based_services": ["Condition based services", "problem", "mdi:wrench"],
-    "check_control_messages": ["Control messages", "problem", "mdi:car-tire-alert"],
+    "condition_based_services": [
+        "Condition based services",
+        "problem",
+        "mdi:wrench",
+    ],
+    "check_control_messages": [
+        "Control messages",
+        "problem",
+        "mdi:car-tire-alert",
+    ],
 }
 
 SENSOR_TYPES_ELEC = {

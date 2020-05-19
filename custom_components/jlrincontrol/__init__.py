@@ -53,6 +53,7 @@ from .const import (
     DEFAULT_HEATH_UPDATE_INTERVAL,
     SIGNAL_STATE_UPDATED,
     JLR_SERVICES,
+    VERSION,
 )
 from .services import JLRService
 from .util import mask
@@ -130,6 +131,10 @@ async def async_setup(hass, config):
         for schema in schema_list:
             s.update(eval(schema))
         return vol.Schema(s)
+
+    _LOGGER.debug(
+        "Loading JLRInControl integration version - {}".format(VERSION)
+    )
 
     data = JLRApiHandler(hass, config)
     hass.data[DOMAIN] = data
@@ -348,7 +353,7 @@ class JLRApiHandler:
                             0
                         ]
                         _LOGGER.debug(
-                            "Retieved trip data update for {}".format(
+                            "Recieved trip data update for {}".format(
                                 self.vehicles[vehicle].attributes.get(
                                     "nickname"
                                 )

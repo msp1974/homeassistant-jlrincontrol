@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v1.3.1)
+# JLR Home Assistant Integration (v1.4.0)
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
 # Functionality
@@ -16,7 +16,8 @@ Currently this loads a series of sensors for
 * Tyres
 * Range
 * Location
-* EV Battery Sensor (EVs only)
+* EV Battery Sensor (EVs only - deprecated!)
+* Battery Sensor (EVs Only)
 * Service Info
 * Last Trip
 
@@ -122,6 +123,10 @@ jlrincontrol:
 
 
 # Change Log
+
+## v1.4.0
+* Deprecated: EV_Battery sensor - this will be removed in furture version
+* Added: New Battery Sensor for EVs
 
 ## v1.3.1
 * Added: Does not load trip sensor if privacy mode enabled
