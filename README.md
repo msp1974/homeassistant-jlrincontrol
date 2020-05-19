@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v1.3.0)
+# JLR Home Assistant Integration (v1.3.1)
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
 # Functionality
@@ -122,6 +122,11 @@ jlrincontrol:
 
 
 # Change Log
+
+## v1.3.1
+* Added: Does not load trip sensor if privacy mode enabled
+* Fixed: Integration errors if no position or trip data
+
 
 ## v1.3.0
 * Added: New status sensor to show engine running status
