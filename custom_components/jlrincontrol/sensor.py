@@ -349,6 +349,7 @@ class JLREVBatterySensor(JLREntity):
         self._sensor_name = "battery"
         super().__init__(hass, vin)
         self._units = self.get_distance_units()
+        self._charging_state = False
 
     @property
     def state(self):
@@ -367,7 +368,8 @@ class JLREVBatterySensor(JLREntity):
     @property
     def icon(self):
         return icon.icon_for_battery_level(
-            self._vehicle.status.get("EV_STATE_OF_CHARGE", 0), True
+            self._vehicle.status.get("EV_STATE_OF_CHARGE", 0),
+            self._charging_state,
         )
 
     @property
@@ -377,12 +379,13 @@ class JLREVBatterySensor(JLREntity):
         s = self._vehicle.status
 
         # Charging status
-        attrs["Charging"] = (
+        self._charging_state = (
             True
             if s.get("EV_CHARGING_STATUS")
             in ["CHARGING", "WAITINGTOCHARGE", "INITIALIZATION"]
             else False
         )
+        attrs["Charging"] = self._charging_state
 
         # Max SOC Values Set
         if (
