@@ -53,7 +53,6 @@ async def async_setup_platform(
     devices.append(JLRVehicleTyreSensor(hass, discovery_info))
     devices.append(JLRVehicleServiceSensor(hass, discovery_info))
     devices.append(JLRVehicleRangeSensor(hass, discovery_info))
-    devices.append(JLRVehicleLastTripSensor(hass, discovery_info))
     devices.append(JLRVehicleStatusSensor(hass, discovery_info))
 
     # If EV show EV sensorl otherwise show fuel sensor
@@ -62,6 +61,14 @@ async def async_setup_platform(
         == FUEL_TYPE_BATTERY
     ):
         devices.append(JLREVChargeSensor(hass, discovery_info))
+
+    # Show last trip sensor is privacy mode off and data exists
+    if data.vehicles[discovery_info].last_trip:
+        devices.append(JLRVehicleLastTripSensor(hass, discovery_info))
+    else:
+        _LOGGER.debug(
+            "Not loading Last Trip sensor due to privacy mode or no data"
+        )
 
     data.entities.extend(devices)
     async_add_entities(devices, True)

@@ -55,6 +55,7 @@ from .const import (
     JLR_SERVICES,
 )
 from .services import JLRService
+from .util import mask
 
 # from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -229,7 +230,9 @@ class JLRApiHandler:
 
         # Discover all vehicles and get one time info
         for vehicle in self.connection.vehicles:
-            _LOGGER.debug("Discovered vehicle - {}".format(vehicle.vin))
+            _LOGGER.debug(
+                "Discovered vehicle - {}".format(mask(vehicle.vin, 3, 2))
+            )
             # Get attributes
             vehicle.attributes = await self.hass.async_add_executor_job(
                 vehicle.get_attributes
@@ -308,28 +311,77 @@ class JLRApiHandler:
                 status = {
                     d["key"]: d["value"] for d in status["vehicleStatus"]
                 }
+                _LOGGER.debug(
+                    "Received status data update for {}".format(
+                        self.vehicles[vehicle].attributes.get("nickname")
+                    )
+                )
                 status["lastUpdatedTime"] = last_updated
                 self.vehicles[vehicle].status = status
 
-                self.vehicles[
-                    vehicle
-                ].position = await self.hass.async_add_executor_job(
+                position = await self.hass.async_add_executor_job(
                     self.vehicles[vehicle].get_position
                 )
 
-                trips = await self.hass.async_add_executor_job(
-                    self.vehicles[vehicle].get_trips, 1
-                )
-                if trips:
-                    self.vehicles[vehicle].last_trip = trips.get("trips")[0]
+                if position:
+                    self.vehicles[vehicle].position = position
+                    _LOGGER.debug(
+                        "Received position data update for {}".format(
+                            self.vehicles[vehicle].attributes.get("nickname")
+                        )
+                    )
+                else:
+                    self.vehicles[vehicle].position = None
+                    _LOGGER.debug(
+                        "No position data received for {}".format(
+                            self.vehicles[vehicle].attributes.get("nickname")
+                        )
+                    )
 
-            _LOGGER.info("JLR InControl Update Received.")
+                # Only get trip data if privacy mode is not enabled
+                if status.get("PRIVACY_SWITCH") == "FALSE":
+                    trips = await self.hass.async_add_executor_job(
+                        self.vehicles[vehicle].get_trips, 1
+                    )
+                    if trips and trips.get("trips"):
+                        self.vehicles[vehicle].last_trip = trips.get("trips")[
+                            0
+                        ]
+                        _LOGGER.debug(
+                            "Retieved trip data update for {}".format(
+                                self.vehicles[vehicle].attributes.get(
+                                    "nickname"
+                                )
+                            )
+                        )
+                    else:
+                        self.vehicles[vehicle].last_trip = None
+                        _LOGGER.debug(
+                            "No trip data received for {}".format(
+                                self.vehicles[vehicle].attributes.get(
+                                    "nickname"
+                                )
+                            )
+                        )
+                else:
+                    self.vehicles[vehicle].last_trip = None
+                    _LOGGER.debug(
+                        "Privacy mode is enabled. Trip data will not be loaded for {}".format(
+                            self.vehicles[vehicle].attributes.get("nickname")
+                        )
+                    )
+
+            _LOGGER.info(
+                "JLR InControl update received for {}".format(
+                    self.vehicles[vehicle].attributes.get("nickname")
+                )
+            )
 
             # Send update notice to all components to update
             async_dispatcher_send(self.hass, SIGNAL_STATE_UPDATED)
         except Exception as ex:
             _LOGGER.debug(
-                "Unable to update from JLRInControl servers. They may be down or you have a internet connectivity issue.  Error is : {}".format(
+                "Unable to update data from JLRInControl servers. They may be down or you have a internet connectivity issue.  Error is : {}".format(
                     ex
                 )
             )
