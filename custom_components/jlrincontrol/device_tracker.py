@@ -14,16 +14,26 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     if discovery_info is None:
         return
 
-    _LOGGER.debug(
-        "Loading Device Tracker for - {}".format(
-            data.vehicles[discovery_info].attributes.get("nickname")
+    if data.vehicles[discovery_info].position:
+        _LOGGER.debug(
+            "Loading Device Tracker for - {}".format(
+                data.vehicles[discovery_info].attributes.get("nickname")
+            )
         )
-    )
 
-    tracker = JLRDeviceTracker(hass, async_see, discovery_info)
-    await tracker.see_vehicle()
-    async_dispatcher_connect(hass, SIGNAL_STATE_UPDATED, tracker.see_vehicle)
-    return True
+        tracker = JLRDeviceTracker(hass, async_see, discovery_info)
+        await tracker.see_vehicle()
+        async_dispatcher_connect(
+            hass, SIGNAL_STATE_UPDATED, tracker.see_vehicle
+        )
+        return True
+    else:
+        _LOGGER.debug(
+            "Vehicle {} is not providing any position information. No device trakcer will be created.".format(
+                data.vehicles[discovery_info].attributes.get("nickname")
+            )
+        )
+        return False
 
 
 class JLRDeviceTracker:
@@ -37,33 +47,40 @@ class JLRDeviceTracker:
 
     async def see_vehicle(self):
         """Update the device info."""
-        dev_id = slugify(self._name)
-        p = self._vehicle.position.get("position")
+        try:
+            dev_id = slugify(self._name)
+            p = self._vehicle.position.get("position")
 
-        if p:
-            gps = [
-                round(p.get("latitude"), 8),
-                round(p.get("longitude"), 8),
-            ]
+            if p:
+                gps = [
+                    round(p.get("latitude"), 8),
+                    round(p.get("longitude"), 8),
+                ]
 
-            attrs = {}
-            try:
-                loc_name = self._hass.async_add_exexutor_job(
-                    self._data.connection.reverse_geocode, (gps[0], gps[1])
+                attrs = {}
+                try:
+                    loc_name = self._hass.async_add_exexutor_job(
+                        self._data.connection.reverse_geocode, (gps[0], gps[1])
+                    )
+                    attrs["location"] = loc_name.get("formattedAddress")
+                except:
+                    pass
+                attrs["speed"] = p.get("speed")
+                attrs["heading"] = p.get("heading")
+
+                _LOGGER.debug("Updating {} Device Tracker".format(self._name))
+
+                await self._see(
+                    dev_id=dev_id,
+                    host_name=self._name,
+                    source_type=SOURCE_TYPE_GPS,
+                    gps=gps,
+                    icon="mdi:car",
+                    attributes=attrs,
                 )
-                attrs["location"] = loc_name.get("formattedAddress")
-            except:
-                pass
-            attrs["speed"] = p.get("speed")
-            attrs["heading"] = p.get("heading")
-
-            _LOGGER.debug("Updating {} Device Tracker".format(self._name))
-
-            await self._see(
-                dev_id=dev_id,
-                host_name=self._name,
-                source_type=SOURCE_TYPE_GPS,
-                gps=gps,
-                icon="mdi:car",
-                attributes=attrs,
+        except Exception as ex:
+            _LOGGER.debug(
+                "Unable to update device tracker for {}. Error is {}".format(
+                    self._name, ex
+                )
             )
