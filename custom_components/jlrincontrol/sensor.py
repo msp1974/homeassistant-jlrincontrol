@@ -2,7 +2,6 @@
 import logging
 
 # from homeassistant.const import STATE_OFF, UNIT_PERCENTAGE
-from . import JLREntity, DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     UNIT_PERCENTAGE,
@@ -16,6 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers import icon
 from homeassistant.util import dt, distance, pressure
 from .const import (
+    DOMAIN,
     DATA_ATTRS_CAR_INFO,
     DATA_ATTRS_EV_CHARGE_INFO,
     DATA_ATTRS_TYRE_STATUS,
@@ -29,62 +29,60 @@ from .const import (
     JLR_CHARGE_METHOD_TO_HA,
     JLR_CHARGE_STATUS_TO_HA,
     JLR_SERVICES,
+    JLR_DATA,
     SERVICE_STATUS_OK,
 )
+from .entity import JLREntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
-):
-    data = hass.data[DOMAIN]
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    data = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]
+
     devices = []
     _LOGGER.debug("Loading Sensors")
 
-    if discovery_info is None:
-        return
-
-    _LOGGER.debug(
-        "Setting Up Sensors for - {}".format(
-            data.vehicles[discovery_info].attributes.get("nickname")
-        )
-    )
-
-    devices.append(JLRVehicleSensor(hass, discovery_info))
-    devices.append(JLRVehicleWindowSensor(hass, discovery_info))
-    devices.append(JLRVehicleAlarmSensor(hass, discovery_info))
-    devices.append(JLRVehicleTyreSensor(hass, discovery_info))
-    devices.append(JLRVehicleServiceSensor(hass, discovery_info))
-    devices.append(JLRVehicleRangeSensor(hass, discovery_info))
-    devices.append(JLRVehicleStatusSensor(hass, discovery_info))
-
-    # If EV show EV sensorl otherwise show fuel sensor
-    if (
-        data.vehicles[discovery_info].attributes.get("fuelType")
-        == FUEL_TYPE_BATTERY
-    ):
-        devices.append(JLREVChargeSensor(hass, discovery_info))
-    # TODO: Add back into IF statements
-    devices.append(JLREVBatterySensor(hass, discovery_info))
-
-    # Show last trip sensor if privacy mode off and data exists
-    if data.vehicles[discovery_info].last_trip:
-        devices.append(JLRVehicleLastTripSensor(hass, discovery_info))
-    else:
+    for vehicle in data.vehicles:
         _LOGGER.debug(
-            "Not loading Last Trip sensor due to privacy mode or no data"
+            "Setting Up Sensors for - {}".format(
+                data.vehicles[vehicle].attributes.get("nickname")
+            )
         )
+
+        devices.append(JLRVehicleSensor(hass, data, vehicle))
+        devices.append(JLRVehicleWindowSensor(hass, data, vehicle))
+        devices.append(JLRVehicleAlarmSensor(hass, data, vehicle))
+        devices.append(JLRVehicleTyreSensor(hass, data, vehicle))
+        devices.append(JLRVehicleServiceSensor(hass, data, vehicle))
+        devices.append(JLRVehicleRangeSensor(hass, data, vehicle))
+        devices.append(JLRVehicleStatusSensor(hass, data, vehicle))
+
+        # If EV show EV sensorl otherwise show fuel sensor
+        if (
+            data.vehicles[vehicle].attributes.get("fuelType")
+            == FUEL_TYPE_BATTERY
+        ):
+            devices.append(JLREVChargeSensor(hass, data, vehicle))
+            devices.append(JLREVBatterySensor(hass, data, vehicle))
+
+        # Show last trip sensor is privacy mode off and data exists
+        if data.vehicles[vehicle].last_trip:
+            devices.append(JLRVehicleLastTripSensor(hass, data, vehicle))
+        else:
+            _LOGGER.debug(
+                "Not loading Last Trip sensor due to privacy mode or no data"
+            )
 
     data.entities.extend(devices)
     async_add_entities(devices, True)
 
 
 class JLRVehicleSensor(JLREntity):
-    def __init__(self, hass, vin, *args):
+    def __init__(self, hass, data, vin):
         self._icon = "mdi:car-info"
         self._sensor_name = "info"
-        super().__init__(hass, vin)
+        super().__init__(hass, data, vin)
 
     @property
     def state(self):
@@ -112,10 +110,10 @@ class JLRVehicleSensor(JLREntity):
 
 
 class JLRVehicleTyreSensor(JLREntity):
-    def __init__(self, hass, vin, *args):
+    def __init__(self, hass, data, vin):
         self._icon = "mdi:car-tire-alert"
         self._sensor_name = "tyres"
-        super().__init__(hass, vin)
+        super().__init__(hass, data, vin)
         self._units = self.get_pressure_units()
 
     @property
@@ -170,10 +168,10 @@ class JLRVehicleTyreSensor(JLREntity):
 
 
 class JLRVehicleWindowSensor(JLREntity):
-    def __init__(self, hass, vin, *args):
+    def __init__(self, hass, data, vin):
         self._icon = "mdi:car-door"
         self._sensor_name = "windows"
-        super().__init__(hass, vin)
+        super().__init__(hass, data, vin)
 
     @property
     def state(self):
@@ -208,10 +206,10 @@ class JLRVehicleWindowSensor(JLREntity):
 
 
 class JLRVehicleAlarmSensor(JLREntity):
-    def __init__(self, hass, vin, *args):
+    def __init__(self, hass, data, vin):
         self._icon = "mdi:security"
         self._sensor_name = "alarm"
-        super().__init__(hass, vin)
+        super().__init__(hass, data, vin)
 
     @property
     def state(self):
@@ -229,10 +227,10 @@ class JLRVehicleAlarmSensor(JLREntity):
 
 
 class JLRVehicleServiceSensor(JLREntity):
-    def __init__(self, hass, vin, *args):
+    def __init__(self, hass, data, vin):
         self._icon = "mdi:wrench"
         self._sensor_name = "service info"
-        super().__init__(hass, vin)
+        super().__init__(hass, data, vin)
 
     @property
     def state(self):
@@ -264,9 +262,9 @@ class JLRVehicleServiceSensor(JLREntity):
 
 
 class JLRVehicleRangeSensor(JLREntity):
-    def __init__(self, hass, vin, *args):
+    def __init__(self, hass, data, vin):
         self._sensor_name = "range"
-        super().__init__(hass, vin)
+        super().__init__(hass, data, vin)
         self._units = self.get_distance_units()
         self._icon = (
             "mdi:speedometer"
@@ -316,9 +314,9 @@ class JLRVehicleRangeSensor(JLREntity):
 
 
 class JLREVChargeSensor(JLREntity):
-    def __init__(self, hass, vin, *args):
+    def __init__(self, hass, data, vin):
         self._sensor_name = "ev_battery"
-        super().__init__(hass, vin)
+        super().__init__(hass, data, vin)
         self._units = self.get_distance_units()
         self._icon = "mdi:car-electric"
 
@@ -345,9 +343,9 @@ class JLREVChargeSensor(JLREntity):
 
 
 class JLREVBatterySensor(JLREntity):
-    def __init__(self, hass, vin, *args):
+    def __init__(self, hass, data, vin):
         self._sensor_name = "battery"
-        super().__init__(hass, vin)
+        super().__init__(hass, data, vin)
         self._units = self.get_distance_units()
         self._charging_state = False
 
@@ -368,7 +366,7 @@ class JLREVBatterySensor(JLREntity):
     @property
     def icon(self):
         return icon.icon_for_battery_level(
-            self._vehicle.status.get("EV_STATE_OF_CHARGE", 0),
+            int(self._vehicle.status.get("EV_STATE_OF_CHARGE", 0)),
             self._charging_state,
         )
 
@@ -426,17 +424,17 @@ class JLREVBatterySensor(JLREntity):
         )
 
         # Last Charge Amount
-        attrs["Last Charge Energy (kWh)"] = s.get(
-            "EV_ENERGY_CONSUMED_LAST_CHARGE_KWH", "Unknown"
+        attrs["Last Charge Energy (kWh)"] = round(
+            int(s.get("EV_ENERGY_CONSUMED_LAST_CHARGE_KWH", 0)) / 10, 1
         )
 
         return attrs
 
 
 class JLRVehicleLastTripSensor(JLREntity):
-    def __init__(self, hass, vin, *args):
+    def __init__(self, hass, data, vin):
         self._sensor_name = "last trip"
-        super().__init__(hass, vin)
+        super().__init__(hass, data, vin)
         self._units = self.get_distance_units()
         self._icon = "mdi:map"
 
@@ -515,9 +513,9 @@ class JLRVehicleLastTripSensor(JLREntity):
 
 
 class JLRVehicleStatusSensor(JLREntity):
-    def __init__(self, hass, vin, *args):
+    def __init__(self, hass, data, vin):
         self._sensor_name = "status"
-        super().__init__(hass, vin)
+        super().__init__(hass, data, vin)
         self._icon = "mdi:car"
 
     @property

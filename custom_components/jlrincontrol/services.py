@@ -5,15 +5,15 @@ from urllib import error
 import time
 from functools import partial
 
-from .const import DOMAIN
+from .const import DOMAIN, JLR_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class JLRService:
-    def __init__(self, hass, vin):
+    def __init__(self, hass, config_entry, vin):
         self.hass = hass
-        self.data = hass.data[DOMAIN]
+        self.data = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]
         self.vin = vin
         self.vehicle = self.data.vehicles[vin]
         self.service_code = None

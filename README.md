@@ -3,8 +3,10 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v1.4.0)
+# JLR Home Assistant Integration (v2.0.0)
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
+
+Due to changes in Home Assistant, this integration requires a minimum of HA0.110.0.
 
 # Functionality
 Currently this loads a series of sensors for
@@ -40,7 +42,16 @@ Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations we
 # Sample Images
 ![](https://raw.githubusercontent.com/msp1974/homeassistant-jlrincontrol/master/docs/panel1.png)
 
-## Additional Optional Parameters
+
+## Configuration
+Add via Configuration -> Integrations in the UI
+
+**Required Parameters**
+```
+  email: <your InControl email address>
+  password: <your InControl password>
+```
+**Config Options**
 1. scan_interval - in minutes. Default update interval is 5 minutes.  Use this to change that.  Minimum is 1 minute.
 2. pin - set this to be able to use the lock/unlock on the lock sensor.
 3. distance_unit - set this to 'mi' or 'km' to override the HA default metric for mileages (mainly for funny UK system of miles and litres!).
@@ -48,21 +59,10 @@ Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations we
 5. health_update_interval - see health update section.
 6. debug_data: - see debugging below.
 
+### Migrating From Previous Versions
+The new config flow will import your settings from configuration.yaml.  It is recommended to remove them after this has happened, otherwise changes via the UI can be reverted by the entries in configuration.yaml.
 Required Parameters
-```
-jlrincontrol:
-  username: <your InControl email address>
-  password: <your InControl password>
-```
-Optional Parameters
-```
-  scan_interval: 5
-  pin: <your InControl pin>
-  distance_unit: <mi or km to override HA defualt>
-  pressure_unit: <bar or psi to override HA default>
-  health_update_interval: 60
-  debug_data: <false or true - see debugging>
-```
+
 
 # Health Status Update
 
@@ -76,7 +76,7 @@ I.e. on EV vehicles you could only call it if the vehicle is charging, or on all
 
 # Installation
 
-**Installing via HACS is the recommended method.**
+**Installing via HACS and configuring via the UI is the recommended method.**
 
 ## Manual Code Installation
 1. On your server clone the github repository into a suitable directory using the git clone command.<br>
@@ -124,9 +124,11 @@ jlrincontrol:
 
 # Change Log
 
-## v1.4.0
+## v2.0.0
 * Deprecated: EV_Battery sensor - this will be removed in furture version
+* Added: Setup and options via config flow
 * Added: New Battery Sensor for EVs
+* Fixed: Deprecation warnings in HA0.110.x
 
 ## v1.3.1
 * Added: Does not load trip sensor if privacy mode enabled
