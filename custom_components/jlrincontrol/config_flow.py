@@ -3,23 +3,19 @@ Config Flow for JLR InControl
 
 """
 import logging
-from functools import partial
 import voluptuous as vol
 from homeassistant import config_entries, exceptions
-from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
-    CONF_PIN,
-    CONF_USERNAME,
-    CONF_NAME,
     CONF_PASSWORD,
+    CONF_PIN,
     CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PRESSURE_BAR,
-    PRESSURE_PA,
     PRESSURE_PSI,
 )
-from homeassistant.core import HomeAssistantError, callback
+from homeassistant.core import callback
 import jlrpy
 
 from .const import (

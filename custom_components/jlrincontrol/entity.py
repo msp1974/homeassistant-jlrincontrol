@@ -1,8 +1,6 @@
 import logging
-from datetime import timedelta
 from homeassistant.const import (
     LENGTH_KILOMETERS,
-    LENGTH_MILES,
     PRESSURE_BAR,
     PRESSURE_PA,
     PRESSURE_PSI,
@@ -83,8 +81,10 @@ class JLREntity(Entity):
             """Update sensor state."""
             await self.async_update_ha_state(True)
 
-        async_dispatcher_connect(
-            self._hass, SIGNAL_STATE_UPDATED, async_update_state
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self._hass, SIGNAL_STATE_UPDATED, async_update_state
+            )
         )
 
     def to_local_datetime(self, datetime: str):

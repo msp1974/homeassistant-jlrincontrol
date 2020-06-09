@@ -6,11 +6,9 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     UNIT_PERCENTAGE,
     LENGTH_KILOMETERS,
-    LENGTH_MILES,
     LENGTH_METERS,
     PRESSURE_PA,
     PRESSURE_BAR,
-    PRESSURE_PSI,
 )
 from homeassistant.helpers import icon
 from homeassistant.util import dt, distance, pressure
@@ -20,15 +18,12 @@ from .const import (
     DATA_ATTRS_EV_CHARGE_INFO,
     DATA_ATTRS_TYRE_STATUS,
     DATA_ATTRS_TYRE_PRESSURE,
-    DATA_ATTRS_DOOR_STATUS,
-    DATA_ATTRS_DOOR_POSITION,
     DATA_ATTRS_WINDOW_STATUS,
     DATA_ATTRS_SERVICE_STATUS,
     DATA_ATTRS_SERVICE_INFO,
     FUEL_TYPE_BATTERY,
     JLR_CHARGE_METHOD_TO_HA,
     JLR_CHARGE_STATUS_TO_HA,
-    JLR_SERVICES,
     JLR_DATA,
     SERVICE_STATUS_OK,
 )
@@ -139,7 +134,8 @@ class JLRVehicleTyreSensor(JLREntity):
             if s.get(v):
                 attrs[k.title() + " Status"] = s.get(v).title()
 
-        # Hass lacks proper pressure conversions/units definitions so need to deal with here
+        # Hass lacks proper pressure conversions/units definitions.
+        # So need to deal with here
         # Pressures
         for k, v in DATA_ATTRS_TYRE_PRESSURE.items():
 
@@ -153,7 +149,7 @@ class JLRVehicleTyreSensor(JLREntity):
                 if self._units == PRESSURE_BAR:
                     attrs[
                         k.title() + " Pressure ({})".format(self._units)
-                    ] = round(tyre_pressure / 100, 1)
+                    ] = round(tyre_pressure / 100, 2)
                 else:
                     attrs[
                         k.title() + " Pressure ({})".format(self._units)
@@ -237,7 +233,7 @@ class JLRVehicleServiceSensor(JLREntity):
         if all(
             [
                 self._vehicle.status.get(v) in SERVICE_STATUS_OK
-                or self._vehicle.status.get(v) == None
+                or self._vehicle.status.get(v) is None
                 for k, v in DATA_ATTRS_SERVICE_STATUS.items()
             ]
         ):

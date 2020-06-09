@@ -257,7 +257,7 @@ JLR_SERVICES = {
     "start_preconditioning": {
         "function_name": "preconditioning_start",
         "service_code": "ECC",
-        "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_TARGET_TEMP_SCHEMA",],
+        "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_TARGET_TEMP_SCHEMA"],
     },
     "stop_preconditioning": {
         "function_name": "preconditioning_stop",

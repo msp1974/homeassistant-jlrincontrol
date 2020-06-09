@@ -3,8 +3,7 @@ import logging
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.util import slugify
-from .const import JLR_DATA, DOMAIN, SIGNAL_STATE_UPDATED
+from .const import JLR_DATA, DOMAIN
 from .entity import JLREntity
 
 
@@ -21,9 +20,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         else:
             _LOGGER.debug(
-                "Vehicle {} is not providing any position information. No device trakcer will be created.".format(
+                "Vehicle {} is not providing any position information.".format(
                     data.vehicles[vehicle].attributes.get("nickname")
                 )
+                + " No device trakcer will be created."
             )
     async_add_entities(devices, True)
 
@@ -63,7 +63,7 @@ class JLRDeviceTracker(JLREntity, TrackerEntity):
                 (self._latitude, self._longitude),
             )
             attrs["location"] = loc_name.get("formattedAddress")
-        except:
+        except Exception:
             pass
         attrs["speed"] = self._position.get("speed")
         attrs["heading"] = self._position.get("heading")

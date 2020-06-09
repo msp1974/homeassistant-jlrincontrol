@@ -71,6 +71,7 @@ DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
 HEALTH_UPDATE_TRACKER = "health_update_tracker"
 STATUS_UPDATE_TRACKER = "status_update_tracker"
+UPDATE_LISTENER = "update_listener"
 
 CONF_DEBUG_DATA = "debug_data"
 CONF_DISTANCE_UNIT = "distance_unit"
@@ -134,11 +135,11 @@ async def async_setup(hass, config):
     """
     JLR InControl uses config flow for configuration.
 
-    But, a "jlrincontrol:" entry in configuration.yaml will trigger an import flow
-    if a config entry doesn't already exist. If it exists, the import
+    But, a "jlrincontrol:" entry in configuration.yaml will trigger an import
+    flow if a config entry doesn't already exist. If it exists, the import
     flow will attempt to import it and create a config entry, to assist users
-    migrating from the old jlrincontrol component. Otherwise, the user will have to
-    continue setting up the integration via the config flow.
+    migrating from the old jlrincontrol component. Otherwise, the user will
+    have to continue setting up the integration via the config flow.
     """
     jlr_config: Optional[ConfigType] = config.get(DOMAIN)
     hass.data.setdefault(DOMAIN, {})
@@ -162,8 +163,6 @@ async def async_setup(hass, config):
         )
         return True
 
-    # Update the entry based on the YAML configuration, in case it changed.
-    # hass.config_entries.async_update_entry(config_entry, data=dict(jlr_config))
     return True
 
 
@@ -178,72 +177,101 @@ async def async_setup_entry(hass, config_entry):
     """Setup JLR InConnect component"""
     _async_import_options_from_data_if_missing(hass, config_entry)
 
+    health_update_track = None
+
     def get_schema(schema_list):
         s = {}
         for schema in schema_list:
             s.update(eval(schema))
         return vol.Schema(s)
 
-    hass.data[DOMAIN][config_entry.entry_id] = {}
-    hass_jlr_data = hass.data[DOMAIN][config_entry.entry_id]
-
-    config_entry.add_update_listener(_async_update_listener)
-
     data = JLRApiHandler(hass, config_entry)
-    hass_jlr_data[JLR_DATA] = data
 
-    if await data.async_connect():
-        if not data.connection.vehicles:
-            # No vehicles or wrong credentials
-            _LOGGER.error(
-                "Unable to get vehicles from api.  Check credentials"
+    update_interval = config_entry.options.get(
+        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+    )
+    health_update_interval = config_entry.options.get(
+        CONF_HEALTH_UPDATE_INTERVAL, 0
+    )
+
+    try:
+        if await data.async_connect():
+            if not data.connection.vehicles:
+                # No vehicles or wrong credentials
+                _LOGGER.error(
+                    "Unable to get vehicles from api.  Check credentials"
+                )
+                return False
+    except Exception:
+        return False
+
+    # Do first update
+    await data.async_update()
+
+    # Poll for updates in background
+    _LOGGER.info(
+        "Update from InControl servers on {} minute interval".format(
+            int(update_interval)
+        )
+    )
+    update_track = async_track_time_interval(
+        hass, data.do_status_update, timedelta(minutes=update_interval),
+    )
+
+    # Schedule health update and repeat interval
+    if health_update_interval and health_update_interval > 0:
+        _LOGGER.info(
+            "Vehicle health update on {} minute interval.".format(
+                int(health_update_interval)
             )
-            return False
+        )
+        # Do initial call to health_update service after HASS start up.
+        # This speeds up restart.
+        # 30 seconds should do it.
+        async_call_later(hass, 30, data.do_health_update)
 
-        await async_update_device_registry(
-            hass, config_entry, data.connection.vehicles, data
+        health_update_track = async_track_time_interval(
+            hass,
+            data.do_health_update,
+            timedelta(minutes=data.health_update_interval),
+        )
+    else:
+        _LOGGER.info(
+            "Scheduled vehicle health update is disabled. "
+            + "Set interval in options to enable."
         )
 
-        # for vehicle in data.vehicles:
-        for platform in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(
-                    config_entry, platform
-                )
-            )
+    update_listener = config_entry.add_update_listener(_async_update_listener)
 
-        # Add services
-        for service, service_info in JLR_SERVICES.items():
-            _LOGGER.debug("Adding {} service".format(service))
-            hass.services.async_register(
-                DOMAIN,
-                service,
-                data.async_call_service,
-                schema=get_schema(service_info.get("schema")),
-            )
+    hass.data[DOMAIN][config_entry.entry_id] = {
+        JLR_DATA: data,
+        STATUS_UPDATE_TRACKER: update_track,
+        HEALTH_UPDATE_TRACKER: health_update_track,
+        UPDATE_LISTENER: update_listener,
+    }
 
-        # Schedule health update and repeat interval
-        if data.health_update_interval and data.health_update_interval > 0:
-            _LOGGER.debug(
-                "Scheduling vehicle health update on {} minute interval.  First call will be in 30 seconds.".format(
-                    int(data.health_update_interval)
-                )
+    # for vehicle in data.vehicles:
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(
+                config_entry, platform
             )
+        )
 
-            # Do initial call to health_update service after HASS has started up.
-            # This speeds up restart.
-            # 30 seconds should do it.
-            async_call_later(hass, 30, data.do_health_update)
+    # Add services
+    for service, service_info in JLR_SERVICES.items():
+        _LOGGER.debug("Adding {} service".format(service))
+        hass.services.async_register(
+            DOMAIN,
+            service,
+            data.async_call_service,
+            schema=get_schema(service_info.get("schema")),
+        )
 
-            hass_jlr_data[HEALTH_UPDATE_TRACKER] = async_track_time_interval(
-                hass,
-                data.do_health_update,
-                timedelta(minutes=data.health_update_interval),
-            )
-        else:
-            _LOGGER.debug(
-                "Scheduled vehicle health update is disabled.  Add to configuration.yaml to enable."
-            )
+    # Create vehicle devices
+    await async_update_device_registry(
+        hass, config_entry, data.connection.vehicles, data
+    )
 
     return True
 
@@ -295,17 +323,21 @@ async def async_update_device_registry(hass, config_entry, vehicles, data):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    _LOGGER.debug("Unloading JLR InControl Component")
-    hass_jlr_data = hass.data[DOMAIN][config_entry.entry_id]
+    _LOGGER.info("Unloading JLR InControl Component")
 
-    # Stop scheduled update
-    if hass_jlr_data.get(STATUS_UPDATE_TRACKER):
-        hass_jlr_data[STATUS_UPDATE_TRACKER]()
-        hass_jlr_data[STATUS_UPDATE_TRACKER] = None
+    # Deregister services
+    _LOGGER.info("Unregister JLR InControl Services")
+    for service in JLR_SERVICES.items():
+        _LOGGER.info("Unregister {}".format(service[0]))
+        hass.services.async_remove(DOMAIN, service[0])
 
-    if hass_jlr_data.get(HEALTH_UPDATE_TRACKER):
-        hass_jlr_data[HEALTH_UPDATE_TRACKER] = None
+    # Stop scheduled updates
+    hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER]()
+    hass.data[DOMAIN][config_entry.entry_id][STATUS_UPDATE_TRACKER]()
+    if hass.data[DOMAIN][config_entry.entry_id][HEALTH_UPDATE_TRACKER]:
+        hass.data[DOMAIN][config_entry.entry_id][HEALTH_UPDATE_TRACKER]()
 
+    # Remove platform components
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -318,11 +350,6 @@ async def async_unload_entry(hass, config_entry):
     )
 
     if unload_ok:
-        # Deregister services
-        _LOGGER.debug("Unregister JLR InControl Services")
-        for service, service_info in JLR_SERVICES.items():
-            _LOGGER.debug("Unregister {}".format(service))
-            hass.services.async_remove(DOMAIN, service)
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
@@ -394,21 +421,6 @@ class JLRApiHandler:
                 }
                 _LOGGER.debug("STATUS DATA - {}".format(status))
 
-        # Get initial update and schedule interval update
-        await self.async_update()
-
-        _LOGGER.debug(
-            "Scheduling update from InControl servers on {} minute interval".format(
-                int(self.update_interval)
-            )
-        )
-        self.hass.data[DOMAIN][self.config_entry.entry_id][
-            STATUS_UPDATE_TRACKER
-        ] = async_track_time_interval(
-            self.hass,
-            self.do_status_update,
-            timedelta(minutes=self.update_interval),
-        )
         return True
 
     async def async_call_service(self, service):
@@ -442,8 +454,9 @@ class JLRApiHandler:
             # Call update on return of monitorif successful
             if status and status == "Successful":
                 _LOGGER.debug(
-                    "Service call {} on vehicle {} successful. Updating entities from server.".format(
-                        kwargs["service_name"],
+                    "Service call {} on vehicle {} successful. ".format(
+                        kwargs["service_name"]
+                        + "Updating entities from server.",
                         self.vehicles[vin].attributes.get("nickname"),
                     )
                 )
@@ -514,7 +527,8 @@ class JLRApiHandler:
                 else:
                     self.vehicles[vehicle].last_trip = None
                     _LOGGER.debug(
-                        "Privacy mode is enabled. Trip data will not be loaded for {}".format(
+                        "Privacy mode is enabled. "
+                        + "Trip data will not be loaded for {}".format(
                             self.vehicles[vehicle].attributes.get("nickname")
                         )
                     )
@@ -529,9 +543,9 @@ class JLRApiHandler:
             async_dispatcher_send(self.hass, SIGNAL_STATE_UPDATED)
         except Exception as ex:
             _LOGGER.debug(
-                "Unable to update data from JLRInControl servers. They may be down or you have a internet connectivity issue.  Error is : {}".format(
-                    ex
-                )
+                "Unable to update data from JLRInControl servers."
+                + "May be down or you have a internet connectivity issue. "
+                + "Error is : {}".format(ex)
             )
 
     async def async_health_update(self):
@@ -541,12 +555,11 @@ class JLRApiHandler:
                 kwargs = {}
                 kwargs["service_name"] = service.get("function_name")
                 kwargs["service_code"] = service.get("service_code")
-                jlr_service = JLRService(self.hass, vehicle)
+                jlr_service = JLRService(self.hass, self.config_entry, vehicle)
                 await jlr_service.async_call_service(**kwargs)
             return True
         except Exception as ex:
             _LOGGER.debug(
-                "Error when requesting health status update.  Error is {}".format(
-                    ex
-                )
+                "Error when requesting health status update. "
+                + "Error is {}".format(ex)
             )
