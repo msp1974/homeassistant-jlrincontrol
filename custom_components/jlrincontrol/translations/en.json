@@ -1,9 +1,13 @@
 {
   "config": {
     "abort": {
+      "already_configured": "This account is already configured"
+    },
+    "error": {
       "cannot_connect": "Unable to connect to the JLR InControl servers.",
       "invalid_auth": "Unable to authenticate with the JLR InControl.  Check your credentials and try again.",
-      "unknown": "Unexpected error."
+      "no_vehicles": "No vehicles are registered on this JLR InControl account.",
+      "unknown": "An unknown error occurred connecting to JLR InControl"
     },
     "flow_title": "JLR InControl: {name}",
     "step": {
