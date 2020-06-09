@@ -139,7 +139,7 @@ jlrincontrol:
 
 ## v2.0.0
 
-- Deprecated: EV_Battery sensor - this will be removed in furture version
+- Deprecated: EV_Battery sensor - this will be removed in future version
 - Added: Setup and options via config flow
 - Added: New Battery Sensor for EVs
 - Fixed: Deprecation warnings in HA0.110.x
