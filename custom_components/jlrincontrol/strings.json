@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Unable to connect to the JLR InControl servers.",
+            "invalid_auth": "Unable to authenticate with the JLR InControl.  Check your credentials and try again.",
+            "unknown": "Unexpected error."
+        },
+        "flow_title": "JLR InControl: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "username": "Email",
+                    "password": "Password"
+                },
+                "description": "Please enter the email and password for your InControl account.",
+                "title": "JLR InControl Setup"
+            }
+        },
+        "title": "JLR In Control"
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "pin": "Pin",
+                    "scan_interval": "Scan Interval",
+                    "health_update_interval": "Health Update Interval",
+                    "distance_unit": "Distance Unit Override",
+                    "pressure_unit": "Pressure Unit Override",
+                    "debug_data": "Debug Data"
+                },
+                "description": "Amend your InControl options.",
+                "title": "JLR InControl Options"
+            }
+        }
+    }
+}

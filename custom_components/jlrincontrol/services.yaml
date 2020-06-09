@@ -14,10 +14,7 @@ lock_vehicle:
         description: "Enter the entity_id for vehcile.",
         example: "sensor.my_car_info",
       }
-    pin:
-      { description: "The pin set for your vehicle.",
-        example: "1234",
-      }
+    pin: { description: "The pin set for your vehicle.", example: "1234" }
 unlock_vehicle:
   description: "Request the car to unlock."
   fields:
@@ -26,10 +23,7 @@ unlock_vehicle:
         description: "Enter the entity_id for vehcile.",
         example: "sensor.my_car_info",
       }
-    pin:
-      { description: "The pin set for your vehicle.",
-        example: "1234",
-      }
+    pin: { description: "The pin set for your vehicle.", example: "1234" }
 reset_alarm:
   description: "Reset the vehicle alarm."
   fields:
@@ -38,10 +32,7 @@ reset_alarm:
         description: "Enter the entity_id for vehcile.",
         example: "sensor.my_car_info",
       }
-    pin:
-      { description: "The pin set for your vehicle.",
-        example: "1234",
-      }
+    pin: { description: "The pin set for your vehicle.", example: "1234" }
 honk_blink:
   description: "Sound the horn and flash the lights."
   fields:
@@ -58,13 +49,11 @@ start_vehicle:
         description: "Enter the entity_id for vehcile.",
         example: "sensor.my_car_info",
       }
-    pin:
-      { description: "The pin set for your vehicle.",
-        example: "1234",
-      }
+    pin: { description: "The pin set for your vehicle.", example: "1234" }
     target_value:
-      { description: "The climate temperature to set (31-57).",
-        example: "42",
+      {
+        description: "The temperature to set (15.5 - 28.5C or 58 - 84F based on local HA units).",
+        example: "21.0",
       }
 stop_vehicle:
   description: "Stop the vehicle engine."
@@ -74,10 +63,7 @@ stop_vehicle:
         description: "Enter the entity_id for vehcile.",
         example: "sensor.my_car_info",
       }
-    pin:
-      { description: "The pin set for your vehicle.",
-        example: "1234",
-      }
+    pin: { description: "The pin set for your vehicle.", example: "1234" }
 start_charging:
   description: "Start vehicle charging."
   fields:
@@ -103,8 +89,9 @@ start_preconditioning:
         example: "sensor.my_car_info",
       }
     target_temp:
-      { description: "The temperature to set (31-57).",
-        example: "42",
+      {
+        description: "The temperature to set (15.5 - 28.5C or 58 - 84F based on local HA units).",
+        example: "21.0",
       }
 stop_preconditioning:
   description: "Stop vehicle preconditioning."
@@ -122,11 +109,7 @@ set_max_charge_level:
         description: "Enter the entity_id for vehcile.",
         example: "sensor.my_car_info",
       }
-    charge_level:
-      {
-        description: "The percentage to charge to.",
-        example: "85",
-      }
+    charge_level: { description: "The percentage to charge to.", example: "85" }
 set_one_off_max_charge_level:
   description: "Stop vehicle preconditioning."
   fields:
@@ -135,10 +118,4 @@ set_one_off_max_charge_level:
         description: "Enter the entity_id for vehcile.",
         example: "sensor.my_car_info",
       }
-    charge_level:
-      {
-        description: "The percentage to charge to.",
-        example: "85",
-      }
-
-
+    charge_level: { description: "The percentage to charge to.", example: "85" }

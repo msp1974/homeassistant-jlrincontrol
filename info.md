@@ -1,4 +1,6 @@
-This component provides integration to the JLR InControl functionality to homeassistant. 
+This component provides integration to the JLR InControl functionality to homeassistant.
+
+Due to changes in Home Assistant, this integration requires a minimum of HA0.110.0.
 
 ## Functionality
 **Currently this loads a series of sensors for**
@@ -36,15 +38,14 @@ Each sensor has a series of attributes to show related sensor information.  Whic
 
 
 ## Configuration
-### Additional Optional Parameters
+Add via Configuration -> Integrations in the UI
 
 **Required Parameters**
 ```
-jlrincontrol:
-  username: <your InControl email address>
+  email: <your InControl email address>
   password: <your InControl password>
 ```
-**Optional Parameters**
+**Config Options**
 1. scan_interval - in minutes. Default update interval is 5 minutes.  Use this to change that.  Minimum is 1 minute.
 2. pin - set this to be able to use the lock/unlock on the lock sensor.
 3. distance_unit - set this to 'mi' or 'km' to override the HA default metric for mileages (mainly for funny UK system of miles and litres!).
@@ -52,14 +53,9 @@ jlrincontrol:
 5. health_update_interval - see health update section.
 6. debug_data: - see debugging below.
 
-```
-  scan_interval: 5
-  pin: <your InControl pin>
-  distance_unit: <mi or km to override HA default>
-  pressure_unit: <bar or psi to override HA default>
-  health_update_interval: 60
-  debug_data: <false or true - see debugging>
-```
+### Migrating From Previous Versions
+The new config flow will import your settings from configuration.yaml.  It is recommended to remove them after this has happened, otherwise changes via the UI can be reverted by the entries in configuration.yaml.
+
 
 ## Vehicle Health Status Update
 

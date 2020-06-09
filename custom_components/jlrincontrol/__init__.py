@@ -11,6 +11,7 @@ import json
 import logging
 from datetime import timedelta
 from functools import partial
+from typing import Optional
 
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.event import (
@@ -19,6 +20,7 @@ from homeassistant.helpers.event import (
 )
 import jlrpy
 import voluptuous as vol
+from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -43,16 +45,19 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt
 
 from .const import (
     DOMAIN,
+    DATA_JLR_CONFIG,
     KMS_TO_MILES,
     DEFAULT_SCAN_INTERVAL,
     MIN_SCAN_INTERVAL,
     DEFAULT_HEATH_UPDATE_INTERVAL,
     SIGNAL_STATE_UPDATED,
     JLR_SERVICES,
+    JLR_DATA,
 )
 from .services import JLRService
 from .util import mask
@@ -63,6 +68,10 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
+
+HEALTH_UPDATE_TRACKER = "health_update_tracker"
+STATUS_UPDATE_TRACKER = "status_update_tracker"
+UPDATE_LISTENER = "update_listener"
 
 CONF_DEBUG_DATA = "debug_data"
 CONF_DISTANCE_UNIT = "distance_unit"
@@ -116,14 +125,59 @@ CONFIG_SCHEMA = vol.Schema(
                     default=DEFAULT_HEATH_UPDATE_INTERVAL,
                 ): vol.Coerce(int),
             }
-        ),
+        )
     },
     extra=vol.ALLOW_EXTRA,
 )
 
 
 async def async_setup(hass, config):
+    """
+    JLR InControl uses config flow for configuration.
+
+    But, a "jlrincontrol:" entry in configuration.yaml will trigger an import
+    flow if a config entry doesn't already exist. If it exists, the import
+    flow will attempt to import it and create a config entry, to assist users
+    migrating from the old jlrincontrol component. Otherwise, the user will
+    have to continue setting up the integration via the config flow.
+    """
+    jlr_config: Optional[ConfigType] = config.get(DOMAIN)
+    hass.data.setdefault(DOMAIN, {})
+
+    if not jlr_config:
+        return True
+
+    # Import config if doesn't already exist
+    config_entry = _async_find_matching_config_entry(hass)
+    if not config_entry:
+        """
+        No config entry exists and configuration.yaml config exists,
+        so lets trigger the import flow.
+        """
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=dict(jlr_config),
+            )
+        )
+        return True
+
+    return True
+
+
+@callback
+def _async_find_matching_config_entry(hass):
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.source == config_entries.SOURCE_IMPORT:
+            return entry
+
+
+async def async_setup_entry(hass, config_entry):
     """Setup JLR InConnect component"""
+    _async_import_options_from_data_if_missing(hass, config_entry)
+
+    health_update_track = None
 
     def get_schema(schema_list):
         s = {}
@@ -131,79 +185,196 @@ async def async_setup(hass, config):
             s.update(eval(schema))
         return vol.Schema(s)
 
-    data = JLRApiHandler(hass, config)
-    hass.data[DOMAIN] = data
+    data = JLRApiHandler(hass, config_entry)
 
-    if await data.async_connect():
-        if not data.connection.vehicles:
-            # No vehicles or wrong credentials
-            _LOGGER.error(
-                "Unable to get vehicles from api.  Check credentials"
-            )
-            return False
+    update_interval = config_entry.options.get(
+        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+    )
+    health_update_interval = config_entry.options.get(
+        CONF_HEALTH_UPDATE_INTERVAL, 0
+    )
 
-        for vehicle in data.vehicles:
-            for platform in PLATFORMS:
-                hass.async_create_task(
-                    async_load_platform(
-                        hass,
-                        platform,
-                        DOMAIN,
-                        data.vehicles[vehicle].vin,
-                        config,
-                    )
+    try:
+        if await data.async_connect():
+            if not data.connection.vehicles:
+                # No vehicles or wrong credentials
+                _LOGGER.error(
+                    "Unable to get vehicles from api.  Check credentials"
                 )
+                return False
+    except Exception:
+        return False
 
-        # Add services
-        for service, service_info in JLR_SERVICES.items():
-            _LOGGER.debug("Adding {} service".format(service))
-            hass.services.async_register(
-                DOMAIN,
-                service,
-                data.async_call_service,
-                schema=get_schema(service_info.get("schema")),
-            )
+    # Do first update
+    await data.async_update()
 
-        # Schedule health update and repeat interval
-        if data.health_update_interval > 0:
-            _LOGGER.debug(
-                "Scheduling vehicle health update on {} minute interval.  First call will be in 30 seconds.".format(
-                    int(data.health_update_interval)
-                )
-            )
+    # Poll for updates in background
+    _LOGGER.info(
+        "Update from InControl servers on {} minute interval".format(
+            int(update_interval)
+        )
+    )
+    update_track = async_track_time_interval(
+        hass, data.do_status_update, timedelta(minutes=update_interval),
+    )
 
-            # Do initial call to health_update service after HASS has started up.
-            # This speeds up restart.
-            # 30 seconds should do it.
-            async_call_later(hass, 30, data.do_health_update)
+    # Schedule health update and repeat interval
+    if health_update_interval and health_update_interval > 0:
+        _LOGGER.info(
+            "Vehicle health update on {} minute interval.".format(
+                int(health_update_interval)
+            )
+        )
+        # Do initial call to health_update service after HASS start up.
+        # This speeds up restart.
+        # 30 seconds should do it.
+        async_call_later(hass, 30, data.do_health_update)
 
-            async_track_time_interval(
-                hass,
-                data.do_health_update,
-                timedelta(minutes=data.health_update_interval),
+        health_update_track = async_track_time_interval(
+            hass,
+            data.do_health_update,
+            timedelta(minutes=data.health_update_interval),
+        )
+    else:
+        _LOGGER.info(
+            "Scheduled vehicle health update is disabled. "
+            + "Set interval in options to enable."
+        )
+
+    update_listener = config_entry.add_update_listener(_async_update_listener)
+
+    hass.data[DOMAIN][config_entry.entry_id] = {
+        JLR_DATA: data,
+        STATUS_UPDATE_TRACKER: update_track,
+        HEALTH_UPDATE_TRACKER: health_update_track,
+        UPDATE_LISTENER: update_listener,
+    }
+
+    # for vehicle in data.vehicles:
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(
+                config_entry, platform
             )
-        else:
-            _LOGGER.debug(
-                "Scheduled vehicle health update is disabled.  Add to configuration.yaml to enable."
-            )
+        )
+
+    # Add services
+    for service, service_info in JLR_SERVICES.items():
+        _LOGGER.debug("Adding {} service".format(service))
+        hass.services.async_register(
+            DOMAIN,
+            service,
+            data.async_call_service,
+            schema=get_schema(service_info.get("schema")),
+        )
+
+    # Create vehicle devices
+    await async_update_device_registry(
+        hass, config_entry, data.connection.vehicles, data
+    )
 
     return True
 
 
+@callback
+def _async_import_options_from_data_if_missing(hass, config_entry):
+    options = dict(config_entry.options)
+    modified = False
+    for importable_option in [
+        CONF_PIN,
+        CONF_DISTANCE_UNIT,
+        CONF_PRESSURE_UNIT,
+        CONF_SCAN_INTERVAL,
+        CONF_HEALTH_UPDATE_INTERVAL,
+        CONF_DEBUG_DATA,
+    ]:
+        if (
+            importable_option not in config_entry.options
+            and importable_option in config_entry.data
+        ):
+            options[importable_option] = config_entry.data[importable_option]
+            modified = True
+
+    if modified:
+        hass.config_entries.async_update_entry(config_entry, options=options)
+
+
+async def _async_update_listener(hass, config_entry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
+
+
+async def async_update_device_registry(hass, config_entry, vehicles, data):
+    """Update device registry."""
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    for vehicle in vehicles:
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={},
+            identifiers={(DOMAIN, vehicle.vin)},
+            manufacturer=data.vehicles[vehicle.vin].attributes.get(
+                "vehicleBrand"
+            ),
+            name=data.vehicles[vehicle.vin].attributes.get("nickname"),
+            model=data.vehicles[vehicle.vin].attributes.get("vehicleType"),
+            sw_version="1.0",
+        )
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+    _LOGGER.info("Unloading JLR InControl Component")
+
+    # Deregister services
+    _LOGGER.info("Unregister JLR InControl Services")
+    for service in JLR_SERVICES.items():
+        _LOGGER.info("Unregister {}".format(service[0]))
+        hass.services.async_remove(DOMAIN, service[0])
+
+    # Stop scheduled updates
+    hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER]()
+    hass.data[DOMAIN][config_entry.entry_id][STATUS_UPDATE_TRACKER]()
+    if hass.data[DOMAIN][config_entry.entry_id][HEALTH_UPDATE_TRACKER]:
+        hass.data[DOMAIN][config_entry.entry_id][HEALTH_UPDATE_TRACKER]()
+
+    # Remove platform components
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(
+                    config_entry, platform
+                )
+                for platform in PLATFORMS
+            ]
+        )
+    )
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    return unload_ok
+
+
 class JLRApiHandler:
-    def __init__(self, hass, config):
+    def __init__(self, hass, config_entry):
         self.hass = hass
-        self.config = config[DOMAIN]
+        self.config_entry = config_entry
         self.connection = None
+        self.email = config_entry.data.get(CONF_USERNAME)
+        self.password = config_entry.data.get(CONF_PASSWORD)
         self.vehicles = {}
         self.entities = []
-        self.pin = self.config.get(CONF_PIN)
-        self.update_interval = self.config.get(CONF_SCAN_INTERVAL)
-        self.health_update_interval = self.config.get(
+        self.pin = config_entry.options.get(CONF_PIN)
+        self.distance_unit = config_entry.options.get(CONF_DISTANCE_UNIT)
+        self.pressure_unit = config_entry.options.get(CONF_PRESSURE_UNIT)
+        self.update_interval = config_entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
+        self.health_update_interval = config_entry.options.get(
             CONF_HEALTH_UPDATE_INTERVAL
         )
-        self.email = self.config.get(CONF_USERNAME)
-        self.password = self.config.get(CONF_PASSWORD)
+
+        self.debug_data = config_entry.options.get(CONF_DEBUG_DATA)
 
     @callback
     def do_status_update(self, *args):
@@ -240,7 +411,7 @@ class JLRApiHandler:
             self.vehicles[vehicle.vin] = vehicle
 
             # Add one time dump of attr and status data for debugging
-            if self.config.get(CONF_DEBUG_DATA):
+            if self.debug_data:
                 _LOGGER.debug("ATTRIBUTE DATA - {}".format(vehicle.attributes))
                 status = await self.hass.async_add_executor_job(
                     vehicle.get_status
@@ -250,19 +421,6 @@ class JLRApiHandler:
                 }
                 _LOGGER.debug("STATUS DATA - {}".format(status))
 
-        # Get initial update and schedule interval update
-        await self.async_update()
-
-        _LOGGER.debug(
-            "Scheduling update from InControl servers on {} minute interval".format(
-                int(self.update_interval)
-            )
-        )
-        async_track_time_interval(
-            self.hass,
-            self.do_status_update,
-            timedelta(minutes=self.update_interval),
-        )
         return True
 
     async def async_call_service(self, service):
@@ -270,7 +428,9 @@ class JLRApiHandler:
         entity = next(
             (
                 entity
-                for entity in self.hass.data[DOMAIN].entities
+                for entity in self.hass.data[DOMAIN][
+                    self.config_entry.entry_id
+                ][JLR_DATA].entities
                 if entity.entity_id == entity_id
             ),
             None,
@@ -288,14 +448,15 @@ class JLRApiHandler:
             )
             for k, v in service.data.items():
                 kwargs[k] = v
-            jlr_service = JLRService(self.hass, vin)
+            jlr_service = JLRService(self.hass, self.config_entry, vin)
             status = await jlr_service.async_call_service(**kwargs)
 
             # Call update on return of monitorif successful
             if status and status == "Successful":
                 _LOGGER.debug(
-                    "Service call {} on vehicle {} successful. Updating entities from server.".format(
-                        kwargs["service_name"],
+                    "Service call {} on vehicle {} successful. ".format(
+                        kwargs["service_name"]
+                        + "Updating entities from server.",
                         self.vehicles[vin].attributes.get("nickname"),
                     )
                 )
@@ -366,7 +527,8 @@ class JLRApiHandler:
                 else:
                     self.vehicles[vehicle].last_trip = None
                     _LOGGER.debug(
-                        "Privacy mode is enabled. Trip data will not be loaded for {}".format(
+                        "Privacy mode is enabled. "
+                        + "Trip data will not be loaded for {}".format(
                             self.vehicles[vehicle].attributes.get("nickname")
                         )
                     )
@@ -381,9 +543,9 @@ class JLRApiHandler:
             async_dispatcher_send(self.hass, SIGNAL_STATE_UPDATED)
         except Exception as ex:
             _LOGGER.debug(
-                "Unable to update data from JLRInControl servers. They may be down or you have a internet connectivity issue.  Error is : {}".format(
-                    ex
-                )
+                "Unable to update data from JLRInControl servers."
+                + "May be down or you have a internet connectivity issue. "
+                + "Error is : {}".format(ex)
             )
 
     async def async_health_update(self):
@@ -393,106 +555,11 @@ class JLRApiHandler:
                 kwargs = {}
                 kwargs["service_name"] = service.get("function_name")
                 kwargs["service_code"] = service.get("service_code")
-                jlr_service = JLRService(self.hass, vehicle)
+                jlr_service = JLRService(self.hass, self.config_entry, vehicle)
                 await jlr_service.async_call_service(**kwargs)
             return True
         except Exception as ex:
             _LOGGER.debug(
-                "Error when requesting health status update.  Error is {}".format(
-                    ex
-                )
+                "Error when requesting health status update. "
+                + "Error is {}".format(ex)
             )
-
-
-class JLREntity(Entity):
-    def __init__(self, hass, vin):
-        """Create a new generic JLR sensor."""
-        self._hass = hass
-        self._data = self._hass.data[DOMAIN]
-        self._vin = vin
-        self._vehicle = self._hass.data[DOMAIN].vehicles[self._vin]
-        self._name = (
-            self._vehicle.attributes.get("nickname")
-            + " "
-            + self._sensor_name.title()
-        )
-        self._fuel = self._vehicle.attributes.get("fuelType")
-        self._entity_prefix = (
-            self._vehicle.attributes.get("vehicleBrand")
-            + self._vehicle.attributes.get("vehicleType")
-            + "-"
-            + self._vin[-6:]
-        )
-
-        _LOGGER.debug("Loading {} Sensors".format(self._name))
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon for this sensor."""
-        return self._icon or "mdi:cloud"
-
-    @property
-    def vehicle(self):
-        return self._vehicle
-
-    @property
-    def unique_id(self):
-        """Return the sensor's unique id."""
-        return f"{self._entity_prefix}-{self._sensor_name}"
-
-    @property
-    def assumed_state(self):
-        """Return true if unable to access real state of entity."""
-        return True
-
-    async def async_update(self):
-        _LOGGER.debug("Updating {}".format(self._name))
-        return True
-
-    async def async_added_to_hass(self):
-        """Subscribe for update from the hub"""
-
-        async def async_update_state():
-            """Update sensor state."""
-            await self.async_update_ha_state(True)
-
-        async_dispatcher_connect(
-            self._hass, SIGNAL_STATE_UPDATED, async_update_state
-        )
-
-    def to_local_datetime(self, datetime: str):
-        try:
-            return dt.as_local(dt.parse_datetime(datetime))
-        except Exception:
-            return None
-
-    def get_distance_units(self):
-        if self._data.config.get(CONF_DISTANCE_UNIT):
-            return self._data.config.get(CONF_DISTANCE_UNIT)
-        else:
-            return self._hass.config.units.length_unit
-
-    def get_pressure_units(self):
-        if self._data.config.get(CONF_PRESSURE_UNIT):
-            return self._data.config.get(CONF_PRESSURE_UNIT)
-        else:
-            if self._hass.config.units.pressure_unit == PRESSURE_PA:
-                return PRESSURE_BAR
-            else:
-                return PRESSURE_PSI
-
-    def get_odometer(self, vehicle):
-        self.units = self.get_distance_units()
-        if self.units == LENGTH_KILOMETERS:
-            return int(int(vehicle.status.get("ODOMETER_METER")) / 1000)
-        else:
-            return int(vehicle.status.get("ODOMETER_MILES"))
