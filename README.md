@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v2.0.0)
+# JLR Home Assistant Integration (v2.0.1)
 
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
@@ -74,9 +74,9 @@ Required Parameters
 
 # Health Status Update
 
-This integration has the ability to perform a scheduled health status update request from your vehicle. By default this is disabled. Adding the entry to your configuration.yaml as above will enable it (after a HA restart).
+This integration has the ability to perform a scheduled health status update request from your vehicle. By default this is disabled. Setting the interval and your pin in the config options will enable this.
 
-I do not know the impact on either vehicle battery or JLRs view on running this often, so please use at your own risk. I would certainly not set it to anything too often.
+I do not know the impact on either vehicle battery or JLRs view on running this often, so please use at your own risk. I would certainly not set it to too low an interval. Recommended 120 mins.
 
 Alternatively, you can make a more intelligent health update request automation using the service call available in this integration and the output of some sensors.
 
@@ -91,13 +91,7 @@ I.e. on EV vehicles you could only call it if the vehicle is charging, or on all
 1. On your server clone the github repository into a suitable directory using the git clone command.<br>
    `git clone https://github.com/msp1974/homeassistant-jlrincontrol.git`
 2. Copy the jlrincontrol folder to the custom_components directory of your Home Assistant installation.
-3. In your configuration.yaml file, add the following entry.
-
-```
-jlrincontrol:
-  username: <your InControl email address>
-  password: <your InControl password>
-```
+3. Configure via the integrations page in the UI.
 
 ## Branch Versions
 
@@ -120,26 +114,23 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 1. To enable debug logging for this component, add the following to your configuration.yaml
 
 ```
-logger:
-  default: critical
-  logs:
-    custom_components.jlrincontrol: debug
+    logger:
+      default: critical
+      logs:
+        custom_components.jlrincontrol: debug
 ```
 
-2. To enable logging of the attributes and status data in the debug log, add the following to you configuration.yaml.
-
-```
-jlrincontrol:
-  username: <your InControl email address>
-  password: <your InControl password>
-  debug_data: true
-```
+2. To enable logging of the attributes and status data in the debug log, set the debug data option in config options with debugging turned on as above.
 
 # Change Log
 
-## v2.0.0
+## v2.0.1
 
-- Deprecated: EV_Battery sensor - this will be removed in furture version
+- Fixed: errors on non unique id when changing config options
+
+## v2.0.0beta
+
+- Deprecated: EV_Battery sensor - this will be removed in future version
 - Added: Setup and options via config flow
 - Added: New Battery Sensor for EVs
 - Fixed: Deprecation warnings in HA0.110.x

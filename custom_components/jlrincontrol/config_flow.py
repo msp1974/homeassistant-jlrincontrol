@@ -3,6 +3,7 @@ Config Flow for JLR InControl
 
 """
 import logging
+import urllib
 import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import (
@@ -29,13 +30,13 @@ CONF_DEBUG_DATA = "debug_data"
 CONF_DISTANCE_UNIT = "distance_unit"
 CONF_PRESSURE_UNIT = "pressure_unit"
 CONF_HEALTH_UPDATE_INTERVAL = "health_update_interval"
+UNIQUE_ID = "unique_id"
 
 _LOGGER = logging.getLogger(__name__)
 
-data_schema = {
-    vol.Required(CONF_USERNAME): str,
-    vol.Required(CONF_PASSWORD): str,
-}
+DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+)
 
 
 @callback
@@ -44,30 +45,28 @@ def configured_instances(hass):
     return {entry.title for entry in hass.config_entries.async_entries(DOMAIN)}
 
 
-def _test_connection(user, password, device_id=""):
-    try:
-        connection = jlrpy.Connection(user, password, device_id=device_id)
-    except ValueError as err:
-        raise InvalidAuth(err.args[0])
-
-    return connection
-
-
 async def validate_input(hass, data):
-    user = data[CONF_USERNAME]
-    password = data[CONF_PASSWORD]
-    device_id = data.get("device_id")
+    """Validate the user input allows us to connect"""
 
-    connection = await hass.async_add_executor_job(
-        _test_connection, user, password, device_id
-    )
-
-    if not connection or not connection.refresh_token:
+    try:
+        connection = await hass.async_add_executor_job(
+            jlrpy.Connection, data[CONF_USERNAME], data[CONF_PASSWORD]
+        )
+    except urllib.error.HTTPError as ex:
+        if ex.code > 400 and ex.code < 500:
+            raise InvalidAuth
         raise CannotConnect
+    except ValueError:
+        raise InvalidAuth
+    except Exception:
+        raise CannotConnect
+
+    if not connection.vehicles or len(connection.vehicles) == 0:
+        raise NoVehicles
 
     return {
         "title": connection.email,
-        "device_id": connection.device_id,
+        UNIQUE_ID: f"{DOMAIN}-{data[CONF_USERNAME]}",
     }
 
 
@@ -90,43 +89,46 @@ class JLRInControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return JLRInControlOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
-        """
-        Handle a JLR InControl config flow start.
-        Manage device specific parameters.
-        """
+        """Handle the initial step."""
         errors = {}
-        info = None
         if user_input is not None:
+            if self._username_already_configured(user_input):
+                return self.async_abort(reason="already_configured")
+
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
+            except NoVehicles:
+                errors["base"] = "no_vehicles"
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception - {}".format(ex))
                 errors["base"] = "unknown"
 
-            if not errors:
-                await self.async_set_unique_id(
-                    f"{DOMAIN}-{info['device_id']}", raise_on_progress=False
-                )
+            if "base" not in errors:
+                await self.async_set_unique_id(info[UNIQUE_ID])
                 self._abort_if_unique_id_configured()
-                user_input["device_id"] = info["device_id"]
                 return self.async_create_entry(
                     title=info["title"], data=user_input
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(data_schema), errors={},
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
     async def async_step_import(self, import_data):
-        """
-        Import wiser config from configuration.yaml.
-        Triggered by async_setup only if a config entry doesn't already exist.
-        """
+        """Handle import."""
         return await self.async_step_user(import_data)
+
+    def _username_already_configured(self, user_input):
+        """See if we already have a username matching user input configured."""
+        existing_username = {
+            entry.data[CONF_USERNAME]
+            for entry in self._async_current_entries()
+        }
+        return user_input[CONF_USERNAME] in existing_username
 
 
 class JLRInControlOptionsFlowHandler(config_entries.OptionsFlow):
@@ -190,3 +192,7 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class NoVehicles(exceptions.HomeAssistantError):
+    """Error to indicate no vehicles on account."""
