@@ -74,9 +74,9 @@ Required Parameters
 
 # Health Status Update
 
-This integration has the ability to perform a scheduled health status update request from your vehicle. By default this is disabled. Adding the entry to your configuration.yaml as above will enable it (after a HA restart).
+This integration has the ability to perform a scheduled health status update request from your vehicle. By default this is disabled. Setting the interval and your pin in the config options will enable this.
 
-I do not know the impact on either vehicle battery or JLRs view on running this often, so please use at your own risk. I would certainly not set it to anything too often.
+I do not know the impact on either vehicle battery or JLRs view on running this often, so please use at your own risk. I would certainly not set it to too low an interval. Recommended 120 mins.
 
 Alternatively, you can make a more intelligent health update request automation using the service call available in this integration and the output of some sensors.
 
