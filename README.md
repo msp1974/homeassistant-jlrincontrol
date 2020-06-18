@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v2.0.0)
+# JLR Home Assistant Integration (v2.0.1)
 
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
@@ -137,7 +137,11 @@ jlrincontrol:
 
 # Change Log
 
-## v2.0.0
+## v2.0.1
+
+- Fixed: errors on non unique id when changing config options
+
+## v2.0.0beta
 
 - Deprecated: EV_Battery sensor - this will be removed in future version
 - Added: Setup and options via config flow
