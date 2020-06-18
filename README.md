@@ -91,13 +91,7 @@ I.e. on EV vehicles you could only call it if the vehicle is charging, or on all
 1. On your server clone the github repository into a suitable directory using the git clone command.<br>
    `git clone https://github.com/msp1974/homeassistant-jlrincontrol.git`
 2. Copy the jlrincontrol folder to the custom_components directory of your Home Assistant installation.
-3. In your configuration.yaml file, add the following entry.
-
-```
-jlrincontrol:
-  username: <your InControl email address>
-  password: <your InControl password>
-```
+3. Configure via the integrations page in the UI.
 
 ## Branch Versions
 
@@ -120,20 +114,13 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 1. To enable debug logging for this component, add the following to your configuration.yaml
 
 ```
-logger:
-  default: critical
-  logs:
-    custom_components.jlrincontrol: debug
+    logger:
+      default: critical
+      logs:
+        custom_components.jlrincontrol: debug
 ```
 
-2. To enable logging of the attributes and status data in the debug log, add the following to you configuration.yaml.
-
-```
-jlrincontrol:
-  username: <your InControl email address>
-  password: <your InControl password>
-  debug_data: true
-```
+2. To enable logging of the attributes and status data in the debug log, set the debug data option in config options with debugging turned on as above.
 
 # Change Log
 
