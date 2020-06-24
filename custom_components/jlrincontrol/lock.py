@@ -49,6 +49,7 @@ class JLRLock(JLREntity, LockEntity):
                 self._hass, self._data.config_entry, self._vin
             )
             await jlr_service.async_call_service(**kwargs)
+            await self._data.async_update()
         else:
             _LOGGER.warning("Cannot lock vehicle - pin not set in options.")
 
@@ -65,6 +66,7 @@ class JLRLock(JLREntity, LockEntity):
                 self._hass, self._data.config_entry, self._vin
             )
             await jlr_service.async_call_service(**kwargs)
+            await self._data.async_update()
         else:
             _LOGGER.warning("Cannot unlock vehicle - pin not set in options.")
 
