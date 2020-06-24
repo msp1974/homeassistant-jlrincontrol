@@ -182,13 +182,13 @@ class JLRService:
                 await asyncio.sleep(5)
                 result = await self.async_check_service_status(service_id)
                 status = result.get("status")
-            if status and status == "Successful":
+            if status and status in ["Successful", "MessageDelivered"]:
                 _LOGGER.info(
                     "Service call ({}) to vehicle {} was successful".format(
                         self.service_name, self.nickname
                     )
                 )
-                return status
+                return "Successful"
             else:
                 _LOGGER.info(
                     "InControl service call ({}) to vehicle {} ".format(

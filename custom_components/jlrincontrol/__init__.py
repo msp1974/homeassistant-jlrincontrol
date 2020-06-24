@@ -451,7 +451,6 @@ class JLRApiHandler:
             jlr_service = JLRService(self.hass, self.config_entry, vin)
             status = await jlr_service.async_call_service(**kwargs)
 
-            # Call update on return of monitorif successful
             if status and status == "Successful":
                 _LOGGER.debug(
                     "Service call {} on vehicle {} successful. ".format(
@@ -460,7 +459,8 @@ class JLRApiHandler:
                         self.vehicles[vin].attributes.get("nickname"),
                     )
                 )
-                await self.async_update()
+            # Call update on return of monitor
+            await self.async_update()
 
     async def async_update(self):
         try:

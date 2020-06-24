@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v2.0.1)
+# JLR Home Assistant Integration (v2.0.2)
 
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
@@ -123,6 +123,13 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 2. To enable logging of the attributes and status data in the debug log, set the debug data option in config options with debugging turned on as above.
 
 # Change Log
+
+## v2.0.2
+
+- Fixed: error when locking/unlocking via lock device sensor. Issue #39
+- Fixed: not updating from server after lock/unlock call from device sensor
+- Updated: improved handling of service call returns
+- Updated: get status update from server when service call fails
 
 ## v2.0.1
 
