@@ -42,7 +42,7 @@ And has services for
 
 **Note 2**: When calling a service, HA will monitor the status of the service call and report in the error log if it failed. Debug log will show this checking and the success/failure reason.
 
-**Note 3**: This sensor shows all returned data for attributes, statuses and position as device attribute data. See recipes for how to use this in your automations or template sensors. By defualt it is not enabled and can be enabled in config options.
+**Note 3**: This sensor shows all returned data for attributes, statuses and position as device attribute data. See recipes for how to use this in your automations or template sensors. By default it is not enabled and can be enabled in config options.
 
 Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations welcome!), there maybe issues with some models not supporting some funtions. Please raise an issue for these and say what vehcile you have and post the log.
 
@@ -74,7 +74,6 @@ Add via Configuration -> Integrations in the UI
 ### Migrating From Previous Versions
 
 The new config flow will import your settings from configuration.yaml. It is recommended to remove them after this has happened, otherwise changes via the UI can be reverted by the entries in configuration.yaml.
-Required Parameters
 
 # Health Status Update
 
@@ -85,6 +84,14 @@ I do not know the impact on either vehicle battery or JLRs view on running this 
 Alternatively, you can make a more intelligent health update request automation using the service call available in this integration and the output of some sensors.
 
 I.e. on EV vehicles you could only call it if the vehicle is charging, or on all vehicles, only call it during the day and it was more than x period since the last update.
+
+# Creating Custom Sensors
+
+As all use cases cannot be covered and to allow the best beneift to all of this integration, version 2.1.0 introduced and 'All Info' sensor. This sensor displays the attribute, status and position information being received from the JLR servers and allows the creation of custom sensors and use of any of this data in scripts and automations.
+
+The [recipes](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Recipes.md) document gives an example of a template sensor that uses this data and shows how to extract the values from the all info sensor.
+
+**NOTE**: By default this sensor is not created and must be enabled in the config options. Configuration -> Integrations -> Select Options on the JLR Incontrol integration. You do not need to restart HA to enable or disable this sensor, but you may need to add it into your Lovelace UI after enabling it.
 
 # Installation
 
