@@ -31,7 +31,8 @@
           "health_update_interval": "Health Update Interval",
           "distance_unit": "Distance Unit Override",
           "pressure_unit": "Pressure Unit Override",
-          "debug_data": "Debug Data"
+          "debug_data": "Debug Data",
+          "all_data_sensor": "Show All Data Sensor"
         },
         "description": "Amend your InControl options.",
         "title": "JLR InControl Options"

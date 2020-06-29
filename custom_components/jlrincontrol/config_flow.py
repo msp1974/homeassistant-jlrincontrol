@@ -26,6 +26,7 @@ from .const import (
     DEFAULT_HEATH_UPDATE_INTERVAL,
 )
 
+CONF_ALL_DATA_SENSOR = "all_data_sensor"
 CONF_DEBUG_DATA = "debug_data"
 CONF_DISTANCE_UNIT = "distance_unit"
 CONF_PRESSURE_UNIT = "pressure_unit"
@@ -179,6 +180,10 @@ class JLRInControlOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_DEBUG_DATA,
                     default=self.options.get(CONF_DEBUG_DATA, False),
+                ): bool,
+                vol.Optional(
+                    CONF_ALL_DATA_SENSOR,
+                    default=self.options.get(CONF_ALL_DATA_SENSOR, False),
                 ): bool,
             }
         )
