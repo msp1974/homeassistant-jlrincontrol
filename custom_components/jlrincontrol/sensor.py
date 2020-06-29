@@ -28,6 +28,7 @@ from .const import (
     SERVICE_STATUS_OK,
 )
 from .entity import JLREntity
+from .config_flow import CONF_ALL_DATA_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         devices.append(JLRVehicleRangeSensor(hass, data, vehicle))
         devices.append(JLRVehicleStatusSensor(hass, data, vehicle))
 
-        if config_entry.options.get("all_data_sensor"):
+        if config_entry.options.get(CONF_ALL_DATA_SENSOR):
             devices.append(JLRVehicleAllDataSensor(hass, data, vehicle))
 
         # If EV show EV sensorl otherwise show fuel sensor
@@ -102,7 +103,7 @@ class JLRVehicleAllDataSensor(JLREntity):
         if attributes.get("capabilities"):
             del attributes["capabilities"]
 
-        # Put services on own attribute
+        # Remove Services
         if attributes.get("availableServices"):
             del attributes["availableServices"]
 
