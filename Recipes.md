@@ -201,7 +201,8 @@ sensor:
   - platform: template
     sensors:
       example_json_sensor:
-        friendly_name: "My Car Sensor"
+        friendly_name: "My Car Battery Sensor"
+        icon_template: "mdi:car-battery"
         value_template: "{{ state_attr('sensor.my_car_all_info','status').batteryVoltage }}"
         attribute_templates:
           battery_status: "{{ state_attr('sensor.my_car_all_info','status').batteryStatus }}"
