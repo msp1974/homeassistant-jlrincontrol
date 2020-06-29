@@ -206,5 +206,5 @@ sensor:
         attribute_templates:
           battery_status: "{{ state_attr('sensor.my_car_all_info','status').batteryStatus }}"
           tu_status: "{{ state_attr('sensor.my_car_all_info','status').tuStatusPower }}"
-          {{ state_attr('sensor.my_car_all_info','attributes').telematicsDevice.serialNumber }}
+          tu_serial: "{{ state_attr('sensor.my_car_all_info','attributes').telematicsDevice.serialNumber }}"
 ```
