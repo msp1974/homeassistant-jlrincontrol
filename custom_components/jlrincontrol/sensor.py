@@ -28,6 +28,7 @@ from .const import (
     SERVICE_STATUS_OK,
 )
 from .entity import JLREntity
+from .config_flow import CONF_ALL_DATA_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +54,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         devices.append(JLRVehicleRangeSensor(hass, data, vehicle))
         devices.append(JLRVehicleStatusSensor(hass, data, vehicle))
 
+        if config_entry.options.get(CONF_ALL_DATA_SENSOR):
+            devices.append(JLRVehicleAllDataSensor(hass, data, vehicle))
+
         # If EV show EV sensorl otherwise show fuel sensor
         if (
             data.vehicles[vehicle].attributes.get("fuelType")
@@ -71,6 +75,51 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     data.entities.extend(devices)
     async_add_entities(devices, True)
+
+
+class JLRVehicleAllDataSensor(JLREntity):
+    def __init__(self, hass, data, vin):
+        self._icon = "mdi:cloud"
+        self._sensor_name = "all info"
+        super().__init__(hass, data, vin)
+
+    @property
+    def state(self):
+        if self._vehicle.status.get("lastUpdatedTime"):
+            last_contacted = self.to_local_datetime(
+                self._vehicle.status.get("lastUpdatedTime")
+            )
+            return dt.get_age(last_contacted) + " ago"
+        return "Unknown"
+
+    @property
+    def device_state_attributes(self):
+        attrs = {}
+
+        # Vehicle Attributes
+        attributes = self._vehicle.attributes
+
+        # Remove Capabilities
+        if attributes.get("capabilities"):
+            del attributes["capabilities"]
+
+        # Remove Services
+        if attributes.get("availableServices"):
+            del attributes["availableServices"]
+
+        attrs["attributes"] = dict(sorted(attributes.items()))
+
+        # Vehicle Status
+        s = {}
+        for k, v in self._vehicle.status.copy().items():
+            k = k[0].lower() + k.title().replace("_", "")[1:]
+            s[k] = v
+        attrs["status"] = dict(sorted(s.items()))
+
+        # Vehicle Position
+        attrs["position"] = dict(sorted(self._vehicle.position.items()))
+
+        return attrs
 
 
 class JLRVehicleSensor(JLREntity):

@@ -14,11 +14,11 @@ Due to changes in Home Assistant, this integration requires a minimum of HA0.110
 - Tyres
 - Range
 - Location
-- EV Battery Sensor (EVs only)
+- EV Battery Sensor (EVs only - deprecated!)
+- Battery Sensor (EVs Only)
 - Service Info
 - Last Trip
-
-Each sensor has a series of attributes to show related sensor information. Which attributes are shown is dependant on support by your vehicle.
+- All Vehicle Data (see Note 3)
 
 **And has services for**
 
@@ -34,6 +34,8 @@ Each sensor has a series of attributes to show related sensor information. Which
 **Note:** Not all services are available on all models and the error log will show this if not available on your vehicle.
 
 **Note 2**: When calling a service, HA will monitor the status of the service call and report in the error log if it failed. Debug log will show this checking and the success/failure reason.
+
+**Note 3**: This sensor shows all returned data for attributes, statuses and position as device attribute data. See [recipes](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Recipes.md) for how to use this in your automations or template sensors. By defualt it is not enabled and can be enabled in config options.
 
 ## Sample Images
 

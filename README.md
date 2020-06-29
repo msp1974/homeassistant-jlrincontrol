@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v2.0.2)
+# JLR Home Assistant Integration (v2.1)
 
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
@@ -25,6 +25,7 @@ Currently this loads a series of sensors for
 - Battery Sensor (EVs Only)
 - Service Info
 - Last Trip
+- All Vehicle Data (see Note 3)
 
 And has services for
 
@@ -40,6 +41,8 @@ And has services for
 **Note:** Not all services are available on all models and the error log will show this if not available on your vehicle.
 
 **Note 2**: When calling a service, HA will monitor the status of the service call and report in the error log if it failed. Debug log will show this checking and the success/failure reason.
+
+**Note 3**: This sensor shows all returned data for attributes, statuses and position as device attribute data. See recipes for how to use this in your automations or template sensors. By default it is not enabled and can be enabled in config options.
 
 Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations welcome!), there maybe issues with some models not supporting some funtions. Please raise an issue for these and say what vehcile you have and post the log.
 
@@ -60,17 +63,17 @@ Add via Configuration -> Integrations in the UI
 
 **Config Options**
 
-1. scan_interval - in minutes. Default update interval is 5 minutes. Use this to change that. Minimum is 1 minute.
+1. scan interval - in minutes. Default update interval is 5 minutes. Use this to change that. Minimum is 1 minute.
 2. pin - set this to be able to use the lock/unlock on the lock sensor.
-3. distance_unit - set this to 'mi' or 'km' to override the HA default metric for mileages (mainly for funny UK system of miles and litres!).
-4. pressure_unit - set this to 'bar' or 'psi' to override the HA default unit for pressure (mainly for UK also).
-5. health_update_interval - see health update section.
-6. debug_data: - see debugging below.
+3. distance unit - set this to 'mi' or 'km' to override the HA default metric for mileages (mainly for funny UK system of miles and litres!).
+4. pressure unit - set this to 'bar' or 'psi' to override the HA default unit for pressure (mainly for UK also).
+5. health update interval - see health update section.
+6. debug data: - see debugging below.
+7. show all data sensor
 
 ### Migrating From Previous Versions
 
 The new config flow will import your settings from configuration.yaml. It is recommended to remove them after this has happened, otherwise changes via the UI can be reverted by the entries in configuration.yaml.
-Required Parameters
 
 # Health Status Update
 
@@ -81,6 +84,14 @@ I do not know the impact on either vehicle battery or JLRs view on running this 
 Alternatively, you can make a more intelligent health update request automation using the service call available in this integration and the output of some sensors.
 
 I.e. on EV vehicles you could only call it if the vehicle is charging, or on all vehicles, only call it during the day and it was more than x period since the last update.
+
+# Creating Custom Sensors
+
+As all use cases cannot be covered and to allow the best beneift to all of this integration, version 2.1.0 introduced and 'All Info' sensor. This sensor displays the attribute, status and position information being received from the JLR servers and allows the creation of custom sensors and use of any of this data in scripts and automations.
+
+The [recipes](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Recipes.md) document gives an example of a template sensor that uses this data and shows how to extract the values from the all info sensor.
+
+**NOTE**: By default this sensor is not created and must be enabled in the config options. Configuration -> Integrations -> Select Options on the JLR Incontrol integration. You do not need to restart HA to enable or disable this sensor, but you may need to add it into your Lovelace UI after enabling it.
 
 # Installation
 
@@ -123,6 +134,10 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 2. To enable logging of the attributes and status data in the debug log, set the debug data option in config options with debugging turned on as above.
 
 # Change Log
+
+## v2.1
+
+- Added: All data sensor to show returned info from vehicle
 
 ## v2.0.2
 

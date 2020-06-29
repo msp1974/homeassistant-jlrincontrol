@@ -1,12 +1,15 @@
 # JLR InControl Recipes
+
 This page documents some Home Assistant recipes to help get the most out of this integration.
 
 Please feel free to submit your own for inclusion into this page.
 
 ## Lovelace UI
-### ***Create a button to request the vehicle to update***
+
+### **_Create a button to request the vehicle to update_**
 
 Add a button to your UI and set the configuration to call the jlr_incontrol.update_health_status service.
+
 ```
 entity: sensor.my_car_info
 hold_action:
@@ -22,7 +25,8 @@ tap_action:
 type: button
 ```
 
-### ***Create a stack of buttons to control pin required services as per the readme image.***
+### **_Create a stack of buttons to control pin required services as per the readme image._**
+
 ```
 cards:
   - cards:
@@ -95,6 +99,7 @@ Create a nice looking lovelace card with sensor information.
 ![](https://raw.githubusercontent.com/msp1974/homeassistant-jlrincontrol/master/docs/lovelace-picture-card.png)
 
 This card will require the following mods:
+
 - https://github.com/thomasloven/lovelace-card-mod
 
 which can be installed via HACS.
@@ -187,4 +192,20 @@ elements:
       color: white
       left: 90%
       top: 95%
+```
+
+## Create your own template sensor from the 'All Info' sensor attributes.
+
+```
+sensor:
+  - platform: template
+    sensors:
+      example_json_sensor:
+        friendly_name: "My Car Battery Sensor"
+        icon_template: "mdi:car-battery"
+        value_template: "{{ state_attr('sensor.my_car_all_info','status').batteryVoltage }}"
+        attribute_templates:
+          battery_status: "{{ state_attr('sensor.my_car_all_info','status').batteryStatus }}"
+          tu_status: "{{ state_attr('sensor.my_car_all_info','status').tuStatusPower }}"
+          tu_serial: "{{ state_attr('sensor.my_car_all_info','attributes').telematicsDevice.serialNumber }}"
 ```
