@@ -135,6 +135,10 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 
 # Change Log
 
+## v2.1.1
+
+- Fixed: Lock/Unlock errors if all info sensor enabled
+
 ## v2.1
 
 - Added: All data sensor to show returned info from vehicle
