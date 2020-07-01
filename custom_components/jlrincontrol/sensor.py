@@ -97,7 +97,7 @@ class JLRVehicleAllDataSensor(JLREntity):
         attrs = {}
 
         # Vehicle Attributes
-        attributes = self._vehicle.attributes
+        attributes = self._vehicle.attributes.copy()
 
         # Remove Capabilities
         if attributes.get("capabilities"):
