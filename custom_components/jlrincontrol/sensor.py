@@ -4,7 +4,7 @@ import logging
 # from homeassistant.const import STATE_OFF, UNIT_PERCENTAGE
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     PRESSURE_PA,
@@ -347,13 +347,13 @@ class JLRVehicleRangeSensor(JLREntity):
         if self._fuel == FUEL_TYPE_BATTERY:
             attrs["Battery Level"] = (
                 self._vehicle.status.get("EV_STATE_OF_CHARGE", "0")
-                + UNIT_PERCENTAGE
+                + PERCENTAGE
             )
         else:
             # TODO: If fuelTankVolume is not none show remaining litres
             attrs["Fuel Level"] = (
                 self._vehicle.status.get("FUEL_LEVEL_PERC", "0")
-                + UNIT_PERCENTAGE
+                + PERCENTAGE
             )
         return attrs
 
