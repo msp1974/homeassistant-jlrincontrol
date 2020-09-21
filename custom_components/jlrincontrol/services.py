@@ -5,7 +5,7 @@ from urllib import error
 from functools import partial
 
 from .const import DOMAIN, JLR_DATA
-from .util import convert_temp_value
+from .util import convert_temp_value, field_mask
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -173,10 +173,11 @@ class JLRService:
 
         if result:
             status = result.get("status")
-            while status == "Started":
+            while status and status in ["Started","Running"]:
                 _LOGGER.info(
-                    "Checking for {} service call result status.".format(
-                        self.service_name
+                    "Checking for {} service call result status.  Currently {}.".format(
+                        self.service_name,
+                        status
                     )
                 )
                 await asyncio.sleep(5)
@@ -190,6 +191,10 @@ class JLRService:
                 )
                 return "Successful"
             else:
+                # Anonymise data in log output
+                result["vehicleId"] = field_mask(result["vehicleId"], 3, 2)
+                result["customerServiceId"] = field_mask(result["customerServiceId"], 11, 9)
+
                 _LOGGER.info(
                     "InControl service call ({}) to vehicle {} ".format(
                         self.service_name, self.nickname,

@@ -51,6 +51,7 @@ from homeassistant.util import dt
 from .const import (
     DOMAIN,
     DATA_JLR_CONFIG,
+    FUEL_TYPE_BATTERY,
     KMS_TO_MILES,
     DEFAULT_SCAN_INTERVAL,
     MIN_SCAN_INTERVAL,
@@ -60,7 +61,7 @@ from .const import (
     JLR_DATA,
 )
 from .services import JLRService
-from .util import mask
+from .util import field_mask
 
 # from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -402,7 +403,7 @@ class JLRApiHandler:
         # Discover all vehicles and get one time info
         for vehicle in self.connection.vehicles:
             _LOGGER.debug(
-                "Discovered vehicle - {}".format(mask(vehicle.vin, 3, 2))
+                "Discovered vehicle - {}".format(field_mask(vehicle.vin, 3, 2))
             )
             # Get attributes
             vehicle.attributes = await self.hass.async_add_executor_job(
@@ -417,9 +418,18 @@ class JLRApiHandler:
                     vehicle.get_status
                 )
                 status = {
-                    d["key"]: d["value"] for d in status["vehicleStatus"]
+                    d["key"]: d["value"] for d in status["vehicleStatus"]["coreStatus"]
                 }
-                _LOGGER.debug("STATUS DATA - {}".format(status))
+                _LOGGER.debug("CORE STATUS DATA - {}".format(status))
+
+                if self.vehicles[vehicle].attributes.get("fuelType") == FUEL_TYPE_BATTERY:
+                    status_ev = {
+                        d["key"]: d["value"] for d in status["vehicleStatus"]["evStatus"]
+                    }
+                    _LOGGER.debug("EV STATUS DATA - {}".format(status_ev))
+                
+                
+                
 
         return True
 
@@ -469,16 +479,26 @@ class JLRApiHandler:
                     self.vehicles[vehicle].get_status
                 )
                 last_updated = status.get("lastUpdatedTime")
-                status = {
-                    d["key"]: d["value"] for d in status["vehicleStatus"]
+                
+                status_core = {
+                    d["key"]: d["value"] for d in status["vehicleStatus"].get("coreStatus")
                 }
+                status_core["lastUpdatedTime"] = last_updated
+                self.vehicles[vehicle].status = status_core
+
+                if self.vehicles[vehicle].attributes.get("fuelType") == FUEL_TYPE_BATTERY:
+                    status_ev = {
+                        d["key"]: d["value"] for d in status["vehicleStatus"].get("evStatus")
+                    }
+                    self.vehicles[vehicle].status_ev = status_ev
+                
+                
                 _LOGGER.debug(
                     "Received status data update for {}".format(
                         self.vehicles[vehicle].attributes.get("nickname")
                     )
                 )
-                status["lastUpdatedTime"] = last_updated
-                self.vehicles[vehicle].status = status
+                
 
                 position = await self.hass.async_add_executor_job(
                     self.vehicles[vehicle].get_position
@@ -500,7 +520,7 @@ class JLRApiHandler:
                     )
 
                 # Only get trip data if privacy mode is not enabled
-                if status.get("PRIVACY_SWITCH") == "FALSE":
+                if status_core.get("PRIVACY_SWITCH") == "FALSE":
                     trips = await self.hass.async_add_executor_job(
                         self.vehicles[vehicle].get_trips, 1
                     )
