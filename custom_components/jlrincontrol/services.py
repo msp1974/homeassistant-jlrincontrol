@@ -31,7 +31,7 @@ class JLRService:
                     # OK to make service call
                     return True
                 else:
-                    _LOGGER.debug(
+                    _LOGGER.error(
                         "Error calling service {} on vehicle {}. ".format(
                             self.service_name, self.nickname,
                         )
@@ -39,13 +39,13 @@ class JLRService:
                         + "Please try again later."
                     )
             else:
-                _LOGGER.debug(
+                _LOGGER.error(
                     "Service {} is not available on vehicle {}".format(
                         self.service_name, self.nickname,
                     )
                 )
         else:
-            _LOGGER.debug(
+            _LOGGER.error(
                 "Error calling service {}.  Invalid parameters".format(
                     self.service_name
                 )
@@ -99,7 +99,7 @@ class JLRService:
                         + "- not authorised error. Is your pin correct?"
                     )
                 else:
-                    _LOGGER.debug(
+                    _LOGGER.error(
                         "Error calling service {} on vehicle {}. ".format(
                             self.service_name, self.nickname
                         )
@@ -107,14 +107,14 @@ class JLRService:
                     )
 
             except Exception as ex:
-                _LOGGER.debug(
+                _LOGGER.error(
                     "Error calling service {} on vehicle {}. ".format(
                         self.service_name, self.nickname
                     )
                     + "Error is {}".format(ex)
                 )
         else:
-            _LOGGER.debug(
+            _LOGGER.error(
                 "Error calling service {}.  Invalid parameters".format(
                     self.service_name
                 )
@@ -195,7 +195,7 @@ class JLRService:
                 result["vehicleId"] = field_mask(result["vehicleId"], 3, 2)
                 result["customerServiceId"] = field_mask(result["customerServiceId"], 11, 9)
 
-                _LOGGER.info(
+                _LOGGER.error(
                     "InControl service call ({}) to vehicle {} ".format(
                         self.service_name, self.nickname,
                     )
