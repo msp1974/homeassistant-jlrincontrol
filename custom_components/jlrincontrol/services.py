@@ -196,13 +196,15 @@ class JLRService:
                 result["customerServiceId"] = field_mask(result["customerServiceId"], 11, 9)
 
                 _LOGGER.error(
-                    "InControl service call ({}) to vehicle {} ".format(
+                    "JLR InControl service call ({}) to vehicle {} ".format(
                         self.service_name, self.nickname,
                     )
-                    + "failed due to {}. \r\nFull return is {}".format(
-                        result.get("failureReason"), result,
+                    + "failed due to {}.".format(
+                        result.get("failureReason")
                     )
                 )
+
+                _LOGGER.debug("Full status return is {}.".format(result))
             return status
         else:
             return None
