@@ -9,5 +9,6 @@
   ],
   "requirements": [
     "jlrpy==1.3.3"
-  ]
+  ],
+  "version":"2.1.2",
 }
