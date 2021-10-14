@@ -102,7 +102,7 @@ stop_preconditioning:
         example: "sensor.my_car_info",
       }
 set_max_charge_level:
-  description: "Stop vehicle preconditioning."
+  description: "Set vehicle maximum charge level."
   fields:
     entity_id:
       {
@@ -111,7 +111,7 @@ set_max_charge_level:
       }
     charge_level: { description: "The percentage to charge to.", example: "85" }
 set_one_off_max_charge_level:
-  description: "Stop vehicle preconditioning."
+  description: "Set vehicle maximum charge level (one off)."
   fields:
     entity_id:
       {
