@@ -109,7 +109,7 @@ set_max_charge_level:
         description: "Enter the entity_id for vehicle",
         example: "sensor.my_car_info",
       }
-    charge_level: { description: "The percentage to charge to.", example: "85" }
+    max_charge_level: { description: "The percentage to charge to.", example: "85" }
 set_one_off_max_charge_level:
   description: "Set vehicle maximum charge level (one off)."
   fields:
@@ -118,4 +118,4 @@ set_one_off_max_charge_level:
         description: "Enter the entity_id for vehicle",
         example: "sensor.my_car_info",
       }
-    charge_level: { description: "The percentage to charge to.", example: "85" }
+    max_charge_level: { description: "The percentage to charge to.", example: "85" }
