@@ -3,11 +3,14 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v2.1.2)
+# JLR Home Assistant Integration (v2.2.0beta1)
 
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
-Due to changes in Home Assistant, this integration requires a minimum of HA0.110.0.
+Due to changes in Home Assistant, this integration requires a minimum of HA0.115.0.
+
+### BREAKING CHANGE IN VERSION v2.2.0beta1
+JLR has updated their api to split status information into 'core status' and 'ev status'.  The All Info sensor has been updated to reflect this.  This means that if you have used any of this attribute data from the All Info sensor, in a template sensor, script or automation etc, you will need to update them.
 
 # Functionality
 
@@ -21,7 +24,6 @@ Currently this loads a series of sensors for
 - Tyres
 - Range
 - Location
-- EV Battery Sensor (EVs only - deprecated!)
 - Battery Sensor (EVs Only)
 - Service Info
 - Last Trip
@@ -40,7 +42,7 @@ And has services for
 
 **Note:** Not all services are available on all models and the error log will show this if not available on your vehicle.
 
-**Note 2**: When calling a service, HA will monitor the status of the service call and report in the error log if it failed. Debug log will show this checking and the success/failure reason.
+**Note 2**: When calling a service, HA will monitor the status of the service call and report in the error log if it failed.
 
 **Note 3**: This sensor shows all returned data for attributes, statuses and position as device attribute data. See recipes for how to use this in your automations or template sensors. By default it is not enabled and can be enabled in config options.
 
@@ -134,6 +136,14 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 2. To enable logging of the attributes and status data in the debug log, set the debug data option in config options with debugging turned on as above.
 
 # Change Log
+
+## v2.2.0beta1
+- Fixed: Service returned as a failure if status returned a status of 'running'
+- Updated: Updated to support jlrpy 1.4.0
+- Updated: All Info sensor now shows status information as 'core status' and 'ev status' to align to update from JLR on api, which will break templated automations/scripts/sensors using this data
+- Updated: Set service call errors to error instead of debug to better show in logs
+- Removed: Battery_EV sensor as replaced by better Battery sensor for EVs
+
 
 ## v2.1.2
 - Fixed: Change to constant UNIT_PERCENTAGE to PERCENTAGE in HA core
