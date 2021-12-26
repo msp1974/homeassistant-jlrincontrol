@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "jlrincontrol"
 DATA_JLR_CONFIG = "jlrincontrol_config"
 JLR_DATA = "jlr_data"
-VERSION = "2.0.2"
+VERSION = "2.1.3"
 
 DEFAULT_SCAN_INTERVAL = 5
 MIN_SCAN_INTERVAL = 1
@@ -94,18 +94,6 @@ SENSOR_TYPES = {
 SENSOR_TYPES_ELEC = {
     "charging_status": ["Charging status", "power", "mdi:ev-station"],
     "connection_status": ["Connection status", "plug", "mdi:car-electric"],
-}
-
-DATA_ATTRS_EV_CHARGE_INFO = {
-    "charging": "EV_IS_CHARGING",
-    "charge level": "EV_STATE_OF_CHARGE",
-    "charging method": "EV_CHARGING_METHOD",
-    "charging mode": "EV_CHARGING_MODE_CHOICE",
-    "charge rate": "EV_CHARGING_RATE_{}_PER_HOUR",
-    "charge type": "EV_CHARGE_TYPE",
-    "is plugged in": "EV_IS_PLUGGED_IN",
-    "KWH used since last charge": "EV_ENERGY_CONSUMED_LAST_CHARGE_KWH",
-    "minutes to full charge": "EV_MINUTES_TO_FULLY_CHARGED",
 }
 
 DATA_ATTRS_CAR_INFO = {

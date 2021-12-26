@@ -15,7 +15,6 @@ from homeassistant.util import dt, distance, pressure
 from .const import (
     DOMAIN,
     DATA_ATTRS_CAR_INFO,
-    DATA_ATTRS_EV_CHARGE_INFO,
     DATA_ATTRS_TYRE_STATUS,
     DATA_ATTRS_TYRE_PRESSURE,
     DATA_ATTRS_WINDOW_STATUS,
@@ -62,7 +61,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             data.vehicles[vehicle].attributes.get("fuelType")
             == FUEL_TYPE_BATTERY
         ):
-            devices.append(JLREVChargeSensor(hass, data, vehicle))
             devices.append(JLREVBatterySensor(hass, data, vehicle))
 
         # Show last trip sensor is privacy mode off and data exists
@@ -114,7 +112,17 @@ class JLRVehicleAllDataSensor(JLREntity):
         for k, v in self._vehicle.status.copy().items():
             k = k[0].lower() + k.title().replace("_", "")[1:]
             s[k] = v
-        attrs["status"] = dict(sorted(s.items()))
+        attrs["core status"] = dict(sorted(s.items()))
+
+        if (
+            self._vehicle.attributes.get("fuelType")
+            == FUEL_TYPE_BATTERY
+        ):
+            s = {}
+            for k, v in self._vehicle.status_ev.copy().items():
+                k = k[0].lower() + k.title().replace("_", "")[1:]
+                s[k] = v
+            attrs["ev status"] = dict(sorted(s.items()))
 
         # Vehicle Position
         attrs["position"] = dict(sorted(self._vehicle.position.items()))
@@ -321,9 +329,9 @@ class JLRVehicleRangeSensor(JLREntity):
     def state(self):
         if self._fuel == FUEL_TYPE_BATTERY:
             if self._units == LENGTH_KILOMETERS:
-                return self._vehicle.status.get("EV_RANGE_ON_BATTERY_KM", "0")
+                return self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_KM", "0")
             else:
-                return self._vehicle.status.get(
+                return self._vehicle.status_ev.get(
                     "EV_RANGE_ON_BATTERY_MILES", "0"
                 )
         else:
@@ -346,7 +354,7 @@ class JLRVehicleRangeSensor(JLREntity):
 
         if self._fuel == FUEL_TYPE_BATTERY:
             attrs["Battery Level"] = (
-                self._vehicle.status.get("EV_STATE_OF_CHARGE", "0")
+                self._vehicle.status_ev.get("EV_STATE_OF_CHARGE", "0")
                 + PERCENTAGE
             )
         else:
@@ -355,35 +363,6 @@ class JLRVehicleRangeSensor(JLREntity):
                 self._vehicle.status.get("FUEL_LEVEL_PERC", "0")
                 + PERCENTAGE
             )
-        return attrs
-
-
-class JLREVChargeSensor(JLREntity):
-    def __init__(self, hass, data, vin):
-        self._sensor_name = "ev_battery"
-        super().__init__(hass, data, vin)
-        self._units = self.get_distance_units()
-        self._icon = "mdi:car-electric"
-
-    @property
-    def state(self):
-        return self._vehicle.status.get(
-            "EV_CHARGING_STATUS", "Unknown"
-        ).title()
-
-    @property
-    def extra_state_attributes(self):
-        s = self._vehicle.status
-        attrs = {}
-
-        units = "KM" if self._units == LENGTH_KILOMETERS else "MILES"
-
-        for k, v in DATA_ATTRS_EV_CHARGE_INFO.items():
-            if s.get(v):
-                try:
-                    attrs[k.title()] = s.get(v).format(units).title()
-                except AttributeError:
-                    attrs[k.title()] = s.get(v).title()
         return attrs
 
 
@@ -396,7 +375,7 @@ class JLREVBatterySensor(JLREntity):
 
     @property
     def state(self):
-        return self._vehicle.status.get("EV_STATE_OF_CHARGE", 0)
+        return self._vehicle.status_ev.get("EV_STATE_OF_CHARGE", 0)
 
     @property
     def device_class(self):
@@ -411,7 +390,7 @@ class JLREVBatterySensor(JLREntity):
     @property
     def icon(self):
         return icon.icon_for_battery_level(
-            int(self._vehicle.status.get("EV_STATE_OF_CHARGE", 0)),
+            int(self._vehicle.status_ev.get("EV_STATE_OF_CHARGE", 0)),
             self._charging_state,
         )
 
@@ -419,7 +398,7 @@ class JLREVBatterySensor(JLREntity):
     def extra_state_attributes(self):
         attrs = {}
         units = "KM" if self._units == LENGTH_KILOMETERS else "MILES"
-        s = self._vehicle.status
+        s = self._vehicle.status_ev
 
         # Charging status
         self._charging_state = (
@@ -531,27 +510,30 @@ class JLRVehicleLastTripSensor(JLREntity):
                 )
                 attrs["destination"] = t.get("endPosition").get("address")
                 if t.get("totalEcoScore"):
-                    attrs["eco_score"] = t.get("totalEcoScore").get("score")
+                    attrs["eco_score"] = t.get("totalEcoScore").get("score",0)
                 attrs["average_speed"] = round(
                     distance.convert(
-                        int(t.get("averageSpeed")),
+                        int(t.get("averageSpeed",0)),
                         LENGTH_KILOMETERS,
                         self._units,
                     )
                 )
 
                 if self._fuel == FUEL_TYPE_BATTERY:
+                    avg_consumption = t.get("averageEnergyConsumption",0)
+                    if not avg_consumption:
+                        avg_consumption = 0
                     attrs["average_consumption"] = round(
-                        t.get("averageEnergyConsumption"), 1
+                        avg_consumption, 1
                     )
                 else:
                     if self._units == LENGTH_KILOMETERS:
                         attrs["average_consumption"] = round(
-                            t.get("averageFuelConsumption"), 1
+                            t.get("averageFuelConsumption",0), 1
                         )
                     else:
                         attrs["average_consumption"] = round(
-                            int(t.get("averageFuelConsumption")) * 2.35215, 1
+                            int(t.get("averageFuelConsumption",0)) * 2.35215, 1
                         )
 
             return attrs
