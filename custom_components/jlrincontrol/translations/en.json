@@ -14,7 +14,8 @@
       "user": {
         "data": {
           "username": "Email",
-          "password": "Password"
+          "password": "Password",
+          "use_china_servers": "Use China-Server group (Only for Chinese users)"
         },
         "description": "Please enter the email and password for your InControl account.",
         "title": "JLR InControl Setup"
