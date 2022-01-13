@@ -46,7 +46,7 @@ And has services for
 
 **Note 3**: This sensor shows all returned data for attributes, statuses and position as device attribute data. See recipes for how to use this in your automations or template sensors. By default it is not enabled and can be enabled in config options.
 
-Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations welcome!), there maybe issues with some models not supporting some funtions. Please raise an issue for these and say what vehcile you have and post the log.
+Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations welcome!), there maybe issues with some models not supporting some functions. Please raise an issue for these and say what vehicle you have and post the log.
 
 # Sample Images
 
@@ -89,7 +89,7 @@ I.e. on EV vehicles you could only call it if the vehicle is charging, or on all
 
 # Creating Custom Sensors
 
-As all use cases cannot be covered and to allow the best beneift to all of this integration, version 2.1.0 introduced and 'All Info' sensor. This sensor displays the attribute, status and position information being received from the JLR servers and allows the creation of custom sensors and use of any of this data in scripts and automations.
+As all use cases cannot be covered and to allow the best benefit to all of this integration, version 2.1.0 introduced and 'All Info' sensor. This sensor displays the attribute, status and position information being received from the JLR servers and allows the creation of custom sensors and use of any of this data in scripts and automations.
 
 The [recipes](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Recipes.md) document gives an example of a template sensor that uses this data and shows how to extract the values from the all info sensor.
 
