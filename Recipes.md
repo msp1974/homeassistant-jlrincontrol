@@ -10,7 +10,7 @@ Please feel free to submit your own for inclusion into this page.
 
 Add a button to your UI and set the configuration to call the jlr_incontrol.update_health_status service.
 
-```
+```yaml
 entity: sensor.my_car_info
 hold_action:
   action: more-info
@@ -27,7 +27,7 @@ type: button
 
 ### **_Create a stack of buttons to control pin required services as per the readme image._**
 
-```
+```yaml
 cards:
   - cards:
       - entity: lock.my_car_doors
@@ -106,7 +106,7 @@ which can be installed via HACS.
 
 Example code below used to create this card.
 
-```
+```yaml
 type: picture-elements
 image: /local/ipace.png
 style: |
@@ -210,7 +210,7 @@ template:
 
 ### Same example in legacy format (deprecated - see [here](https://www.home-assistant.io/integrations/template/#legacy-sensor-configuration-format))
 
-```
+```yaml
 sensor:
   - platform: template
     sensors:

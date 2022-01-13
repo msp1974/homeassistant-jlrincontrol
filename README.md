@@ -126,7 +126,7 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 
 1. To enable debug logging for this component, add the following to your configuration.yaml
 
-```
+```yaml
     logger:
       default: critical
       logs:
