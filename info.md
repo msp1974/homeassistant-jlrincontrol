@@ -35,7 +35,7 @@ Due to changes in Home Assistant, this integration requires a minimum of HA0.110
 
 **Note 2**: When calling a service, HA will monitor the status of the service call and report in the error log if it failed. Debug log will show this checking and the success/failure reason.
 
-**Note 3**: This sensor shows all returned data for attributes, statuses and position as device attribute data. See [recipes](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Recipes.md) for how to use this in your automations or template sensors. By defualt it is not enabled and can be enabled in config options.
+**Note 3**: This sensor shows all returned data for attributes, statuses and position as device attribute data. See [recipes](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Recipes.md) for how to use this in your automations or template sensors. By default it is not enabled and can be enabled in config options.
 
 ## Sample Images
 
