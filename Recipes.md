@@ -196,6 +196,20 @@ elements:
 
 ## Create your own template sensor from the 'All Info' sensor attributes.
 
+```yaml
+template:
+  - sensor:
+    - name: "My Car Battery Sensor"
+      icon: "mdi:car-battery"
+      state: "{{ state_attr('sensor.my_car_all_info','status').batteryVoltage }}"
+      attributes:
+        battery_status: "{{ state_attr('sensor.my_car_all_info','status').batteryStatus }}"
+        tu_status: "{{ state_attr('sensor.my_car_all_info','status').tuStatusPower }}"
+        tu_serial: "{{ state_attr('sensor.my_car_all_info','attributes').telematicsDevice.serialNumber }}"
+```
+
+### Same example in legacy format (deprecated - see [here](https://www.home-assistant.io/integrations/template/#legacy-sensor-configuration-format))
+
 ```
 sensor:
   - platform: template
