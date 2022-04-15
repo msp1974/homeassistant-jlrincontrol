@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "jlrincontrol"
 DATA_JLR_CONFIG = "jlrincontrol_config"
 JLR_DATA = "jlr_data"
-VERSION = "2.1.5"
+VERSION = "2.2.0"
 
 DEFAULT_SCAN_INTERVAL = 5
 MIN_SCAN_INTERVAL = 1

@@ -3,13 +3,13 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v2.1.5)
+# JLR Home Assistant Integration (v2.2.0)
 
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
 Due to changes in Home Assistant, this integration requires a minimum of HA0.115.0.
 
-### BREAKING CHANGE IN VERSION v2.2.0beta1
+### BREAKING CHANGE IN VERSION v2.2.0
 JLR has updated their api to split status information into 'core status' and 'ev status'.  The All Info sensor has been updated to reflect this.  This means that if you have used any of this attribute data from the All Info sensor, in a template sensor, script or automation etc, you will need to update them.
 
 # Functionality
@@ -137,24 +137,21 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 
 # Change Log
 
-## v2.1.5
+## v2.2.0
 - Bump jlrpy to v1.4.1
 - Amend way debug data outputs all received data
 
 ## v2.1.4
 - Updated device_state_attributes to extra_state_attributes
 - Fixed spelling mistakes in services.yaml - PR #58.  Thanks @seanauff
-
-## v2.1.3
-- Added version to manifest
-
-## v2.2.0beta1
 - Fixed: Service returned as a failure if status returned a status of 'running'
 - Updated: Updated to support jlrpy 1.4.0
 - Updated: All Info sensor now shows status information as 'core status' and 'ev status' to align to update from JLR on api, which will break templated automations/scripts/sensors using this data
 - Updated: Set service call errors to error instead of debug to better show in logs
 - Removed: Battery_EV sensor as replaced by better Battery sensor for EVs
 
+## v2.1.3
+- Added version to manifest
 
 ## v2.1.2
 - Fixed: Change to constant UNIT_PERCENTAGE to PERCENTAGE in HA core
