@@ -417,6 +417,9 @@ class JLRApiHandler:
                 status = await self.hass.async_add_executor_job(
                     vehicle.get_status
                 )
+
+                _LOGGER.debug(f"STATUS DATA - {status}")
+                """
                 status = {
                     d["key"]: d["value"] for d in status["vehicleStatus"]["coreStatus"]
                 }
@@ -427,10 +430,7 @@ class JLRApiHandler:
                         d["key"]: d["value"] for d in status["vehicleStatus"]["evStatus"]
                     }
                     _LOGGER.debug("EV STATUS DATA - {}".format(status_ev))
-                
-                
-                
-
+                """
         return True
 
     async def async_call_service(self, service):
