@@ -59,6 +59,7 @@ from .const import (
     SIGNAL_STATE_UPDATED,
     JLR_SERVICES,
     JLR_DATA,
+    VERSION
 )
 from .services import JLRService
 from .util import field_mask
@@ -386,7 +387,7 @@ class JLRApiHandler:
         self.hass.async_create_task(self.async_health_update())
 
     async def async_connect(self):
-
+        _LOGGER.debug(f"Initialising JLR InControl v{VERSION}")
         _LOGGER.debug("Creating connection to JLR InControl API")
         try:
             self.connection = await self.hass.async_add_executor_job(
