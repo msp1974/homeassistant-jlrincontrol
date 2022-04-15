@@ -138,6 +138,7 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 # Change Log
 
 ## v2.1.5
+- Bump jlrpy to v1.4.1
 - Amend way debug data outputs all received data
 
 ## v2.1.4
