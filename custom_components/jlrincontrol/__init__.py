@@ -418,7 +418,7 @@ class JLRApiHandler:
                     vehicle.get_status
                 )
 
-                _LOGGER.debug(f"STATUS DATA - {status}")
+                _LOGGER.debug(f"STATUS DATA - {json.dumps(status)}")
                 """
                 status = {
                     d["key"]: d["value"] for d in status["vehicleStatus"]["coreStatus"]
