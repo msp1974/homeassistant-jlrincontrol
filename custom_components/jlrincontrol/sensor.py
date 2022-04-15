@@ -91,7 +91,7 @@ class JLRVehicleAllDataSensor(JLREntity):
         return "Unknown"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         attrs = {}
 
         # Vehicle Attributes
@@ -142,7 +142,7 @@ class JLRVehicleSensor(JLREntity):
         return x
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         a = self._vehicle.attributes
         attrs = {}
 
@@ -182,7 +182,7 @@ class JLRVehicleTyreSensor(JLREntity):
             return "Warning"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         s = self._vehicle.status
         attrs = {}
 
@@ -239,7 +239,7 @@ class JLRVehicleWindowSensor(JLREntity):
             return "Open"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         s = self._vehicle.status
         attrs = {}
         for k, v in DATA_ATTRS_WINDOW_STATUS.items():
@@ -274,7 +274,7 @@ class JLRVehicleAlarmSensor(JLREntity):
             return "Not Supported"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         attrs = {}
         return attrs
 
@@ -299,7 +299,7 @@ class JLRVehicleServiceSensor(JLREntity):
             return "Warning"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         s = self._vehicle.status
         attrs = {}
         for k, v in DATA_ATTRS_SERVICE_STATUS.items():
@@ -348,7 +348,7 @@ class JLRVehicleRangeSensor(JLREntity):
         return self._units
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         attrs = {}
         attrs["Fuel Type"] = self._fuel
 
@@ -395,7 +395,7 @@ class JLREVBatterySensor(JLREntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         attrs = {}
         units = "KM" if self._units == LENGTH_KILOMETERS else "MILES"
         s = self._vehicle.status_ev
@@ -486,7 +486,7 @@ class JLRVehicleLastTripSensor(JLREntity):
         return self._units
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         attrs = {}
         if self._vehicle.last_trip:
             t = self._vehicle.last_trip.get("tripDetails")
@@ -555,6 +555,6 @@ class JLRVehicleStatusSensor(JLREntity):
             return "Unknown"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         attrs = {}
         return attrs

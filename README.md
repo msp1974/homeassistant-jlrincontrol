@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v2.2.0beta1)
+# JLR Home Assistant Integration (v2.1.4)
 
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
@@ -136,6 +136,13 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 2. To enable logging of the attributes and status data in the debug log, set the debug data option in config options with debugging turned on as above.
 
 # Change Log
+
+## v2.1.4
+- Updated device_state_attributes to extra_state_attributes
+- Fixed spelling mistakes in services.yaml - PR #58.  Thanks @seanauff
+
+## v2.1.3
+- Added version to manifest
 
 ## v2.2.0beta1
 - Fixed: Service returned as a failure if status returned a status of 'running'

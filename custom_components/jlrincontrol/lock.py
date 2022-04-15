@@ -71,7 +71,7 @@ class JLRLock(JLREntity, LockEntity):
             _LOGGER.warning("Cannot unlock vehicle - pin not set in options.")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         s = self._vehicle.status
         attrs = {}
         for k, v in DATA_ATTRS_DOOR_STATUS.items():

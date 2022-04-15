@@ -3,7 +3,7 @@ update_health_status:
   fields:
     entity_id:
       {
-        description: "Enter the entity_id for vehcile.",
+        description: "Enter the entity_id for vehicle.",
         example: "sensor.my_car_info",
       }
 lock_vehicle:
@@ -11,7 +11,7 @@ lock_vehicle:
   fields:
     entity_id:
       {
-        description: "Enter the entity_id for vehcile.",
+        description: "Enter the entity_id for vehicle",
         example: "sensor.my_car_info",
       }
     pin: { description: "The pin set for your vehicle.", example: "1234" }
@@ -20,7 +20,7 @@ unlock_vehicle:
   fields:
     entity_id:
       {
-        description: "Enter the entity_id for vehcile.",
+        description: "Enter the entity_id for vehicle",
         example: "sensor.my_car_info",
       }
     pin: { description: "The pin set for your vehicle.", example: "1234" }
@@ -29,7 +29,7 @@ reset_alarm:
   fields:
     entity_id:
       {
-        description: "Enter the entity_id for vehcile.",
+        description: "Enter the entity_id for vehicle",
         example: "sensor.my_car_info",
       }
     pin: { description: "The pin set for your vehicle.", example: "1234" }
@@ -38,7 +38,7 @@ honk_blink:
   fields:
     entity_id:
       {
-        description: "Enter the entity_id for vehcile.",
+        description: "Enter the entity_id for vehicle",
         example: "sensor.my_car_info",
       }
 start_vehicle:
@@ -46,7 +46,7 @@ start_vehicle:
   fields:
     entity_id:
       {
-        description: "Enter the entity_id for vehcile.",
+        description: "Enter the entity_id for vehicle",
         example: "sensor.my_car_info",
       }
     pin: { description: "The pin set for your vehicle.", example: "1234" }
@@ -60,7 +60,7 @@ stop_vehicle:
   fields:
     entity_id:
       {
-        description: "Enter the entity_id for vehcile.",
+        description: "Enter the entity_id for vehicle",
         example: "sensor.my_car_info",
       }
     pin: { description: "The pin set for your vehicle.", example: "1234" }
@@ -69,7 +69,7 @@ start_charging:
   fields:
     entity_id:
       {
-        description: "Enter the entity_id for vehcile.",
+        description: "Enter the entity_id for vehicle",
         example: "sensor.my_car_info",
       }
 stop_charging:
@@ -77,7 +77,7 @@ stop_charging:
   fields:
     entity_id:
       {
-        description: "Enter the entity_id for vehcile.",
+        description: "Enter the entity_id for vehicle",
         example: "sensor.my_car_info",
       }
 start_preconditioning:
@@ -85,7 +85,7 @@ start_preconditioning:
   fields:
     entity_id:
       {
-        description: "Enter the entity_id for vehcile.",
+        description: "Enter the entity_id for vehicle",
         example: "sensor.my_car_info",
       }
     target_temp:
@@ -98,24 +98,24 @@ stop_preconditioning:
   fields:
     entity_id:
       {
-        description: "Enter the entity_id for vehcile.",
+        description: "Enter the entity_id for vehicle",
         example: "sensor.my_car_info",
       }
 set_max_charge_level:
-  description: "Stop vehicle preconditioning."
+  description: "Set vehicle maximum charge level."
   fields:
     entity_id:
       {
-        description: "Enter the entity_id for vehcile.",
+        description: "Enter the entity_id for vehicle",
         example: "sensor.my_car_info",
       }
-    charge_level: { description: "The percentage to charge to.", example: "85" }
+    max_charge_level: { description: "The percentage to charge to.", example: "85" }
 set_one_off_max_charge_level:
-  description: "Stop vehicle preconditioning."
+  description: "Set vehicle maximum charge level (one off)."
   fields:
     entity_id:
       {
-        description: "Enter the entity_id for vehcile.",
+        description: "Enter the entity_id for vehicle",
         example: "sensor.my_car_info",
       }
-    charge_level: { description: "The percentage to charge to.", example: "85" }
+    max_charge_level: { description: "The percentage to charge to.", example: "85" }
