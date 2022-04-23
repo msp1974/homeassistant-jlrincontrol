@@ -413,10 +413,10 @@ class JLRApiHandler:
             # Set vehicle engine type
             vehicle.engine_type = FUEL_TYPE_ICE
             if status["vehicleStatus"].get("evStatus"):
-                if vehicle.attributes.get("fuelType") != FUEL_TYPE_BATTERY:
-                    vehicle.engine_type = FUEL_TYPE_HYBRID
-                else:
+                if vehicle.attributes.get("fuelType") == FUEL_TYPE_BATTERY:
                     vehicle.engine_type = FUEL_TYPE_BATTERY
+                else:
+                    vehicle.engine_type = FUEL_TYPE_HYBRID
 
             _LOGGER.debug(
                 f"Discovered {vehicle.attributes.get('vehicleBrand')} {vehicle.attributes.get('vehicleType')} {vehicle.engine_type} Vehicle - {field_mask(vehicle.vin, 3, 2)}"
