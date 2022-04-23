@@ -402,13 +402,20 @@ class JLRApiHandler:
             return False
 
         _LOGGER.debug("Connected to API")
-
         # Discover all vehicles and get one time info
         for vehicle in self.connection.vehicles:
             # Get attributes
             vehicle.attributes = await self.hass.async_add_executor_job(
                 vehicle.get_attributes
             )
+
+            #Get status
+            status = await self.hass.async_add_executor_job(
+                vehicle.get_status
+            )
+            status = {
+                d["key"]: d["value"] for d in status["vehicleStatus"]["coreStatus"]
+            }
 
             # Set vehicle engine type
             vehicle.engine_type = FUEL_TYPE_ICE
@@ -428,13 +435,6 @@ class JLRApiHandler:
             # Add one time dump of attr and status data for debugging
             if self.debug_data:
                 _LOGGER.debug("ATTRIBUTE DATA - {}".format(vehicle.attributes))
-                status = await self.hass.async_add_executor_job(
-                    vehicle.get_status
-                )
-
-                status = {
-                    d["key"]: d["value"] for d in status["vehicleStatus"]["coreStatus"]
-                }
                 _LOGGER.debug("CORE STATUS DATA - {}".format(status))
 
                 if vehicle.engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
