@@ -25,6 +25,7 @@ class JLREntity(Entity):
             + " "
             + self._sensor_name.title()
         )
+        self._engine_type = self._vehicle.engine_type
         self._fuel = self._vehicle.attributes.get("fuelType")
         self._entity_prefix = (
             self._vehicle.attributes.get("vehicleBrand")

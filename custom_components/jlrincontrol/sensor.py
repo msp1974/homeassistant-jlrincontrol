@@ -21,6 +21,8 @@ from .const import (
     DATA_ATTRS_SERVICE_STATUS,
     DATA_ATTRS_SERVICE_INFO,
     FUEL_TYPE_BATTERY,
+    FUEL_TYPE_HYBRID,
+    FUEL_TYPE_ICE,
     JLR_CHARGE_METHOD_TO_HA,
     JLR_CHARGE_STATUS_TO_HA,
     JLR_DATA,
@@ -56,11 +58,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if config_entry.options.get(CONF_ALL_DATA_SENSOR):
             devices.append(JLRVehicleAllDataSensor(hass, data, vehicle))
 
-        # If EV show EV sensorl otherwise show fuel sensor
-        if (
-            data.vehicles[vehicle].attributes.get("fuelType")
-            == FUEL_TYPE_BATTERY
-        ):
+        # If EV show EV sensor otherwise show fuel sensor
+        if data.vehicles[vehicle].engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
             devices.append(JLREVBatterySensor(hass, data, vehicle))
 
         # Show last trip sensor is privacy mode off and data exists
@@ -114,10 +113,7 @@ class JLRVehicleAllDataSensor(JLREntity):
             s[k] = v
         attrs["core status"] = dict(sorted(s.items()))
 
-        if (
-            self._vehicle.attributes.get("fuelType")
-            == FUEL_TYPE_BATTERY
-        ):
+        if self._engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
             s = {}
             for k, v in self._vehicle.status_ev.copy().items():
                 k = k[0].lower() + k.title().replace("_", "")[1:]
@@ -145,6 +141,7 @@ class JLRVehicleSensor(JLREntity):
     def extra_state_attributes(self):
         a = self._vehicle.attributes
         attrs = {}
+        attrs["engine_type"] = self._vehicle.get("engine_type","Unknown")
 
         for k, v in DATA_ATTRS_CAR_INFO.items():
             if a.get(v):
@@ -327,21 +324,27 @@ class JLRVehicleRangeSensor(JLREntity):
 
     @property
     def state(self):
-        if self._fuel == FUEL_TYPE_BATTERY:
-            if self._units == LENGTH_KILOMETERS:
-                return self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_KM", "0")
-            else:
-                return self._vehicle.status_ev.get(
-                    "EV_RANGE_ON_BATTERY_MILES", "0"
-                )
-        else:
-            return round(
-                distance.convert(
-                    int(self._vehicle.status.get("DISTANCE_TO_EMPTY_FUEL")),
-                    LENGTH_KILOMETERS,
-                    self._units,
-                )
+        # Has battery
+        if self._engine_type == FUEL_TYPE_BATTERY:
+            return (
+                self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_KM", "0") 
+                if self._units == LENGTH_KILOMETERS
+                else self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_MILES", "0")
             )
+        if self._engine_type == FUEL_TYPE_HYBRID:
+            return (
+                self._vehicle.status_ev.get("EV_PHEV_RANGE_COMBINED_KM", "0")
+                 if self._units == LENGTH_KILOMETERS
+                else self._vehicle.status_ev.get("EV_PHEV_RANGE_COMBINED_MILES", "0")
+            )
+        # Fuel only
+        return round(
+            distance.convert(
+                int(self._vehicle.status.get("DISTANCE_TO_EMPTY_FUEL")),
+                LENGTH_KILOMETERS,
+                self._units,
+            )
+        )
 
     @property
     def unit_of_measurement(self):
@@ -352,13 +355,27 @@ class JLRVehicleRangeSensor(JLREntity):
         attrs = {}
         attrs["Fuel Type"] = self._fuel
 
-        if self._fuel == FUEL_TYPE_BATTERY:
+        if self._engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
             attrs["Battery Level"] = (
                 self._vehicle.status_ev.get("EV_STATE_OF_CHARGE", "0")
                 + PERCENTAGE
             )
-        else:
-            # TODO: If fuelTankVolume is not none show remaining litres
+        # If hybrid
+        if self._engine_type == FUEL_TYPE_HYBRID:
+            attrs["Fuel Range"] = round(distance.convert(
+                int(self._vehicle.status.get("DISTANCE_TO_EMPTY_FUEL")),
+                LENGTH_KILOMETERS,
+                self._units,
+                )
+            )
+
+            attrs["Battery Range"] = (
+                self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_KM", "0") 
+                if self._units == LENGTH_KILOMETERS
+                else self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_MILES", "0")
+            )
+        
+        if self._vehicle.engine_type in [FUEL_TYPE_ICE, FUEL_TYPE_HYBRID]:
             attrs["Fuel Level"] = (
                 self._vehicle.status.get("FUEL_LEVEL_PERC", "0")
                 + PERCENTAGE

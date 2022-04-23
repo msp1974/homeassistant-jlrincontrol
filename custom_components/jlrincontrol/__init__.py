@@ -52,6 +52,8 @@ from .const import (
     DOMAIN,
     DATA_JLR_CONFIG,
     FUEL_TYPE_BATTERY,
+    FUEL_TYPE_ICE,
+    FUEL_TYPE_HYBRID,
     KMS_TO_MILES,
     DEFAULT_SCAN_INTERVAL,
     MIN_SCAN_INTERVAL,
@@ -403,13 +405,24 @@ class JLRApiHandler:
 
         # Discover all vehicles and get one time info
         for vehicle in self.connection.vehicles:
-            _LOGGER.debug(
-                "Discovered vehicle - {}".format(field_mask(vehicle.vin, 3, 2))
-            )
             # Get attributes
             vehicle.attributes = await self.hass.async_add_executor_job(
                 vehicle.get_attributes
             )
+
+            # Set vehicle engine type
+            vehicle.engine_type = FUEL_TYPE_ICE
+            if status["vehicleStatus"].get("evStatus"):
+                if vehicle.attributes.get("fuelType") != FUEL_TYPE_BATTERY:
+                    vehicle.engine_type = FUEL_TYPE_HYBRID
+                else:
+                    vehicle.engine_type = FUEL_TYPE_BATTERY
+
+            _LOGGER.debug(
+                f"Discovered {vehicle.attributes.get('vehicleBrand')} {vehicle.attributes.get('vehicleType')} {vehicle.engine_type} Vehicle - {field_mask(vehicle.vin, 3, 2)}"
+            )
+
+            #Add vehicle to collection
             self.vehicles[vehicle.vin] = vehicle
 
             # Add one time dump of attr and status data for debugging
@@ -419,19 +432,17 @@ class JLRApiHandler:
                     vehicle.get_status
                 )
 
-                _LOGGER.debug(f"STATUS DATA - {json.dumps(status)}")
-                """
                 status = {
                     d["key"]: d["value"] for d in status["vehicleStatus"]["coreStatus"]
                 }
                 _LOGGER.debug("CORE STATUS DATA - {}".format(status))
 
-                if self.vehicles[vehicle].attributes.get("fuelType") == FUEL_TYPE_BATTERY:
+                if vehicle.engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
                     status_ev = {
-                        d["key"]: d["value"] for d in status["vehicleStatus"]["evStatus"]
+                        d["key"]: d["value"] for d in status["vehicleStatus"].get("evStatus")
                     }
                     _LOGGER.debug("EV STATUS DATA - {}".format(status_ev))
-                """
+                
         return True
 
     async def async_call_service(self, service):
@@ -487,7 +498,7 @@ class JLRApiHandler:
                 status_core["lastUpdatedTime"] = last_updated
                 self.vehicles[vehicle].status = status_core
 
-                if self.vehicles[vehicle].attributes.get("fuelType") == FUEL_TYPE_BATTERY:
+                if self.vehicles[vehicle].engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
                     status_ev = {
                         d["key"]: d["value"] for d in status["vehicleStatus"].get("evStatus")
                     }
