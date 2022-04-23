@@ -141,7 +141,7 @@ class JLRVehicleSensor(JLREntity):
     def extra_state_attributes(self):
         a = self._vehicle.attributes
         attrs = {}
-        attrs["engine_type"] = self._vehicle.get("engine_type","Unknown")
+        attrs["Engine Type"] = self._engine_type
 
         for k, v in DATA_ATTRS_CAR_INFO.items():
             if a.get(v):
