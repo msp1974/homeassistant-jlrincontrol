@@ -431,10 +431,10 @@ class JLRApiHandler:
             # Add one time dump of attr and status data for debugging
             if self.debug_data:
                 _LOGGER.debug("ATTRIBUTE DATA - {}".format(vehicle.attributes))
-                status = {
+                status_core = {
                     d["key"]: d["value"] for d in status["vehicleStatus"]["coreStatus"]
                 }
-                _LOGGER.debug("CORE STATUS DATA - {}".format(status))
+                _LOGGER.debug("CORE STATUS DATA - {}".format(status_core))
 
                 if vehicle.engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
                     status_ev = {
