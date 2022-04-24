@@ -402,6 +402,13 @@ class JLRApiHandler:
             return False
 
         _LOGGER.debug("Connected to API")
+        
+        if len(self.connection.vehicles) > 0:
+            _LOGGER.debug(f"Found {len(self.connection.vehicles)} vehicles.  Performing setup")
+            _LOGGER.debug(json.dumps(self.connection.vehicles))
+        else:
+            _LOGGER.debug("No vehicles found in this account")
+
         # Discover all vehicles and get one time info
         for vehicle in self.connection.vehicles:
             # Get attributes
@@ -409,10 +416,20 @@ class JLRApiHandler:
                 vehicle.get_attributes
             )
 
+            if vehicle.attributes:
+                _LOGGER.debug(f"Retrieved attribute data for {field_mask(vehicle.vin, 3, 2)}")
+            else:
+                _LOGGER.debug(f"Attribute data is empty for {field_mask(vehicle.vin, 3, 2)}")
+
             #Get status
             status = await self.hass.async_add_executor_job(
                 vehicle.get_status
             )
+
+            if status:
+                _LOGGER.debug(f"Retrieved status data for {field_mask(vehicle.vin, 3, 2)}")
+            else:
+                _LOGGER.debug(f"Status data is empty for {field_mask(vehicle.vin, 3, 2)}")
 
             # Set vehicle engine type
             vehicle.engine_type = FUEL_TYPE_ICE
