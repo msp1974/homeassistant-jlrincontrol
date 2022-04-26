@@ -453,7 +453,7 @@ class JLRApiHandler:
                 }
                 _LOGGER.debug("CORE STATUS DATA - {}".format(status_core))
 
-                if vehicle.engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
+                if status["vehicleStatus"].get("evStatus"):
                     status_ev = {
                         d["key"]: d["value"] for d in status["vehicleStatus"].get("evStatus")
                     }
