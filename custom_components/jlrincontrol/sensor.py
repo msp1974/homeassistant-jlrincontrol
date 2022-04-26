@@ -67,7 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             devices.append(JLRVehicleLastTripSensor(hass, data, vehicle))
         else:
             _LOGGER.debug(
-                "Not loading Last Trip sensor due to privacy mode or no data"
+                f"Not loading Last Trip sensor for {data.vehicles[vehicle].attributes.get('nickname')} due to privacy mode or no data"
             )
 
     data.entities.extend(devices)
