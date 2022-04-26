@@ -58,7 +58,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if config_entry.options.get(CONF_ALL_DATA_SENSOR):
             devices.append(JLRVehicleAllDataSensor(hass, data, vehicle))
 
-        # If EV show EV sensor otherwise show fuel sensor
+        # If EV/PHEV show Battery Sensor
         if data.vehicles[vehicle].engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
             devices.append(JLREVBatterySensor(hass, data, vehicle))
 
