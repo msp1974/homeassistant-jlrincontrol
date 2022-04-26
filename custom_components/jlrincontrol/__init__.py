@@ -432,6 +432,7 @@ class JLRApiHandler:
                 _LOGGER.debug(f"Status data is empty for {field_mask(vehicle.vin, 3, 2)}")
 
             # Set vehicle engine type
+            _LOGGER.debug(f"Vehicle fuel type is {vehicle.attributes.get('fuelType', 'Unknown')}")
             vehicle.engine_type = FUEL_TYPE_ICE
             if status["vehicleStatus"].get("evStatus"):
                 if vehicle.attributes.get("fuelType") == FUEL_TYPE_BATTERY:
@@ -447,17 +448,8 @@ class JLRApiHandler:
 
             # Add one time dump of attr and status data for debugging
             if self.debug_data:
-                _LOGGER.debug("ATTRIBUTE DATA - {}".format(vehicle.attributes))
-                status_core = {
-                    d["key"]: d["value"] for d in status["vehicleStatus"]["coreStatus"]
-                }
-                _LOGGER.debug("CORE STATUS DATA - {}".format(status_core))
-
-                if status["vehicleStatus"].get("evStatus"):
-                    status_ev = {
-                        d["key"]: d["value"] for d in status["vehicleStatus"].get("evStatus")
-                    }
-                    _LOGGER.debug("EV STATUS DATA - {}".format(status_ev))
+                _LOGGER.debug(f"ATTRIBUTE DATA - {vehicle.attributes}")
+                _LOGGER.debug(f"STATUS DATA - {status}")
                 
         return True
 
@@ -514,6 +506,7 @@ class JLRApiHandler:
                 status_core["lastUpdatedTime"] = last_updated
                 self.vehicles[vehicle].status = status_core
 
+                status_ev = {}
                 if self.vehicles[vehicle].engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
                     status_ev = {
                         d["key"]: d["value"] for d in status["vehicleStatus"].get("evStatus")
