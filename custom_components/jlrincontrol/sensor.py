@@ -355,6 +355,12 @@ class JLRVehicleRangeSensor(JLREntity):
         attrs = {}
         attrs["Fuel Type"] = self._fuel
 
+        if self._vehicle.engine_type in [FUEL_TYPE_ICE, FUEL_TYPE_HYBRID]:
+            attrs["Fuel Level"] = (
+                self._vehicle.status.get("FUEL_LEVEL_PERC", "0")
+                + PERCENTAGE
+            )
+
         if self._engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
             attrs["Battery Level"] = (
                 self._vehicle.status_ev.get("EV_STATE_OF_CHARGE", "0")
@@ -375,11 +381,6 @@ class JLRVehicleRangeSensor(JLREntity):
                 else self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_MILES", "0")
             )
         
-        if self._vehicle.engine_type in [FUEL_TYPE_ICE, FUEL_TYPE_HYBRID]:
-            attrs["Fuel Level"] = (
-                self._vehicle.status.get("FUEL_LEVEL_PERC", "0")
-                + PERCENTAGE
-            )
         return attrs
 
 
