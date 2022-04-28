@@ -201,10 +201,10 @@ template:
   - sensor:
     - name: "My Car Battery Sensor"
       icon: "mdi:car-battery"
-      state: "{{ state_attr('sensor.my_car_all_info','status').batteryVoltage }}"
+      state: "{{ state_attr('sensor.my_car_all_info','core_status').batteryVoltage }}"
       attributes:
-        battery_status: "{{ state_attr('sensor.my_car_all_info','status').batteryStatus }}"
-        tu_status: "{{ state_attr('sensor.my_car_all_info','status').tuStatusPower }}"
+        battery_status: "{{ state_attr('sensor.my_car_all_info','core_status').batteryStatus }}"
+        tu_status: "{{ state_attr('sensor.my_car_all_info','core_status').tuStatusPower }}"
         tu_serial: "{{ state_attr('sensor.my_car_all_info','attributes').telematicsDevice.serialNumber }}"
 ```
 
@@ -217,9 +217,9 @@ sensor:
       example_json_sensor:
         friendly_name: "My Car Battery Sensor"
         icon_template: "mdi:car-battery"
-        value_template: "{{ state_attr('sensor.my_car_all_info','status').batteryVoltage }}"
+        value_template: "{{ state_attr('sensor.my_car_all_info','core_status').batteryVoltage }}"
         attribute_templates:
-          battery_status: "{{ state_attr('sensor.my_car_all_info','status').batteryStatus }}"
-          tu_status: "{{ state_attr('sensor.my_car_all_info','status').tuStatusPower }}"
+          battery_status: "{{ state_attr('sensor.my_car_all_info','core_status').batteryStatus }}"
+          tu_status: "{{ state_attr('sensor.my_car_all_info','core_status').tuStatusPower }}"
           tu_serial: "{{ state_attr('sensor.my_car_all_info','attributes').telematicsDevice.serialNumber }}"
 ```
