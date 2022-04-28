@@ -3,13 +3,13 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v2.2.0)
+# JLR Home Assistant Integration (v2.2.1)
 
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
 Due to changes in Home Assistant, this integration requires a minimum of HA0.115.0.
 
-### BREAKING CHANGE IN VERSION v2.2.0
+### BREAKING CHANGE IN VERSION v2.2.1
 JLR has updated their api to split status information into 'core status' and 'ev status'.  The All Info sensor has been updated to reflect this.  This means that if you have used any of this attribute data from the All Info sensor, in a template sensor, script or automation etc, you will need to update them.
 
 # Functionality
@@ -24,7 +24,7 @@ Currently this loads a series of sensors for
 - Tyres
 - Range
 - Location
-- Battery Sensor (EVs Only)
+- Battery Sensor (EV & PHEV Only)
 - Service Info
 - Last Trip
 - All Vehicle Data (see Note 3)
@@ -137,9 +137,12 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 
 # Change Log
 
-## v2.2.0
+## v2.2.1
 - Bump jlrpy to v1.4.1
-- Amend way debug data outputs all received data
+- Amended attributes code to support HA change removal of old method in 2022.4
+- Added support for PHEV vehicles
+- BREAKING CHANGE: All Info sensor attributes now split into core_status and ev_status to reflect JLR change in api
+- Debug data outputs all received data
 
 ## v2.1.4
 - Updated device_state_attributes to extra_state_attributes
