@@ -321,7 +321,7 @@ async def async_update_device_registry(hass, config_entry, vehicles, data):
             ),
             name=data.vehicles[vehicle.vin].attributes.get("nickname"),
             model=data.vehicles[vehicle.vin].attributes.get("vehicleType"),
-            sw_version="1.0",
+            sw_version=data.vehicles[vehicle.vin].status.get("TU_STATUS_SW_VERSION_MAIN"),
         )
 
 
@@ -434,10 +434,17 @@ class JLRApiHandler:
             # Set vehicle engine type
             _LOGGER.debug(f"Vehicle fuel type is {vehicle.attributes.get('fuelType', 'Unknown')}")
 
+            if status["vehicleStatus"].get("coreStatus"):
+                vehicle.status = {
+                    d["key"]: d["value"] for d in status["vehicleStatus"]["coreStatus"]
+                }
+            else:
+                vehicle.status = None
+
             if status["vehicleStatus"].get("evStatus"):
                 status_ev = {
-                        d["key"]: d["value"] for d in status["vehicleStatus"]["evStatus"]
-                    }
+                    d["key"]: d["value"] for d in status["vehicleStatus"]["evStatus"]
+                }
             else:
                 status_ev = None
 
