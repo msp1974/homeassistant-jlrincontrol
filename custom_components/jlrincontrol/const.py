@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "jlrincontrol"
 DATA_JLR_CONFIG = "jlrincontrol_config"
 JLR_DATA = "jlr_data"
-VERSION = "2.1.4"
+VERSION = "2.2.0"
 
 DEFAULT_SCAN_INTERVAL = 5
 MIN_SCAN_INTERVAL = 1
@@ -26,6 +26,8 @@ SIGNAL_STATE_UPDATED = f"{DOMAIN}.updated"
 KMS_TO_MILES = 0.62137
 
 FUEL_TYPE_BATTERY = "Electric"
+FUEL_TYPE_ICE = "ICE"
+FUEL_TYPE_HYBRID = "Hybrid"
 
 JLR_WAKEUP_TO_HA = {
     "RECEIVING_SCHEDULE_ACCEPTANCE_WINDOW": "Active",

@@ -52,6 +52,8 @@ from .const import (
     DOMAIN,
     DATA_JLR_CONFIG,
     FUEL_TYPE_BATTERY,
+    FUEL_TYPE_ICE,
+    FUEL_TYPE_HYBRID,
     KMS_TO_MILES,
     DEFAULT_SCAN_INTERVAL,
     MIN_SCAN_INTERVAL,
@@ -59,6 +61,7 @@ from .const import (
     SIGNAL_STATE_UPDATED,
     JLR_SERVICES,
     JLR_DATA,
+    VERSION
 )
 from .services import JLRService
 from .util import field_mask
@@ -386,7 +389,7 @@ class JLRApiHandler:
         self.hass.async_create_task(self.async_health_update())
 
     async def async_connect(self):
-
+        _LOGGER.debug(f"Initialising JLR InControl v{VERSION}")
         _LOGGER.debug("Creating connection to JLR InControl API")
         try:
             self.connection = await self.hass.async_add_executor_job(
@@ -399,38 +402,64 @@ class JLRApiHandler:
             return False
 
         _LOGGER.debug("Connected to API")
+        
+        if len(self.connection.vehicles) > 0:
+            _LOGGER.debug(f"Found {len(self.connection.vehicles)} vehicles.  Performing setup")
+            _LOGGER.debug(json.dumps(self.connection.vehicles))
+        else:
+            _LOGGER.debug("No vehicles found in this account")
 
         # Discover all vehicles and get one time info
         for vehicle in self.connection.vehicles:
-            _LOGGER.debug(
-                "Discovered vehicle - {}".format(field_mask(vehicle.vin, 3, 2))
-            )
             # Get attributes
             vehicle.attributes = await self.hass.async_add_executor_job(
                 vehicle.get_attributes
             )
+
+            if vehicle.attributes:
+                _LOGGER.debug(f"Retrieved attribute data for {field_mask(vehicle.vin, 3, 2)}")
+            else:
+                _LOGGER.debug(f"Attribute data is empty for {field_mask(vehicle.vin, 3, 2)}")
+
+            #Get status
+            status = await self.hass.async_add_executor_job(
+                vehicle.get_status
+            )
+
+            if status:
+                _LOGGER.debug(f"Retrieved status data for {field_mask(vehicle.vin, 3, 2)}")
+            else:
+                _LOGGER.debug(f"Status data is empty for {field_mask(vehicle.vin, 3, 2)}")
+
+            # Set vehicle engine type
+            _LOGGER.debug(f"Vehicle fuel type is {vehicle.attributes.get('fuelType', 'Unknown')}")
+
+            if status["vehicleStatus"].get("evStatus"):
+                status_ev = {
+                        d["key"]: d["value"] for d in status["vehicleStatus"]["evStatus"]
+                    }
+            else:
+                status_ev = None
+
+            if vehicle.attributes.get("fuelType") == FUEL_TYPE_BATTERY:
+                vehicle.engine_type = FUEL_TYPE_BATTERY
+            elif status_ev and status_ev.get("EV_PHEV_RANGE_COMBINED_KM"):
+                vehicle.engine_type = FUEL_TYPE_HYBRID
+            else:
+                vehicle.engine_type = FUEL_TYPE_ICE
+
+            _LOGGER.debug(
+                f"Discovered {vehicle.attributes.get('vehicleBrand')} {vehicle.attributes.get('vehicleType')} {vehicle.engine_type} Vehicle - {field_mask(vehicle.vin, 3, 2)}"
+            )
+
+            #Add vehicle to collection
             self.vehicles[vehicle.vin] = vehicle
 
             # Add one time dump of attr and status data for debugging
             if self.debug_data:
-                _LOGGER.debug("ATTRIBUTE DATA - {}".format(vehicle.attributes))
-                status = await self.hass.async_add_executor_job(
-                    vehicle.get_status
-                )
-                status = {
-                    d["key"]: d["value"] for d in status["vehicleStatus"]["coreStatus"]
-                }
-                _LOGGER.debug("CORE STATUS DATA - {}".format(status))
-
-                if self.vehicles[vehicle].attributes.get("fuelType") == FUEL_TYPE_BATTERY:
-                    status_ev = {
-                        d["key"]: d["value"] for d in status["vehicleStatus"]["evStatus"]
-                    }
-                    _LOGGER.debug("EV STATUS DATA - {}".format(status_ev))
+                _LOGGER.debug(f"ATTRIBUTE DATA - {vehicle.attributes}")
+                _LOGGER.debug(f"STATUS DATA - {status}")
                 
-                
-                
-
         return True
 
     async def async_call_service(self, service):
@@ -486,7 +515,8 @@ class JLRApiHandler:
                 status_core["lastUpdatedTime"] = last_updated
                 self.vehicles[vehicle].status = status_core
 
-                if self.vehicles[vehicle].attributes.get("fuelType") == FUEL_TYPE_BATTERY:
+                status_ev = {}
+                if self.vehicles[vehicle].engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
                     status_ev = {
                         d["key"]: d["value"] for d in status["vehicleStatus"].get("evStatus")
                     }

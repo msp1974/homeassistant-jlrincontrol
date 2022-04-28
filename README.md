@@ -3,13 +3,13 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v2.1.4)
+# JLR Home Assistant Integration (v2.2.1)
 
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
 Due to changes in Home Assistant, this integration requires a minimum of HA0.115.0.
 
-### BREAKING CHANGE IN VERSION v2.2.0beta1
+### BREAKING CHANGE IN VERSION v2.2.1
 JLR has updated their api to split status information into 'core status' and 'ev status'.  The All Info sensor has been updated to reflect this.  This means that if you have used any of this attribute data from the All Info sensor, in a template sensor, script or automation etc, you will need to update them.
 
 # Functionality
@@ -24,7 +24,7 @@ Currently this loads a series of sensors for
 - Tyres
 - Range
 - Location
-- Battery Sensor (EVs Only)
+- Battery Sensor (EV & PHEV Only)
 - Service Info
 - Last Trip
 - All Vehicle Data (see Note 3)
@@ -46,7 +46,7 @@ And has services for
 
 **Note 3**: This sensor shows all returned data for attributes, statuses and position as device attribute data. See recipes for how to use this in your automations or template sensors. By default it is not enabled and can be enabled in config options.
 
-Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations welcome!), there maybe issues with some models not supporting some funtions. Please raise an issue for these and say what vehcile you have and post the log.
+Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations welcome!), there maybe issues with some models not supporting some functions. Please raise an issue for these and say what vehicle you have and post the log.
 
 # Sample Images
 
@@ -89,7 +89,7 @@ I.e. on EV vehicles you could only call it if the vehicle is charging, or on all
 
 # Creating Custom Sensors
 
-As all use cases cannot be covered and to allow the best beneift to all of this integration, version 2.1.0 introduced and 'All Info' sensor. This sensor displays the attribute, status and position information being received from the JLR servers and allows the creation of custom sensors and use of any of this data in scripts and automations.
+As all use cases cannot be covered and to allow the best benefit to all of this integration, version 2.1.0 introduced and 'All Info' sensor. This sensor displays the attribute, status and position information being received from the JLR servers and allows the creation of custom sensors and use of any of this data in scripts and automations.
 
 The [recipes](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Recipes.md) document gives an example of a template sensor that uses this data and shows how to extract the values from the all info sensor.
 
@@ -126,7 +126,7 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 
 1. To enable debug logging for this component, add the following to your configuration.yaml
 
-```
+```yaml
     logger:
       default: critical
       logs:
@@ -137,20 +137,22 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 
 # Change Log
 
-## v2.1.4
+## v2.2.1 (includes v2.1.4 Pre Release changes)
+- Bump jlrpy to v1.4.1
+- Added support for PHEV vehicles
+- Debug data outputs all received data
+
+## v2.1.4 - Pre Release
 - Updated device_state_attributes to extra_state_attributes
 - Fixed spelling mistakes in services.yaml - PR #58.  Thanks @seanauff
-
-## v2.1.3
-- Added version to manifest
-
-## v2.2.0beta1
 - Fixed: Service returned as a failure if status returned a status of 'running'
 - Updated: Updated to support jlrpy 1.4.0
 - Updated: All Info sensor now shows status information as 'core status' and 'ev status' to align to update from JLR on api, which will break templated automations/scripts/sensors using this data
 - Updated: Set service call errors to error instead of debug to better show in logs
 - Removed: Battery_EV sensor as replaced by better Battery sensor for EVs
 
+## v2.1.3
+- Added version to manifest
 
 ## v2.1.2
 - Fixed: Change to constant UNIT_PERCENTAGE to PERCENTAGE in HA core
