@@ -137,14 +137,12 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 
 # Change Log
 
-## v2.2.1
+## v2.2.1 (includes v2.1.4 Pre Release changes)
 - Bump jlrpy to v1.4.1
-- Amended attributes code to support HA change removal of old method in 2022.4
 - Added support for PHEV vehicles
-- BREAKING CHANGE: All Info sensor attributes now split into core_status and ev_status to reflect JLR change in api
 - Debug data outputs all received data
 
-## v2.1.4
+## v2.1.4 - Pre Release
 - Updated device_state_attributes to extra_state_attributes
 - Fixed spelling mistakes in services.yaml - PR #58.  Thanks @seanauff
 - Fixed: Service returned as a failure if status returned a status of 'running'
