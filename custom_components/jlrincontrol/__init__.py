@@ -46,6 +46,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt
 
 from .const import (
@@ -310,7 +311,7 @@ async def _async_update_listener(hass, config_entry):
 
 async def async_update_device_registry(hass, config_entry, vehicles, data):
     """Update device registry."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     for vehicle in vehicles:
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
