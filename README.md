@@ -137,6 +137,7 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 ## v2.2.2
 - Fix deprecation issue of async_get_registry [#74](https://github.com/msp1974/homeassistant-jlrincontrol/issues/74)
 - Fix distance and pressure deprecated to use unit_conversion
+- Add config option for China region
 
 ## v2.2.1 (includes v2.1.4 Pre Release changes)
 - Bump jlrpy to v1.4.1
