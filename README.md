@@ -7,10 +7,7 @@
 
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
-Due to changes in Home Assistant, this integration requires a minimum of HA0.115.0.
-
-### BREAKING CHANGE IN VERSION v2.2.2
-JLR has updated their api to split status information into 'core status' and 'ev status'.  The All Info sensor has been updated to reflect this.  This means that if you have used any of this attribute data from the All Info sensor, in a template sensor, script or automation etc, you will need to update them.
+Due to changes in Home Assistant, this integration requires a minimum of HA v2022.10.
 
 # Functionality
 
