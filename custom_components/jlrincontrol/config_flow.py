@@ -24,6 +24,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     MIN_SCAN_INTERVAL,
     DEFAULT_HEATH_UPDATE_INTERVAL,
+    CONF_USE_CHINA_SERVERS,
 )
 
 CONF_ALL_DATA_SENSOR = "all_data_sensor"
@@ -36,7 +37,11 @@ UNIQUE_ID = "unique_id"
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {
+        vol.Required(CONF_USERNAME): str, 
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_USE_CHINA_SERVERS, default=False): bool,
+    }
 )
 
 
@@ -51,7 +56,7 @@ async def validate_input(hass, data):
 
     try:
         connection = await hass.async_add_executor_job(
-            jlrpy.Connection, data[CONF_USERNAME], data[CONF_PASSWORD]
+            jlrpy.Connection, data[CONF_USERNAME], data[CONF_PASSWORD], '', '', data[CONF_USE_CHINA_SERVERS]
         )
     except urllib.error.HTTPError as ex:
         if ex.code > 400 and ex.code < 500:
