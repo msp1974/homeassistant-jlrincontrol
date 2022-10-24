@@ -30,3 +30,4 @@ def convert_temp_value(temp_unit, service_code, target_value):
         else:
             # Convert from F
             return min(285, max(155, int(((target_value - 27) / 2) * 10)))
+

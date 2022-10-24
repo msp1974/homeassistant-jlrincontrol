@@ -4,11 +4,7 @@
   "config_flow": true,
   "documentation": "https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/README.Md",
   "dependencies": [],
-  "codeowners": [
-    "@msp1974"
-  ],
-  "requirements": [
-    "jlrpy==1.4.1"
-  ],
-  "version":"2.2.0"
+  "codeowners": ["@msp1974"],
+  "requirements": ["jlrpy==1.4.1"],
+  "version": "2.2.2"
 }

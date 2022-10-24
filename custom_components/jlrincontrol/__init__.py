@@ -46,6 +46,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt
 
 from .const import (
@@ -312,7 +313,7 @@ async def _async_update_listener(hass, config_entry):
 
 async def async_update_device_registry(hass, config_entry, vehicles, data):
     """Update device registry."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     for vehicle in vehicles:
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
@@ -323,7 +324,7 @@ async def async_update_device_registry(hass, config_entry, vehicles, data):
             ),
             name=data.vehicles[vehicle.vin].attributes.get("nickname"),
             model=data.vehicles[vehicle.vin].attributes.get("vehicleType"),
-            sw_version="1.0",
+            sw_version=data.vehicles[vehicle.vin].status.get("TU_STATUS_SW_VERSION_MAIN"),
         )
 
 
@@ -437,10 +438,17 @@ class JLRApiHandler:
             # Set vehicle engine type
             _LOGGER.debug(f"Vehicle fuel type is {vehicle.attributes.get('fuelType', 'Unknown')}")
 
+            if status["vehicleStatus"].get("coreStatus"):
+                vehicle.status = {
+                    d["key"]: d["value"] for d in status["vehicleStatus"]["coreStatus"]
+                }
+            else:
+                vehicle.status = None
+
             if status["vehicleStatus"].get("evStatus"):
                 status_ev = {
-                        d["key"]: d["value"] for d in status["vehicleStatus"]["evStatus"]
-                    }
+                    d["key"]: d["value"] for d in status["vehicleStatus"]["evStatus"]
+                }
             else:
                 status_ev = None
 

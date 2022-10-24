@@ -11,7 +11,7 @@ from homeassistant.const import (
     PRESSURE_BAR,
 )
 from homeassistant.helpers import icon
-from homeassistant.util import dt, distance, pressure
+from homeassistant.util import dt, unit_conversion
 from .const import (
     DOMAIN,
     DATA_ATTRS_CAR_INFO,
@@ -208,7 +208,7 @@ class JLRVehicleTyreSensor(JLREntity):
                     attrs[
                         k.title() + " Pressure ({})".format(self._units)
                     ] = round(
-                        pressure.convert(
+                        unit_conversion.PressureConverter.convert(
                             tyre_pressure * 1000, PRESSURE_PA, self._units
                         ),
                         1,
@@ -339,7 +339,7 @@ class JLRVehicleRangeSensor(JLREntity):
             )
         # Fuel only
         return round(
-            distance.convert(
+            unit_conversion.DistanceConverter.convert(
                 int(self._vehicle.status.get("DISTANCE_TO_EMPTY_FUEL")),
                 LENGTH_KILOMETERS,
                 self._units,
@@ -368,7 +368,7 @@ class JLRVehicleRangeSensor(JLREntity):
             )
         # If hybrid
         if self._engine_type == FUEL_TYPE_HYBRID:
-            attrs["Fuel Range"] = round(distance.convert(
+            attrs["Fuel Range"] = round(unit_conversion.DistanceConverter.convert(
                 int(self._vehicle.status.get("DISTANCE_TO_EMPTY_FUEL")),
                 LENGTH_KILOMETERS,
                 self._units,
@@ -486,7 +486,7 @@ class JLRVehicleLastTripSensor(JLREntity):
             "tripDetails"
         ):
             return round(
-                distance.convert(
+                unit_conversion.DistanceConverter.convert(
                     int(
                         self._vehicle.last_trip.get("tripDetails", "{}").get(
                             "distance"
@@ -530,7 +530,7 @@ class JLRVehicleLastTripSensor(JLREntity):
                 if t.get("totalEcoScore"):
                     attrs["eco_score"] = t.get("totalEcoScore").get("score",0)
                 attrs["average_speed"] = round(
-                    distance.convert(
+                    unit_conversion.DistanceConverter.convert(
                         int(t.get("averageSpeed",0)),
                         LENGTH_KILOMETERS,
                         self._units,
