@@ -83,7 +83,7 @@ CONF_DISTANCE_UNIT = "distance_unit"
 CONF_PRESSURE_UNIT = "pressure_unit"
 CONF_HEALTH_UPDATE_INTERVAL = "health_update_interval"
 
-PLATFORMS = ["sensor", "lock", "device_tracker"]
+PLATFORMS = ["sensor", "lock", "switch, "device_tracker"]
 
 ATTR_PIN = "pin"
 ATTR_CHARGE_LEVEL = "max_charge_level"

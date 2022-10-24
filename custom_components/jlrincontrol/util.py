@@ -30,3 +30,26 @@ def convert_temp_value(temp_unit, service_code, target_value):
         else:
             # Convert from F
             return min(285, max(155, int(((target_value - 27) / 2) * 10)))
+
+def convert_from_target_value(temp_unit, service_code, target_value):
+    """Convert to C/F from target values 31-57"""
+
+    # Engine start/set rcc value
+    if service_code == "REON":
+        # Get temp units
+        if temp_unit == TEMP_CELSIUS:
+            # Convert to C
+            return min(28.5, max(15.5, int(target_value / 2)))
+        else:
+            # Convert to F
+            return min(84, max(58, target_value + 27))
+
+    # Climate preconditioning
+    if service_code == "ECC":
+        # Convert to C
+        target_temp_c = target_value / 10
+        if temp_unit == TEMP_CELSIUS:
+            return min(28.5, max(15.5, target_temp_c))
+        else:
+            # Convert to F
+            return min(84, max(58, int(9.0 / 5.0 * target_temp_c + 32)))
