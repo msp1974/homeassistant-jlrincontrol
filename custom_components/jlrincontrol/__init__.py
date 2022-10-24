@@ -62,7 +62,8 @@ from .const import (
     SIGNAL_STATE_UPDATED,
     JLR_SERVICES,
     JLR_DATA,
-    VERSION
+    VERSION,
+    CONF_USE_CHINA_SERVERS,
 )
 from .services import JLRService
 from .util import field_mask
@@ -112,6 +113,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Required(CONF_USE_CHINA_SERVERS, default=False): cv.boolean,
                 vol.Optional(CONF_DISTANCE_UNIT): vol.In(
                     [LENGTH_KILOMETERS, LENGTH_MILES]
                 ),
@@ -367,6 +369,7 @@ class JLRApiHandler:
         self.connection = None
         self.email = config_entry.data.get(CONF_USERNAME)
         self.password = config_entry.data.get(CONF_PASSWORD)
+        self.use_china_servers = config_entry.data.get(CONF_USE_CHINA_SERVERS)
         self.vehicles = {}
         self.entities = []
         self.pin = config_entry.options.get(CONF_PIN)
@@ -394,7 +397,7 @@ class JLRApiHandler:
         _LOGGER.debug("Creating connection to JLR InControl API")
         try:
             self.connection = await self.hass.async_add_executor_job(
-                partial(jlrpy.Connection, self.email, self.password)
+                partial(jlrpy.Connection, self.email, self.password, '' , '', self.use_china_servers)
             )
         except Exception as ex:
             _LOGGER.warning(
