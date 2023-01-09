@@ -135,7 +135,7 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 # Change Log
 
 ## v2.2.3
-- Fix usage of deprecated device class constant (#84) 
+- Fix usage of deprecated device class constant [#84](https://github.com/msp1974/homeassistant-jlrincontrol/issues/84)
 
 ## v2.2.2
 - Fix deprecation issue of async_get_registry [#74](https://github.com/msp1974/homeassistant-jlrincontrol/issues/74)
