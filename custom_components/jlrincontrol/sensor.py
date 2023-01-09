@@ -1,9 +1,9 @@
 """Support for JLR InControl Sensors."""
 import logging
 
+from homeassistant.components.sensor import SensorDeviceClass
 # from homeassistant.const import STATE_OFF, UNIT_PERCENTAGE
 from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
     PERCENTAGE,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
@@ -398,7 +398,7 @@ class JLREVBatterySensor(JLREntity):
     @property
     def device_class(self):
         """Return the class of the sensor."""
-        return DEVICE_CLASS_BATTERY
+        return SensorDeviceClass.BATTERY
 
     @property
     def unit_of_measurement(self):

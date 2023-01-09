@@ -6,5 +6,5 @@
   "dependencies": [],
   "codeowners": ["@msp1974"],
   "requirements": ["jlrpy==1.4.1"],
-  "version": "2.2.2"
+  "version": "2.2.3"
 }
