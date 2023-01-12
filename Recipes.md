@@ -194,21 +194,29 @@ elements:
       top: 95%
 ```
 
-## Create your own template sensor from the 'All Info' sensor attributes.
+## Custom template sensors
+
+The `All info` sensor has a rich list of data attributes. You can easily use these attributes as source to new sensors
+by using the [Template integration](https://www.home-assistant.io/integrations/template/).
+
+### Battery template sensor
 
 ```yaml
 template:
   - sensor:
-    - name: "My Car Battery Sensor"
-      icon: "mdi:car-battery"
-      state: "{{ state_attr('sensor.my_car_all_info','core status').batteryVoltage }}"
-      attributes:
-        battery_status: "{{ state_attr('sensor.my_car_all_info','core status').batteryStatus }}"
-        tu_status: "{{ state_attr('sensor.my_car_all_info','core status').tuStatusPower }}"
-        tu_serial: "{{ state_attr('sensor.my_car_all_info','attributes').telematicsDevice.serialNumber }}"
+      - name: "My Car Battery Sensor"
+        icon: "mdi:car-battery"
+        state: "{{ state_attr('sensor.my_car_all_info','core status').batteryVoltage }}"
+        attributes:
+          battery_status: "{{ state_attr('sensor.my_car_all_info','core status').batteryStatus }}"
+          tu_status: "{{ state_attr('sensor.my_car_all_info','core status').tuStatusPower }}"
+          tu_serial: "{{ state_attr('sensor.my_car_all_info','attributes').telematicsDevice.serialNumber }}"
 ```
 
-### Same example in legacy format (deprecated - see [here](https://www.home-assistant.io/integrations/template/#legacy-sensor-configuration-format))
+### Battery template sensor - legacy format
+
+Same example in legacy format (deprecated -
+see [here](https://www.home-assistant.io/integrations/template/#legacy-sensor-configuration-format))
 
 ```yaml
 sensor:
@@ -222,4 +230,60 @@ sensor:
           battery_status: "{{ state_attr('sensor.my_car_all_info','core status').batteryStatus }}"
           tu_status: "{{ state_attr('sensor.my_car_all_info','core status').tuStatusPower }}"
           tu_serial: "{{ state_attr('sensor.my_car_all_info','attributes').telematicsDevice.serialNumber }}"
+```
+
+### Precondition status and remaining time sensor
+This recipe creates two sensors, remaining time of precondition (in minutes) and preconditioning status (on/of)
+
+![](docs/preconditioning-off.png) ![](docs/preconditioning-on.png)
+
+**Caveat**
+
+- I choose to use `binary_sensor` (`on`/`off`) for precondition status, but the status actually got 3 states:
+  1) `PRECLIM` (on), `OFF` and `STARTUP` (starting). I did not bother to reflect all three states, but only on/off
+- the remaining runtime minutes is updated according to the `scan interval` (default to `5 minutes`, can be changed in the
+  integration Configuration, but not sure about the side effect of increasing this update)
+
+```yaml
+template:
+  - sensor:
+      - unique_id: my_car_precondition_remaining_runtime_minutes
+        device_class: duration
+        unit_of_measurement: min
+        attributes:
+          friendly_name: "Precondition Remaining Runtime Minutes"
+        # we need to handle that remaining runtime minutes is not reset if precondition is manually switched off
+        state: >-
+          {% set evStatus = state_attr('sensor.my_car_all_info', 'ev status') %}
+
+          {% if is_state('binary_sensor.template_my_car_precondition_operating_status', 'on') and evStatus != None and evStatus != 'unknown' %}
+            {{ evStatus.evPreconditionRemainingRuntimeMinutes | int }}
+          {% else %}
+            0
+          {% endif %}
+  - binary_sensor:
+      - unique_id: my_car_precondition_operating_status
+        device_class: running
+        attributes:
+          friendly_name: "Precondition Operating Status"
+        state: >-
+          {% set evStatus = state_attr('sensor.my_car_all_info', 'ev status') %}
+
+          {% if evStatus == None or evStatus == 'unknown' %}
+            off
+          {% elif evStatus.evPreconditionOperatingStatus == 'OFF' %}
+            off
+          {% else %}
+            on
+          {% endif %}
+        icon: >-
+          {% set evStatus = state_attr('sensor.my_car_all_info', 'ev status') %}
+
+          {% if evStatus == None or evStatus == 'unknown' %}
+            mdi:fan-alert
+          {% elif evStatus.evPreconditionOperatingStatus == 'OFF' %}
+            mdi:fan-off
+          {% else %}
+            mdi:fan
+          {% endif %}
 ```
