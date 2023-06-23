@@ -55,30 +55,18 @@ class JLREntity(CoordinatorEntity, Entity):
         return {"identifiers": {(DOMAIN, self.vin)}}
 
     @property
+    def icon(self):
+        return self._icon
+
+    @property
     def name(self):
         return (
-            self.vehicle.attributes.get("nickname") + " " + self._name.title()
+            f"{self.vehicle.attributes.get('nickname')} {self._name.title()}"
         )
 
     @property
     def unique_id(self):
         return f"{self._entity_prefix}-{self.name}"
-
-    @property
-    def assumed_state(self):
-        """Return true if unable to access real state of entity."""
-        return True
-
-    def get_vehicle_api(self, vin: str) -> Vehicle | None:
-        """Get jlrpy vehicle object"""
-        try:
-            return [
-                vehicle
-                for vehicle in self.coordinator.connection.vehicles
-                if vehicle.vin == vin
-            ][0]
-        except IndexError:
-            return None
 
     @callback
     def _handle_coordinator_update(self) -> None:
