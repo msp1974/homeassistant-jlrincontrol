@@ -1,12 +1,10 @@
 import logging
+
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    VOLUME_LITERS,
-    VOLUME_GALLONS,
+    UnitOfEnergy,
+    UnitOfLength,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -14,22 +12,110 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "jlrincontrol"
 DATA_JLR_CONFIG = "jlrincontrol_config"
 JLR_DATA = "jlr_data"
-VERSION = "2.2.2"
+VERSION = "3.0beta1"
 
 CONF_USE_CHINA_SERVERS = "use_china_servers"
+CONF_DISTANCE_UNIT = "distance_unit"
+CONF_PRESSURE_UNIT = "pressure_unit"
+CONF_ALL_DATA_SENSOR = "all_data_sensor"
+CONF_DEBUG_DATA = "debug_data"
+CONF_HEALTH_UPDATE_INTERVAL = "health_update_interval"
 
 DEFAULT_SCAN_INTERVAL = 5
 MIN_SCAN_INTERVAL = 1
 DEFAULT_HEATH_UPDATE_INTERVAL = 0  # Default disabled
 
-SIGNAL_STATE_UPDATED = f"{DOMAIN}.updated"
+HEALTH_UPDATE_TRACKER = "health_update_tracker"
+UPDATE_LISTENER = "update_listener"
 
-# Conversions
-KMS_TO_MILES = 0.62137
+CONF_DEBUG_DATA = "debug_data"
+CONF_DISTANCE_UNIT = "distance_unit"
+CONF_PRESSURE_UNIT = "pressure_unit"
+CONF_HEALTH_UPDATE_INTERVAL = "health_update_interval"
+
+PLATFORMS = ["sensor", "lock", "device_tracker", "button", "switch"]
+
+ATTR_PIN = "pin"
+ATTR_CHARGE_LEVEL = "max_charge_level"
+ATTR_TARGET_VALUE = "target_value"
+ATTR_TARGET_TEMP = "target_temp"
+
+
+JLR_TO_HASS_UNITS = {
+    "Miles": UnitOfLength.MILES,
+    "Km": UnitOfLength.KILOMETERS,
+    "Litres": UnitOfVolume.LITERS,
+    "USGallons": UnitOfVolume.GALLONS,
+    "UKGallons": UnitOfVolume.GALLONS,
+    "Celcius": UnitOfTemperature.CELSIUS,
+    "Fahrenheit": UnitOfTemperature.FAHRENHEIT,
+    "kWh": UnitOfEnergy.KILO_WATT_HOUR,
+    "Wh": UnitOfEnergy.WATT_HOUR,
+    "kWhPer100Dist": "?",
+    "DistPerkWh": "?",
+    "WhPerDist": "?",
+}
 
 FUEL_TYPE_BATTERY = "Electric"
 FUEL_TYPE_ICE = "ICE"
 FUEL_TYPE_HYBRID = "Hybrid"
+
+SUBSCRIPTIONS = {
+    "GBR025RC_L": "Pro Services",
+    "GBR011BE-E1E2_L": "Protect",
+    "GBR011DA-E1E2_L": "Remote Premium",
+    "GBR011AJ_L": "Secure Tracker Pro",
+}
+
+SUPPORTED_BUTTON_SERVICES = {
+    "ALOFF": {"name": "Reset Alarm", "func": "reset_alarm"},
+    "HBLF": {"name": "Honk Blink", "func": "honk_blink"},
+}
+
+SUPPORTED_SWITCH_SERVICES = {
+    "REON": {
+        "name": "Engine",
+        "on_func": "remote_engine_start",
+        "off_func": "remote_engine_stop",
+        "params": ["pin"],
+        "add_on_params": ["temp"],
+    },
+    "ECC": {
+        "name": "Preconditioning",
+        "on_func": "preconditioning_start",
+        "off_func": "preconditioning_stop",
+        "add_on_params": ["temp"],
+    },
+    "CP": {
+        "name": "Charging",
+        "on_func": "charging_start",
+        "off_func": "charging_stop",
+    },
+    "GMCC": {
+        "name": "Guardian Mode",
+        "on_func": "enable_guardian_mode",
+        "off_func": "enable_guardian_mode",
+        "params": ["pin", "expiration"],
+    },
+    "PM": {
+        "name": "Privacy Mode",
+        "on_func": "enable_privacy_mode",
+        "off_func": "disable_privacy_mode",
+        "params": ["pin"],
+    },
+    "TM": {
+        "name": "Transport Mode",
+        "on_func": "enable_transport_mode",
+        "off_func": "enable_transport_mode",
+        "params": ["pin", "expiration"],
+    },
+    "SM": {
+        "name": "Service Mode",
+        "on_func": "enable_service_mode",
+        "off_func": "enable_service_mode",
+        "params": ["pin", "expiration"],
+    },
+}
 
 JLR_WAKEUP_TO_HA = {
     "RECEIVING_SCHEDULE_ACCEPTANCE_WINDOW": "Active",
@@ -54,28 +140,6 @@ JLR_CHARGE_METHOD_TO_HA = {
     "NOTCONNECTED": "Not Connected",
     "DEFAULT": "Default",
     "UNKNOWN": "Unknown",
-}
-
-JLR_USER_PREF_PARAMS = [
-    "distance",
-    "volume",
-    "temperature",
-    "distPerVol",
-    "energy",
-    "energyPerDist",
-]
-
-JLR_TO_HA_UNITS = {
-    "distance": {"Km": LENGTH_KILOMETERS, "Miles": LENGTH_MILES},
-    "volume": {
-        "Litre": VOLUME_LITERS,
-        "UkGallons": VOLUME_GALLONS,
-        "UsGallons": VOLUME_GALLONS,
-    },
-    "temperature": {"Celsius": TEMP_CELSIUS, "Fahrenheit": TEMP_FAHRENHEIT},
-    "distPerVol": {"DistPerVol": "Km/L"},
-    "energy": {"kWh": ENERGY_KILO_WATT_HOUR},
-    "energyPerDist": {"kWhPer100Dist": ENERGY_KILO_WATT_HOUR + "/100m"},
 }
 
 SENSOR_TYPES = {

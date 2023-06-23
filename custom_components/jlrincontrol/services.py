@@ -25,7 +25,6 @@ class JLRService:
         if self.service_code and self.service_name:
             # Check this is a valid service
             if self.check_service_enabled(self.service_code):
-
                 # Check no other service calls are awaiting
                 if not await self.async_get_services():
                     # OK to make service call
@@ -33,7 +32,8 @@ class JLRService:
                 else:
                     _LOGGER.error(
                         "Error calling service {} on vehicle {}. ".format(
-                            self.service_name, self.nickname,
+                            self.service_name,
+                            self.nickname,
                         )
                         + "Another request is still processing. "
                         + "Please try again later."
@@ -41,7 +41,8 @@ class JLRService:
             else:
                 _LOGGER.error(
                     "Service {} is not available on vehicle {}".format(
-                        self.service_name, self.nickname,
+                        self.service_name,
+                        self.nickname,
                     )
                 )
         else:
@@ -79,7 +80,8 @@ class JLRService:
                 )
                 _LOGGER.info(
                     "Service {} called on vehicle {}. ".format(
-                        self.service_name, self.nickname,
+                        self.service_name,
+                        self.nickname,
                     )
                     + "Awaiting feedback on success."
                 )
@@ -94,7 +96,8 @@ class JLRService:
                 if ex.code == 401:
                     _LOGGER.warning(
                         "Service: {} on vehicle {} ".format(
-                            self.service_name, self.nickname,
+                            self.service_name,
+                            self.nickname,
                         )
                         + "- not authorised error. Is your pin correct?"
                     )
@@ -173,11 +176,10 @@ class JLRService:
 
         if result:
             status = result.get("status")
-            while status and status in ["Started","Running"]:
+            while status and status in ["Started", "Running"]:
                 _LOGGER.info(
                     "Checking for {} service call result status.  Currently {}.".format(
-                        self.service_name,
-                        status
+                        self.service_name, status
                     )
                 )
                 await asyncio.sleep(5)
@@ -193,15 +195,16 @@ class JLRService:
             else:
                 # Anonymise data in log output
                 result["vehicleId"] = field_mask(result["vehicleId"], 3, 2)
-                result["customerServiceId"] = field_mask(result["customerServiceId"], 11, 9)
+                result["customerServiceId"] = field_mask(
+                    result["customerServiceId"], 11, 9
+                )
 
                 _LOGGER.error(
                     "JLR InControl service call ({}) to vehicle {} ".format(
-                        self.service_name, self.nickname,
+                        self.service_name,
+                        self.nickname,
                     )
-                    + "failed due to {}.".format(
-                        result.get("failureReason")
-                    )
+                    + "failed due to {}.".format(result.get("failureReason"))
                 )
 
                 _LOGGER.debug("Full status return is {}.".format(result))

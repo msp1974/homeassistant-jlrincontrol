@@ -1,4 +1,5 @@
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.util import dt
 
 
 def field_mask(str_value, from_start=0, from_end=0):
@@ -31,3 +32,10 @@ def convert_temp_value(temp_unit, service_code, target_value):
             # Convert from F
             return min(285, max(155, int(((target_value - 27) / 2) * 10)))
 
+
+def to_local_datetime(datetime: str):
+    """Convert to local time"""
+    try:
+        return dt.as_local(dt.parse_datetime(datetime))
+    except Exception:
+        return None

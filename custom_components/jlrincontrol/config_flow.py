@@ -4,6 +4,8 @@ Config Flow for JLR InControl
 """
 import logging
 import urllib
+
+import jlrpy
 import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import (
@@ -17,28 +19,28 @@ from homeassistant.const import (
     PRESSURE_PSI,
 )
 from homeassistant.core import callback
-import jlrpy
 
 from .const import (
-    DOMAIN,
-    DEFAULT_SCAN_INTERVAL,
-    MIN_SCAN_INTERVAL,
-    DEFAULT_HEATH_UPDATE_INTERVAL,
+    CONF_ALL_DATA_SENSOR,
+    CONF_DEBUG_DATA,
+    CONF_DISTANCE_UNIT,
+    CONF_HEALTH_UPDATE_INTERVAL,
+    CONF_PRESSURE_UNIT,
     CONF_USE_CHINA_SERVERS,
+    DEFAULT_HEATH_UPDATE_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    MIN_SCAN_INTERVAL,
 )
 
-CONF_ALL_DATA_SENSOR = "all_data_sensor"
-CONF_DEBUG_DATA = "debug_data"
-CONF_DISTANCE_UNIT = "distance_unit"
-CONF_PRESSURE_UNIT = "pressure_unit"
-CONF_HEALTH_UPDATE_INTERVAL = "health_update_interval"
+
 UNIQUE_ID = "unique_id"
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): str, 
+        vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Required(CONF_USE_CHINA_SERVERS, default=False): bool,
     }
@@ -56,16 +58,21 @@ async def validate_input(hass, data):
 
     try:
         connection = await hass.async_add_executor_job(
-            jlrpy.Connection, data[CONF_USERNAME], data[CONF_PASSWORD], '', '', data[CONF_USE_CHINA_SERVERS]
+            jlrpy.Connection,
+            data[CONF_USERNAME],
+            data[CONF_PASSWORD],
+            "",
+            "",
+            data[CONF_USE_CHINA_SERVERS],
         )
     except urllib.error.HTTPError as ex:
         if ex.code > 400 and ex.code < 500:
-            raise InvalidAuth
-        raise CannotConnect
-    except ValueError:
-        raise InvalidAuth
-    except Exception:
-        raise CannotConnect
+            raise InvalidAuth from ex
+        raise CannotConnect from ex
+    except ValueError as ex:
+        raise InvalidAuth from ex
+    except Exception as ex:
+        raise CannotConnect from ex
 
     if not connection.vehicles or len(connection.vehicles) == 0:
         raise NoVehicles
@@ -78,9 +85,8 @@ async def validate_input(hass, data):
 
 @config_entries.HANDLERS.register(DOMAIN)
 class JLRInControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    # The schema version of the entries that it creates
-    # Home Assistant will call your migrate method if the version changes
-    # (this is not implemented yet)
+    """Handles config setup"""
+
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
@@ -110,7 +116,7 @@ class JLRInControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except NoVehicles:
                 errors["base"] = "no_vehicles"
             except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception - {}".format(ex))
+                _LOGGER.exception("Unexpected exception - %s", ex)
                 errors["base"] = "unknown"
 
             if "base" not in errors:
@@ -145,7 +151,7 @@ class JLRInControlOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        return await self.async_step_user()
+        return await self.async_step_user(user_input)
 
     async def async_step_user(self, user_input=None):
         """Manage the options."""

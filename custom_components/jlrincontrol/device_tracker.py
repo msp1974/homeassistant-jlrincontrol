@@ -1,56 +1,58 @@
 """Support for JLR InControl Device Trackers."""
 import logging
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from .const import JLR_DATA, DOMAIN
-from .entity import JLREntity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .const import DOMAIN, JLR_DATA
+from .entity import JLREntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    data = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]
+    """Setup device tracker"""
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]
     devices = []
 
-    for vehicle in data.vehicles:
-        if data.vehicles[vehicle].position:
-            devices.append(JLRDeviceTracker(hass, data, vehicle))
+    for vehicle in coordinator.vehicles:
+        if coordinator.vehicles[vehicle].position:
+            devices.append(JLRDeviceTracker(coordinator, vehicle))
 
         else:
             _LOGGER.debug(
-                "Vehicle {} is not providing any position information.".format(
-                    data.vehicles[vehicle].attributes.get("nickname")
-                )
-                + " No device trakcer will be created."
+                "Vehicle %s is not providing any position information.",
+                coordinator.vehicles[vehicle].attributes.get("nickname"),
             )
+
     async_add_entities(devices, True)
 
 
 class JLRDeviceTracker(JLREntity, TrackerEntity):
-    def __init__(self, hass, data, vin) -> None:
+    """Device tracker"""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, vin: str) -> None:
+        super().__init__(coordinator, vin, "device tracker")
         self._position = None
         self._latitude = None
         self._longitude = None
         self._icon = "mdi:car-connected"
-        self._sensor_name = "device tracker"
-        super().__init__(hass, data, vin)
 
     async def async_update(self):
         """Update the device info."""
-        _LOGGER.debug("Updating {}".format(self._name))
+        _LOGGER.debug("Updating %s", self._name)
         try:
-            self._position = self._vehicle.position.get("position")
+            self._position = self.vehicle.position.get("position")
 
             if self._position:
                 self._latitude = round(self._position.get("latitude"), 8)
                 self._longitude = round(self._position.get("longitude"), 8)
         except Exception as ex:
             _LOGGER.debug(
-                "Unable to update device tracker for {}. Error is {}".format(
-                    self._name, ex
-                )
+                "Unable to update device tracker for %s. Error is %s",
+                self._name,
+                ex,
             )
 
     @property
@@ -58,8 +60,8 @@ class JLRDeviceTracker(JLREntity, TrackerEntity):
         attrs = {}
 
         try:
-            loc_name = self._hass.async_add_exexutor_job(
-                self._data.connection.reverse_geocode,
+            loc_name = self.hass.async_add_exexutor_job(
+                self.coordinator.connection.reverse_geocode,
                 (self._latitude, self._longitude),
             )
             attrs["location"] = loc_name.get("formattedAddress")
