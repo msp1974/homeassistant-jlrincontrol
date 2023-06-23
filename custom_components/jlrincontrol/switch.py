@@ -84,7 +84,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
             raise HomeAssistantError("Unable to perform function.  No pin set")
         else:
             func = getattr(
-                self.get_vehicle_api(self.vin),
+                self.api,
                 SUPPORTED_SWITCH_SERVICES[self.service_code].get("on_func"),
             )
             # TODO: Add check for parameters needing passing!
@@ -99,7 +99,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
             raise HomeAssistantError("Unable to perform function.  No pin set")
         else:
             func = getattr(
-                self.get_vehicle_api(self.vin),
+                self.api,
                 SUPPORTED_SWITCH_SERVICES[self.service_code].get("on_func"),
             )
             # await self.hass.async_add_executor_job(func, self.coordinator.pin)
