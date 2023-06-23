@@ -66,7 +66,7 @@ class JLREntity(CoordinatorEntity, Entity):
 
     @property
     def unique_id(self):
-        return f"{self._entity_prefix}-{self.name}"
+        return f"{self._entity_prefix}-{self._name}"
 
     @callback
     def _handle_coordinator_update(self) -> None:
