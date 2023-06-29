@@ -3,14 +3,15 @@
 import logging
 
 from homeassistant.components.lock import LockEntity
-from .services import JLRService
+
 from .const import (
-    DOMAIN,
     DATA_ATTRS_DOOR_POSITION,
     DATA_ATTRS_DOOR_STATUS,
+    DOMAIN,
     JLR_DATA,
 )
 from .entity import JLREntity
+from .services import JLRService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ class JLRLock(JLREntity, LockEntity):
                 self.hass, self.coordinator.config_entry, self.vin
             )
             await jlr_service.async_call_service(**kwargs)
-            await self.coordinator.async_update_data()
+            await self.async_force_update()
         else:
             _LOGGER.warning("Cannot lock vehicle - pin not set in options.")
 
@@ -69,7 +70,7 @@ class JLRLock(JLREntity, LockEntity):
                 self.hass, self.coordinator.config_entry, self.vin
             )
             await jlr_service.async_call_service(**kwargs)
-            await self.coordinator.async_update_data()
+            await self.async_force_update()
         else:
             _LOGGER.warning("Cannot unlock vehicle - pin not set in options.")
 

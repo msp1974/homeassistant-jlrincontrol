@@ -1,14 +1,14 @@
+import asyncio
 import logging
 
+from homeassistant.core import callback
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.helpers.entity import Entity
 
-from homeassistant.core import callback
 from .const import DOMAIN
-from jlrpy import Vehicle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class JLREntity(CoordinatorEntity, Entity):
 
         self.vehicle = self.coordinator.vehicles[self.vin]
 
-        _LOGGER.debug("Loading %s Sensor", self.name)
+        _LOGGER.debug("Loading %s", self.name)
 
     @property
     def _entity_prefix(self):
@@ -37,18 +37,6 @@ class JLREntity(CoordinatorEntity, Entity):
             + "-"
             + self.vin[-6:]
         )
-
-    @property
-    def api(self):
-        """Return api for vehicle"""
-        try:
-            return [
-                vehicle
-                for vehicle in self.coordinator.connection.vehicles
-                if vehicle.vin == self.vin
-            ][0]
-        except IndexError:
-            return None
 
     @property
     def device_info(self):
@@ -67,6 +55,18 @@ class JLREntity(CoordinatorEntity, Entity):
     @property
     def unique_id(self):
         return f"{self._entity_prefix}-{self._name}"
+
+    @property
+    def extra_state_attributes(self):
+        attrs = {}
+        return attrs
+
+    async def async_force_update(self, delay: int = 0):
+        """Force update"""
+        _LOGGER.debug("Update initiated by %s", self.name)
+        if delay:
+            await asyncio.sleep(delay)
+        await self.coordinator.async_request_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:

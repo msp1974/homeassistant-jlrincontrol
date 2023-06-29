@@ -7,9 +7,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntry
 
-# from aioWiserHeatAPI.cli import anonymise_data
-
 from .const import DOMAIN, JLR_DATA
+
+# from aioWiserHeatAPI.cli import anonymise_data
 
 
 async def async_get_config_entry_diagnostics(

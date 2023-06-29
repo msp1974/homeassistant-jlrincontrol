@@ -15,6 +15,7 @@ JLR_DATA = "jlr_data"
 VERSION = "3.0.0"
 
 CONF_USE_CHINA_SERVERS = "use_china_servers"
+CONF_DEVICE_ID = "device_id"
 CONF_DISTANCE_UNIT = "distance_unit"
 CONF_PRESSURE_UNIT = "pressure_unit"
 CONF_ALL_DATA_SENSOR = "all_data_sensor"
@@ -36,6 +37,7 @@ CONF_HEALTH_UPDATE_INTERVAL = "health_update_interval"
 PLATFORMS = ["sensor", "lock", "device_tracker", "button", "switch"]
 
 ATTR_PIN = "pin"
+ATTR_EXPIRY = "expiration_time"
 ATTR_CHARGE_LEVEL = "max_charge_level"
 ATTR_TARGET_VALUE = "target_value"
 ATTR_TARGET_TEMP = "target_temp"
@@ -67,55 +69,6 @@ SUBSCRIPTIONS = {
     "GBR011AJ_L": "Secure Tracker Pro",
 }
 
-SUPPORTED_BUTTON_SERVICES = {
-    "ALOFF": {"name": "Reset Alarm", "func": "reset_alarm"},
-    "HBLF": {"name": "Honk Blink", "func": "honk_blink"},
-}
-
-SUPPORTED_SWITCH_SERVICES = {
-    "REON": {
-        "name": "Engine",
-        "on_func": "remote_engine_start",
-        "off_func": "remote_engine_stop",
-        "params": ["pin"],
-        "add_on_params": ["temp"],
-    },
-    "ECC": {
-        "name": "Preconditioning",
-        "on_func": "preconditioning_start",
-        "off_func": "preconditioning_stop",
-        "add_on_params": ["temp"],
-    },
-    "CP": {
-        "name": "Charging",
-        "on_func": "charging_start",
-        "off_func": "charging_stop",
-    },
-    "GMCC": {
-        "name": "Guardian Mode",
-        "on_func": "enable_guardian_mode",
-        "off_func": "enable_guardian_mode",
-        "params": ["pin", "expiration"],
-    },
-    "PM": {
-        "name": "Privacy Mode",
-        "on_func": "enable_privacy_mode",
-        "off_func": "disable_privacy_mode",
-        "params": ["pin"],
-    },
-    "TM": {
-        "name": "Transport Mode",
-        "on_func": "enable_transport_mode",
-        "off_func": "enable_transport_mode",
-        "params": ["pin", "expiration"],
-    },
-    "SM": {
-        "name": "Service Mode",
-        "on_func": "enable_service_mode",
-        "off_func": "enable_service_mode",
-        "params": ["pin", "expiration"],
-    },
-}
 
 JLR_WAKEUP_TO_HA = {
     "RECEIVING_SCHEDULE_ACCEPTANCE_WINDOW": "Active",
@@ -185,14 +138,13 @@ DATA_ATTRS_CLIMATE = {
     "climate timer1 hour": "CLIMATE_STATUS_TIMER1_HOUR",
     "climate timeer1 minute": "CLIMATE_STATUS_TIMER1_MINUTE",
     "climate timer2 month": "CLIMATE_STATUS_TIMER2_MONTH",
-    "climate timer2 hour": "CLIMATE_STATUS_TIMER2_HOUR",
     "climate timer2 day": "CLIMATE_STATUS_TIMER2_DAY",
+    "climate timer2 hour": "CLIMATE_STATUS_TIMER2_HOUR",
     "climate timer2 minute": "CLIMATE_STATUS_TIMER2_MINUTE",
     "climate remaining run time": "CLIMATE_STATUS_REMAINING_RUNTIME",
     "climate ffh remaining run time": "CLIMATE_STATUS_FFH_REMAINING_RUNTIME",
     "climate venting time": "CLIMATE_STATUS_VENTING_TIME",
     "climate timer active": "CLIMATE_STATUS_TIMER_ACTIVATION_STATUS",
-    "climate status": "CLIMATE_STATUS_OPERATING_STATUS",
 }
 
 DATA_ATTRS_DOOR_STATUS = {
@@ -225,7 +177,9 @@ DATA_ATTRS_SERVICE_STATUS = {
 
 DATA_ATTRS_SERVICE_INFO = {
     "distance to service": "EXT_KILOMETERS_TO_SERVICE",
-    "exhaust fluid distance to service": "EXT_EXHAUST_FLUID_DISTANCE_TO_SERVICE_KM",
+    "exhaust fluid distance to service": (
+        "EXT_EXHAUST_FLUID_DISTANCE_TO_SERVICE_KM"
+    ),
     "exhaust fluid fill": "EXT_EXHAUST_FLUID_VOLUME_REFILL_LITRESX10",
 }
 
@@ -259,6 +213,66 @@ DATA_ATTRS_WINDOW_STATUS = {
 }
 
 SERVICE_STATUS_OK = ["CLEAR", "FUNCTIONING", "NORMAL", "NORMAL_UNBLOCKED"]
+
+SUPPORTED_BUTTON_SERVICES = {
+    "ALOFF": {"name": "Reset Alarm", "service": "reset_alarm"},
+    "HBLF": {"name": "Honk Blink", "service": "honk_blink"},
+    "VHS": {"name": "Update From Vehcile", "service": "update_health_status"},
+}
+
+SUPPORTED_SWITCH_SERVICES = {
+    "CP": {
+        "name": "Charging",
+        "on_service": "start_charging",
+        "off_service": "stop_charging",
+        "state": "is_charging",
+    },
+    "ECC": {
+        "name": "Preconditioning",
+        "on_service": "start_preconditioning",
+        "off_service": "stop_preconditioning",
+        "params": ["pin"],
+        "add_on_params": ["target_temp"],
+        "state": "climate_active",
+    },
+    "GMCC": {
+        "name": "Guardian Mode",
+        "on_service": "enable_guardian_mode",
+        "off_service": "disable_guardian_mode",
+        "params": ["pin", "expiration"],
+        "state": "guardian_mode_active",
+        "attrs": {"expires": "guardian_mode.expiry"},
+    },
+    "PM": {
+        "name": "Journey Recording",
+        "on_service": "enable_journey_recording",
+        "off_service": "disable_journey_recording",
+        "params": ["pin"],
+        "state": "privacy_mode_enabled",
+    },
+    "REON": {
+        "name": "Climate",
+        "on_service": "start_vehicle",
+        "off_service": "stop_vehicle",
+        "params": ["pin"],
+        "add_on_params": ["target_value"],
+        "state": "climate_active",
+    },
+    "SM": {
+        "name": "Service Mode",
+        "on_service": "enable_service_mode",
+        "off_service": "disable_service_mode",
+        "params": ["pin", "expiration"],
+        "state": "service_mode_enabled",
+    },
+    "TM": {
+        "name": "Transport Mode",
+        "on_service": "enable_transport_mode",
+        "off_service": "disable_transport_mode",
+        "params": ["pin", "expiration"],
+        "state": "transport_mode_enabled",
+    },
+}
 
 JLR_SERVICES = {
     "update_health_status": {
@@ -329,5 +343,57 @@ JLR_SERVICES = {
         "function_name": "set_one_off_max_soc",
         "service_code": "CP",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_CHARGE_LEVEL_SCHEMA"],
+    },
+    "enable_journey_recording": {
+        "function_name": "disable_privacy_mode",
+        "service_code": "PM",
+        "schema": ["SERVICES_BASE_SCHEMA"],
+    },
+    "disable_journey_recording": {
+        "function_name": "enable_privacy_mode",
+        "service_code": "PM",
+        "schema": ["SERVICES_BASE_SCHEMA"],
+    },
+    "enable_guardian_mode": {
+        "function_name": "enable_guardian_mode",
+        "service_code": "GMCC",
+        "schema": [
+            "SERVICES_BASE_SCHEMA",
+            "SERVICES_PIN_SCHEMA",
+            "SERVICES_EXPIRY_SCHEMA",
+        ],
+    },
+    "disable_guardian_mode": {
+        "function_name": "enable_guardian_mode",
+        "service_code": "GMCC",
+        "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
+    },
+    "enable_service_mode": {
+        "function_name": "enable_service_mode",
+        "service_code": "SM",
+        "schema": [
+            "SERVICES_BASE_SCHEMA",
+            "SERVICES_PIN_SCHEMA",
+            "SERVICES_EXPIRY_SCHEMA",
+        ],
+    },
+    "disable_service_mode": {
+        "function_name": "enable_service_mode",
+        "service_code": "SM",
+        "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
+    },
+    "enable_transport_mode": {
+        "function_name": "enable_transport_mode",
+        "service_code": "TM",
+        "schema": [
+            "SERVICES_BASE_SCHEMA",
+            "SERVICES_PIN_SCHEMA",
+            "SERVICES_EXPIRY_SCHEMA",
+        ],
+    },
+    "disable_transport_mode": {
+        "function_name": "enable_transport_mode",
+        "service_code": "TM",
+        "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
     },
 }

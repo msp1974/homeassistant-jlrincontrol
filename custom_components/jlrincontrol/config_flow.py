@@ -4,6 +4,7 @@ Config Flow for JLR InControl
 """
 import logging
 import urllib
+import uuid
 
 import jlrpy
 import voluptuous as vol
@@ -13,17 +14,13 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
     PRESSURE_BAR,
     PRESSURE_PSI,
 )
 from homeassistant.core import callback
 
 from .const import (
-    CONF_ALL_DATA_SENSOR,
-    CONF_DEBUG_DATA,
-    CONF_DISTANCE_UNIT,
+    CONF_DEVICE_ID,
     CONF_HEALTH_UPDATE_INTERVAL,
     CONF_PRESSURE_UNIT,
     CONF_USE_CHINA_SERVERS,
@@ -33,8 +30,8 @@ from .const import (
     MIN_SCAN_INTERVAL,
 )
 
-
 UNIQUE_ID = "unique_id"
+DEVICE_ID = "device_id"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +40,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Required(CONF_USE_CHINA_SERVERS, default=False): bool,
+        vol.Required(CONF_DEVICE_ID, default=str(uuid.uuid4())): str,
     }
 )
 
@@ -87,7 +85,7 @@ async def validate_input(hass, data):
 class JLRInControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handles config setup"""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
@@ -144,6 +142,8 @@ class JLRInControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class JLRInControlOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handles JLRIncontrol options"""
+
     def __init__(self, config_entry):
         """Initialize deCONZ options flow."""
         self.config_entry = config_entry
@@ -179,23 +179,9 @@ class JLRInControlOptionsFlowHandler(config_entries.OptionsFlow):
                     ),
                 ): vol.Coerce(int),
                 vol.Optional(
-                    CONF_DISTANCE_UNIT,
-                    default=self.options.get(
-                        CONF_DISTANCE_UNIT, LENGTH_KILOMETERS
-                    ),
-                ): vol.In(["Default", LENGTH_KILOMETERS, LENGTH_MILES]),
-                vol.Optional(
                     CONF_PRESSURE_UNIT,
                     default=self.options.get(CONF_PRESSURE_UNIT, PRESSURE_BAR),
                 ): vol.In(["Default", PRESSURE_BAR, PRESSURE_PSI]),
-                vol.Optional(
-                    CONF_DEBUG_DATA,
-                    default=self.options.get(CONF_DEBUG_DATA, False),
-                ): bool,
-                vol.Optional(
-                    CONF_ALL_DATA_SENSOR,
-                    default=self.options.get(CONF_ALL_DATA_SENSOR, False),
-                ): bool,
             }
         )
 

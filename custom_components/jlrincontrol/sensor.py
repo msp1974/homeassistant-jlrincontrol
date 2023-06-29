@@ -2,10 +2,11 @@
 import logging
 
 from homeassistant.components.sensor import SensorDeviceClass
+
 # from homeassistant.const import STATE_OFF, UNIT_PERCENTAGE
 from homeassistant.const import (
-    PERCENTAGE,
     LENGTH_KILOMETERS,
+    PERCENTAGE,
     UnitOfLength,
     UnitOfPressure,
     UnitOfVolume,
@@ -13,15 +14,17 @@ from homeassistant.const import (
 from homeassistant.helpers import icon
 from homeassistant.util import dt, unit_conversion
 
-from custom_components.jlrincontrol.util import to_local_datetime
+from .util import to_local_datetime
+
 from .const import (
-    DOMAIN,
     DATA_ATTRS_CAR_INFO,
-    DATA_ATTRS_TYRE_STATUS,
-    DATA_ATTRS_TYRE_PRESSURE,
-    DATA_ATTRS_WINDOW_STATUS,
-    DATA_ATTRS_SERVICE_STATUS,
+    DATA_ATTRS_CLIMATE,
     DATA_ATTRS_SERVICE_INFO,
+    DATA_ATTRS_SERVICE_STATUS,
+    DATA_ATTRS_TYRE_PRESSURE,
+    DATA_ATTRS_TYRE_STATUS,
+    DATA_ATTRS_WINDOW_STATUS,
+    DOMAIN,
     FUEL_TYPE_BATTERY,
     FUEL_TYPE_HYBRID,
     FUEL_TYPE_ICE,
@@ -31,15 +34,14 @@ from .const import (
     SERVICE_STATUS_OK,
 )
 from .entity import JLREntity
-from .config_flow import CONF_ALL_DATA_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Setup sensor entities"""
-
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]
+    component = hass.data[DOMAIN]
+    coordinator = component[config_entry.entry_id][JLR_DATA]
 
     devices = []
     _LOGGER.debug("Loading Sensors")
@@ -57,9 +59,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         devices.append(JLRVehicleServiceSensor(coordinator, vehicle))
         devices.append(JLRVehicleRangeSensor(coordinator, vehicle))
         devices.append(JLRVehicleStatusSensor(coordinator, vehicle))
-
-        if config_entry.options.get(CONF_ALL_DATA_SENSOR):
-            devices.append(JLRVehicleAllDataSensor(coordinator, vehicle))
+        devices.append(JLRVehicleClimateSensor(coordinator, vehicle))
+        devices.append(JLRVehicleAllDataSensor(coordinator, vehicle))
 
         # If EV/PHEV show Battery Sensor
         if coordinator.vehicles[vehicle].engine_type in [
@@ -73,8 +74,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             devices.append(JLRVehicleLastTripSensor(coordinator, vehicle))
         else:
             _LOGGER.debug(
-                "Not loading Last Trip sensor for %s due to privacy mode or no data",
-                coordinator.vehicles[vehicle].attributes.get("nickname"),
+                "Last Trip sensor not loaded for %s",
+                (
+                    "%s due to privacy mode or no data",
+                    coordinator.vehicles[vehicle].attributes.get("nickname"),
+                ),
             )
 
     # data.entities.extend(devices)
@@ -275,11 +279,6 @@ class JLRVehicleAlarmSensor(JLREntity):
             return status.replace("_", "").title()
         else:
             return "Not Supported"
-
-    @property
-    def extra_state_attributes(self):
-        attrs = {}
-        return attrs
 
 
 class JLRVehicleServiceSensor(JLREntity):
@@ -608,7 +607,27 @@ class JLRVehicleStatusSensor(JLREntity):
         else:
             return "Unknown"
 
+
+class JLRVehicleClimateSensor(JLREntity):
+    """Climate status sensor"""
+
+    def __init__(self, coordinator, vin):
+        super().__init__(coordinator, vin, "climate")
+        self._icon = "mdi:air-conditioner"
+
+    @property
+    def state(self):
+        return str(
+            self.vehicle.status.get(
+                "CLIMATE_STATUS_OPERATING_STATUS", "Unknown"
+            )
+        ).title()
+
     @property
     def extra_state_attributes(self):
         attrs = {}
+
+        for name, attr in DATA_ATTRS_CLIMATE.items():
+            if value := self.vehicle.status.get(attr):
+                attrs[name] = value
         return attrs

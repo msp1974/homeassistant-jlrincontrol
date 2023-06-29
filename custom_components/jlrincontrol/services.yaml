@@ -1,5 +1,9 @@
 update_health_status:
   description: "Request the car to send latest sensor data."
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
   fields:
     entity_id:
       {

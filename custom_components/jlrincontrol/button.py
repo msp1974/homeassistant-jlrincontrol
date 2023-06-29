@@ -3,12 +3,11 @@ import logging
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.exceptions import HomeAssistantError
-from .coordinator import JLRIncontrolUpdateCoordinator
-
-
-from .entity import JLREntity
 
 from .const import DOMAIN, JLR_DATA, SUPPORTED_BUTTON_SERVICES
+from .entity import JLREntity
+from .services import JLRService
+from .util import requires_pin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +41,7 @@ class JLRButton(JLREntity, ButtonEntity):
 
     def __init__(
         self,
-        coordinator: JLRIncontrolUpdateCoordinator,
+        coordinator,
         vin: str,
         service_code: str,
     ):
@@ -57,12 +56,13 @@ class JLRButton(JLREntity, ButtonEntity):
 
     async def async_press(self):
         _LOGGER.debug("Pressed %s", self._name)
-        if not self.coordinator.pin:
+        if (
+            requires_pin(SUPPORTED_BUTTON_SERVICES, self.service_code)
+            and not self.coordinator.pin
+        ):
             raise HomeAssistantError("Unable to perform function.  No pin set")
-        else:
-            func = getattr(
-                self.coordinator.get_vehicle(self.vin),
-                SUPPORTED_BUTTON_SERVICES[self.service_code].get("function"),
-            )
-            # TODO: Add check for parameters needing passing!
-            await self.hass.async_add_executor_job(func, self.coordinator.pin)
+
+        service = SUPPORTED_BUTTON_SERVICES[self.service_code].get("service")
+        jlr_service = JLRService(self.coordinator, self.vin, service)
+        await jlr_service.async_call_service()
+        await self.async_force_update()

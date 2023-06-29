@@ -8,23 +8,27 @@ msparker@sky.com
 """
 import asyncio
 import logging
-from datetime import timedelta
+import uuid
+from datetime import datetime, timedelta
 
 import voluptuous as vol
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.event import (
-    async_call_later,
-    async_track_time_interval,
-)
+
+from custom_components.jlrincontrol.config_flow import DEVICE_ID
 
 from .const import (
     ATTR_CHARGE_LEVEL,
+    ATTR_EXPIRY,
     ATTR_PIN,
     ATTR_TARGET_TEMP,
     ATTR_TARGET_VALUE,
+    CONF_ALL_DATA_SENSOR,
+    CONF_DEBUG_DATA,
+    CONF_DISTANCE_UNIT,
     CONF_HEALTH_UPDATE_INTERVAL,
     DOMAIN,
     HEALTH_UPDATE_TRACKER,
@@ -33,7 +37,10 @@ from .const import (
     PLATFORMS,
     UPDATE_LISTENER,
 )
-from .coordinator import JLRIncontrolUpdateCoordinator
+from .coordinator import (
+    JLRIncontrolHealthUpdateCoordinator,
+    JLRIncontrolUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,9 +62,46 @@ SERVICES_TARGET_VALUE_SCHEMA = {
 SERVICES_CHARGE_LEVEL_SCHEMA = {
     vol.Required(ATTR_CHARGE_LEVEL): vol.Coerce(int),
 }
+SERVICES_EXPIRY_SCHEMA = {
+    vol.Required(ATTR_EXPIRY): vol.Coerce(datetime),
+}
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_migrate_entry(hass, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        new_data = {**config_entry.data}
+        new_options = {**config_entry.options}
+
+        # Add fixed device id
+        new_data[DEVICE_ID] = str(uuid.uuid4())
+
+        # Remove no longer needed options
+        remove_options = [
+            CONF_DISTANCE_UNIT,
+            CONF_ALL_DATA_SENSOR,
+            CONF_DEBUG_DATA,
+        ]
+        for option in remove_options:
+            try:
+                del new_options[option]
+                _LOGGER.debug("Removed option %s", option)
+            except KeyError:
+                pass
+
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, options=new_options
+        )
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True
+
+
+async def async_setup_entry(hass, config_entry: ConfigEntry):
     """Setup JLR InConnect component"""
 
     def get_schema(schema_list):
@@ -66,7 +110,6 @@ async def async_setup_entry(hass, config_entry):
             result.update(eval(schema))
         return vol.Schema(result)
 
-    health_update_track = None
     hass.data.setdefault(DOMAIN, {})
 
     coordinator = JLRIncontrolUpdateCoordinator(hass, config_entry)
@@ -78,26 +121,21 @@ async def async_setup_entry(hass, config_entry):
 
     await coordinator.async_config_entry_first_refresh()
 
+    # Setup health update and repeat interval
     health_update_interval = config_entry.options.get(
         CONF_HEALTH_UPDATE_INTERVAL, 0
     )
 
-    # Schedule health update and repeat interval
     if health_update_interval and health_update_interval > 0:
         _LOGGER.info(
             "Vehicle health update on %s minute interval.",
             int(health_update_interval),
         )
-        # Do initial call to health_update service after HASS start up.
-        # This speeds up restart.
-        # 30 seconds should do it.
-        async_call_later(hass, 30, coordinator.async_health_update)
 
-        health_update_track = async_track_time_interval(
-            hass,
-            coordinator.async_health_update,
-            timedelta(minutes=health_update_interval),
+        health_update_coordinator = JLRIncontrolHealthUpdateCoordinator(
+            hass, config_entry, coordinator.connection
         )
+
     else:
         _LOGGER.info(
             "Scheduled vehicle health update is disabled. %s",
@@ -109,7 +147,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][config_entry.entry_id] = {
         JLR_DATA: coordinator,
-        HEALTH_UPDATE_TRACKER: health_update_track,
+        HEALTH_UPDATE_TRACKER: health_update_coordinator,
         UPDATE_LISTENER: update_listener,
     }
 
@@ -147,7 +185,6 @@ async def async_update_device_registry(hass, config_entry):
     data = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]
     device_registry = dr.async_get(hass)
     for vin in data.vehicles:
-        _LOGGER.error("VEHILCE: %s", vin)
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             connections={},
@@ -173,8 +210,6 @@ async def async_unload_entry(hass, config_entry):
 
     # Stop scheduled updates
     hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER]()
-    if hass.data[DOMAIN][config_entry.entry_id][HEALTH_UPDATE_TRACKER]:
-        hass.data[DOMAIN][config_entry.entry_id][HEALTH_UPDATE_TRACKER]()
 
     # Remove platform components
     unload_ok = all(
