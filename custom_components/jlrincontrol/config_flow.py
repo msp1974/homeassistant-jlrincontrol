@@ -20,6 +20,8 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from .const import (
+    CONF_DEFAULT_CLIMATE_TEMP,
+    CONF_DEFAULT_SERVICE_DURATION,
     CONF_DEVICE_ID,
     CONF_HEALTH_UPDATE_INTERVAL,
     CONF_PRESSURE_UNIT,
@@ -120,9 +122,7 @@ class JLRInControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if "base" not in errors:
                 await self.async_set_unique_id(info[UNIQUE_ID])
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=info["title"], data=user_input
-                )
+                return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -135,8 +135,7 @@ class JLRInControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def _username_already_configured(self, user_input):
         """See if we already have a username matching user input configured."""
         existing_username = {
-            entry.data[CONF_USERNAME]
-            for entry in self._async_current_entries()
+            entry.data[CONF_USERNAME] for entry in self._async_current_entries()
         }
         return user_input[CONF_USERNAME] in existing_username
 
@@ -160,28 +159,30 @@ class JLRInControlOptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = vol.Schema(
             {
-                vol.Optional(
-                    CONF_PIN, default=self.options.get(CONF_PIN)
-                ): str,
-                vol.Optional(
+                vol.Required(CONF_PIN, default=self.options.get(CONF_PIN, "0000")): str,
+                vol.Required(
                     CONF_SCAN_INTERVAL,
-                    default=self.options.get(
-                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                    ),
-                ): (
-                    vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL))
-                ),
-                vol.Optional(
+                    default=self.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                ): (vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL))),
+                vol.Required(
                     CONF_HEALTH_UPDATE_INTERVAL,
                     default=self.options.get(
                         CONF_HEALTH_UPDATE_INTERVAL,
                         DEFAULT_HEATH_UPDATE_INTERVAL,
                     ),
                 ): vol.Coerce(int),
-                vol.Optional(
+                vol.Required(
                     CONF_PRESSURE_UNIT,
                     default=self.options.get(CONF_PRESSURE_UNIT, PRESSURE_BAR),
                 ): vol.In(["Default", PRESSURE_BAR, PRESSURE_PSI]),
+                vol.Required(
+                    CONF_DEFAULT_CLIMATE_TEMP,
+                    default=self.options.get(CONF_DEFAULT_CLIMATE_TEMP, 21),
+                ): vol.Coerce(int),
+                vol.Required(
+                    CONF_DEFAULT_SERVICE_DURATION,
+                    default=self.options.get(CONF_DEFAULT_SERVICE_DURATION, 24),
+                ): vol.Coerce(int),
             }
         )
 
