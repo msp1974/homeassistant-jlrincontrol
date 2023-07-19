@@ -19,22 +19,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Wiser climate device."""
 
     jlr_switches = []
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][
-        JLR_DATA
-    ]  # Get Handler
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]  # Get Handler
 
     # Get list of supported services
     for vehicle in coordinator.vehicles:
         services = coordinator.vehicles[vehicle].supported_services
 
-        _LOGGER.debug(
-            "Setting up switches for %s", coordinator.vehicles[vehicle].name
-        )
+        _LOGGER.debug("Setting up switches for %s", coordinator.vehicles[vehicle].name)
         for service_code in SUPPORTED_SWITCH_SERVICES:
             if service_code in services:
-                jlr_switches.append(
-                    JLRSwitch(coordinator, vehicle, service_code)
-                )
+                jlr_switches.append(JLRSwitch(coordinator, vehicle, service_code))
 
     async_add_entities(jlr_switches, True)
 
@@ -60,12 +54,8 @@ class JLRSwitch(JLREntity, SwitchEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if state_attr := SUPPORTED_SWITCH_SERVICES[self.service_code].get(
-            "state"
-        ):
-            self._attr_is_on = get_attribute(
-                self.vehicle.tracked_status, state_attr
-            )
+        if state_attr := SUPPORTED_SWITCH_SERVICES[self.service_code].get("state"):
+            self._attr_is_on = get_attribute(self.vehicle.tracked_status, state_attr)
         else:
             self._attr_is_on = False
 
@@ -87,9 +77,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
         ):
             raise HomeAssistantError("Unable to perform function.  No pin set")
 
-        service = SUPPORTED_SWITCH_SERVICES[self.service_code].get(
-            "on_service"
-        )
+        service = SUPPORTED_SWITCH_SERVICES[self.service_code].get("on_service")
         params = self.get_service_params(True)
         jlr_service = JLRService(self.coordinator, self.vin, service)
 
@@ -106,9 +94,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
             and not self.coordinator.pin
         ):
             raise HomeAssistantError("Unable to perform function.  No pin set")
-        service = SUPPORTED_SWITCH_SERVICES[self.service_code].get(
-            "off_service"
-        )
+        service = SUPPORTED_SWITCH_SERVICES[self.service_code].get("off_service")
         params = self.get_service_params(False)
         jlr_service = JLRService(self.coordinator, self.vin, service)
 
@@ -121,9 +107,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
-        switch_attrs = SUPPORTED_SWITCH_SERVICES[self.service_code].get(
-            "attrs", {}
-        )
+        switch_attrs = SUPPORTED_SWITCH_SERVICES[self.service_code].get("attrs", {})
         if switch_attrs:
             for name, value in switch_attrs.items():
                 value = get_attribute(self.vehicle, value)
@@ -166,12 +150,22 @@ class JLRSwitch(JLREntity, SwitchEntity):
 
         if "expiration" in params:
             if is_turn_on:
+                result["expiration_time"] = int(
+                    (datetime.now(timezone.utc) + timedelta(hours=24)).timestamp()
+                    * 1000
+                )
+            else:
+                result["expiration_time"] = int(
+                    datetime.now(timezone.utc).timestamp() * 1000
+                )
+        if "expiration_formatted" in params:
+            if is_turn_on:
                 result["expiration_time"] = (
                     datetime.now(timezone.utc) + timedelta(hours=24)
                 ).strftime("%Y-%m-%dT%H:%M:00.000Z")
             else:
-                result["expiration_time"] = (
-                    datetime.now(timezone.utc)
-                ).strftime("%Y-%m-%dT%H:%M:00.000Z")
+                result["expiration_time"] = datetime.now(timezone.utc).strftime(
+                    "%Y-%m-%dT%H:%M:00.000Z"
+                )
 
         return result
