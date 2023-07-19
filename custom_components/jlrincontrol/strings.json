@@ -30,10 +30,9 @@
           "pin": "Pin",
           "scan_interval": "Scan Interval",
           "health_update_interval": "Health Update Interval",
-          "distance_unit": "Distance Unit Override",
           "pressure_unit": "Pressure Unit Override",
-          "debug_data": "Debug Data",
-          "all_data_sensor": "Show All Data Sensor"
+          "default_climate_temp": "Default Climate Temp",
+          "default_service_duration": "Default Service Duration"
         },
         "description": "Amend your InControl options.",
         "title": "JLR InControl Options"
