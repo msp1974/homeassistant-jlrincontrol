@@ -21,6 +21,8 @@ CONF_PRESSURE_UNIT = "pressure_unit"
 CONF_ALL_DATA_SENSOR = "all_data_sensor"
 CONF_DEBUG_DATA = "debug_data"
 CONF_HEALTH_UPDATE_INTERVAL = "health_update_interval"
+CONF_DEFAULT_CLIMATE_TEMP = "default_climate_temp"
+CONF_DEFAULT_SERVICE_DURATION = "default_service_duration"
 
 DEFAULT_SCAN_INTERVAL = 5
 MIN_SCAN_INTERVAL = 1
@@ -28,11 +30,6 @@ DEFAULT_HEATH_UPDATE_INTERVAL = 0  # Default disabled
 
 HEALTH_UPDATE_TRACKER = "health_update_tracker"
 UPDATE_LISTENER = "update_listener"
-
-CONF_DEBUG_DATA = "debug_data"
-CONF_DISTANCE_UNIT = "distance_unit"
-CONF_PRESSURE_UNIT = "pressure_unit"
-CONF_HEALTH_UPDATE_INTERVAL = "health_update_interval"
 
 PLATFORMS = ["sensor", "lock", "device_tracker", "button", "switch"]
 
@@ -177,9 +174,7 @@ DATA_ATTRS_SERVICE_STATUS = {
 
 DATA_ATTRS_SERVICE_INFO = {
     "distance to service": "EXT_KILOMETERS_TO_SERVICE",
-    "exhaust fluid distance to service": (
-        "EXT_EXHAUST_FLUID_DISTANCE_TO_SERVICE_KM"
-    ),
+    "exhaust fluid distance to service": ("EXT_EXHAUST_FLUID_DISTANCE_TO_SERVICE_KM"),
     "exhaust fluid fill": "EXT_EXHAUST_FLUID_VOLUME_REFILL_LITRESX10",
 }
 
@@ -239,7 +234,8 @@ SUPPORTED_SWITCH_SERVICES = {
         "name": "Guardian Mode",
         "on_service": "enable_guardian_mode",
         "off_service": "disable_guardian_mode",
-        "params": ["pin", "expiration"],
+        "params": ["pin"],
+        "add_on_params": ["expiration_formatted"],
         "state": "guardian_mode_active",
         "attrs": {"expires": "guardian_mode.expiry"},
     },
@@ -278,7 +274,7 @@ JLR_SERVICES = {
     "update_health_status": {
         "function_name": "get_health_status",
         "service_code": "VHS",
-        "schema": ["SERVICES_BASE_SCHEMA"],
+        "schema": [],
     },
     "lock_vehicle": {
         "function_name": "lock",

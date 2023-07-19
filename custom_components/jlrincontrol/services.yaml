@@ -4,122 +4,171 @@ update_health_status:
     entity:
       integration: jlrincontrol
       domain: sensor
-  fields:
-    entity_id:
-      {
-        description: "Enter the entity_id for vehicle.",
-        example: "sensor.my_car_info",
-      }
 lock_vehicle:
   description: "Request the car to lock."
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
   fields:
-    entity_id:
-      {
-        description: "Enter the entity_id for vehicle",
-        example: "sensor.my_car_info",
-      }
-    pin: { description: "The pin set for your vehicle.", example: "1234" }
+    pin:
+      name: Pin
+      description: "The pin set for your vehicle."
+      example: "1234"
+      default: "0000"
+      required: true
+      selector:
+        text:
 unlock_vehicle:
   description: "Request the car to unlock."
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
   fields:
-    entity_id:
-      {
-        description: "Enter the entity_id for vehicle",
-        example: "sensor.my_car_info",
-      }
-    pin: { description: "The pin set for your vehicle.", example: "1234" }
+    pin:
+      name: Pin
+      description: "The pin set for your vehicle."
+      example: "1234"
+      default: "0000"
+      required: true
+      selector:
+        text:
 reset_alarm:
   description: "Reset the vehicle alarm."
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
   fields:
-    entity_id:
-      {
-        description: "Enter the entity_id for vehicle",
-        example: "sensor.my_car_info",
-      }
-    pin: { description: "The pin set for your vehicle.", example: "1234" }
+    pin:
+      name: Pin
+      description: "The pin set for your vehicle."
+      example: "1234"
+      default: "0000"
+      required: true
+      selector:
+        text:
 honk_blink:
   description: "Sound the horn and flash the lights."
-  fields:
-    entity_id:
-      {
-        description: "Enter the entity_id for vehicle",
-        example: "sensor.my_car_info",
-      }
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
 start_vehicle:
   description: "Start the vehicle engine and set climate temp."
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
   fields:
-    entity_id:
-      {
-        description: "Enter the entity_id for vehicle",
-        example: "sensor.my_car_info",
-      }
-    pin: { description: "The pin set for your vehicle.", example: "1234" }
+    pin:
+      name: Pin
+      description: "The pin set for your vehicle."
+      example: "1234"
+      default: "0000"
+      required: true
+      selector:
+        text:
     target_value:
-      {
-        description: "The temperature to set (15.5 - 28.5C or 58 - 84F based on local HA units).",
-        example: "21.0",
-      }
+      name: Targert Temperature
+      description: "The temperature to set (15.5 - 28.5C or 58 - 84F based on local HA units)."
+      example: "21.0"
+      default: 21
+      required: true
+      selector:
+        number:
+          min: 15.5
+          max: 28.5
+          step: 0.5
+          unit_of_measurement: °C
 stop_vehicle:
   description: "Stop the vehicle engine."
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
   fields:
-    entity_id:
-      {
-        description: "Enter the entity_id for vehicle",
-        example: "sensor.my_car_info",
-      }
-    pin: { description: "The pin set for your vehicle.", example: "1234" }
+    pin:
+      name: Pin
+      description: "The pin set for your vehicle."
+      example: "1234"
+      default: "0000"
+      required: true
+      selector:
+        text:
 start_charging:
   description: "Start vehicle charging."
-  fields:
-    entity_id:
-      {
-        description: "Enter the entity_id for vehicle",
-        example: "sensor.my_car_info",
-      }
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
 stop_charging:
   description: "Stop vehicle charging."
-  fields:
-    entity_id:
-      {
-        description: "Enter the entity_id for vehicle",
-        example: "sensor.my_car_info",
-      }
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
 start_preconditioning:
   description: "Start vehicle preconditioning and set temp."
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
   fields:
-    entity_id:
-      {
-        description: "Enter the entity_id for vehicle",
-        example: "sensor.my_car_info",
-      }
-    target_temp:
-      {
-        description: "The temperature to set (15.5 - 28.5C or 58 - 84F based on local HA units).",
-        example: "21.0",
-      }
+    target_temperature:
+      name: Target Temperature
+      description: "The temperature to set (15.5 - 28.5C)."
+      example: 21
+      default: 21
+      required: true
+      selector:
+        number:
+          min: 15.5
+          max: 28.5
+          step: 0.5
+          unit_of_measurement: °C
 stop_preconditioning:
   description: "Stop vehicle preconditioning."
-  fields:
-    entity_id:
-      {
-        description: "Enter the entity_id for vehicle",
-        example: "sensor.my_car_info",
-      }
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
 set_max_charge_level:
   description: "Set vehicle maximum charge level."
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
   fields:
-    entity_id:
-      {
-        description: "Enter the entity_id for vehicle",
-        example: "sensor.my_car_info",
-      }
-    max_charge_level: { description: "The percentage to charge to.", example: "85" }
+    max_charge_level:
+      name: "Max Charge Level"
+      description: "The percentage to charge to."
+      example: 85
+      default: 85
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
 set_one_off_max_charge_level:
   description: "Set vehicle maximum charge level (one off)."
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
   fields:
-    entity_id:
-      {
-        description: "Enter the entity_id for vehicle",
-        example: "sensor.my_car_info",
-      }
-    max_charge_level: { description: "The percentage to charge to.", example: "85" }
+    max_charge_level:
+      name: "Max Charge Level"
+      description: "The percentage to charge to."
+      example: 85
+      default: 85
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          unit_of_measurement: "%"

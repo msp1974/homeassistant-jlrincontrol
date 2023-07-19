@@ -53,9 +53,7 @@ class JLRService:
 
     async def is_service_call_in_progress(self) -> bool:
         """Check if a service call is already in progress"""
-        services = await self.hass.async_add_executor_job(
-            self.vehicle.api.get_services
-        )
+        services = await self.hass.async_add_executor_job(self.vehicle.api.get_services)
         if services:
             return True
         return False
@@ -170,9 +168,7 @@ class JLRService:
                     service_status,
                 )
                 await asyncio.sleep(2)
-                service_status = await self.async_get_service_status(
-                    service_id
-                )
+                service_status = await self.async_get_service_status(service_id)
                 status = service_status.get("status", "Unknown")
 
             if status and status in ["Successful", "MessageDelivered"]:

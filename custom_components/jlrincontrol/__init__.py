@@ -17,6 +17,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.event import async_call_later
 
 from custom_components.jlrincontrol.config_flow import DEVICE_ID
 
@@ -48,7 +49,7 @@ MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
 SERVICES_BASE_SCHEMA = {
-    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
 }
 SERVICES_PIN_SCHEMA = {
     vol.Required(ATTR_PIN): vol.Coerce(str),
@@ -108,7 +109,7 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
         result = {}
         for schema in schema_list:
             result.update(eval(schema))
-        return vol.Schema(result)
+        return vol.Schema(cv.make_entity_service_schema(result))
 
     hass.data.setdefault(DOMAIN, {})
 
@@ -122,9 +123,7 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
     await coordinator.async_config_entry_first_refresh()
 
     # Setup health update and repeat interval
-    health_update_interval = config_entry.options.get(
-        CONF_HEALTH_UPDATE_INTERVAL, 0
-    )
+    health_update_interval = config_entry.options.get(CONF_HEALTH_UPDATE_INTERVAL, 0)
 
     if health_update_interval and health_update_interval > 0:
         _LOGGER.info(
@@ -133,8 +132,13 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
         )
 
         health_update_coordinator = JLRIncontrolHealthUpdateCoordinator(
-            hass, config_entry, coordinator.connection
+            hass, config_entry, coordinator
         )
+
+        # Do initial call to health_update service after HASS start up.
+        # This speeds up restart.
+        # 30 seconds should do it.
+        async_call_later(hass, 30, health_update_coordinator.async_update_data)
 
     else:
         _LOGGER.info(
@@ -151,12 +155,13 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
         UPDATE_LISTENER: update_listener,
     }
 
-    # for vehicle in data.vehicles:
+    # Create vehicle devices
+    await async_update_device_registry(hass, config_entry)
+
+    # Setup platforms
     for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(
-                config_entry, platform
-            )
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     # Add services
@@ -168,9 +173,6 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
             coordinator.async_call_service,
             schema=get_schema(service_info.get("schema")),
         )
-
-    # Create vehicle devices
-    await async_update_device_registry(hass, config_entry)
 
     return True
 
@@ -192,9 +194,7 @@ async def async_update_device_registry(hass, config_entry):
             manufacturer=data.vehicles[vin].attributes.get("vehicleBrand"),
             name=data.vehicles[vin].attributes.get("nickname"),
             model=data.vehicles[vin].attributes.get("vehicleType"),
-            sw_version=data.vehicles[vin].status.get(
-                "TU_STATUS_SW_VERSION_MAIN"
-            ),
+            sw_version=data.vehicles[vin].status.get("TU_STATUS_SW_VERSION_MAIN"),
         )
 
 
@@ -215,9 +215,7 @@ async def async_unload_entry(hass, config_entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(
-                    config_entry, platform
-                )
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
                 for platform in PLATFORMS
             ]
         )
