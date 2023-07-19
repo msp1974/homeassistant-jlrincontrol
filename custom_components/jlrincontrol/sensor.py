@@ -94,10 +94,8 @@ class JLRVehicleAllDataSensor(JLREntity):
 
     @property
     def state(self):
-        if self.vehicle.status.get("lastUpdatedTime"):
-            last_contacted = to_local_datetime(
-                self.vehicle.status.get("lastUpdatedTime")
-            )
+        if self.vehicle.last_updated:
+            last_contacted = to_local_datetime(self.vehicle.last_updated)
             return dt.get_age(last_contacted) + " ago"
         return "Unknown"
 
@@ -308,26 +306,20 @@ class JLRVehicleServiceSensor(JLREntity):
         attrs = {}
         for key, value in DATA_ATTRS_SERVICE_STATUS.items():
             if status.get(value):
-                attrs[key.title()] = (
-                    status.get(value).replace("_", " ").title()
-                )
+                attrs[key.title()] = status.get(value).replace("_", " ").title()
 
         # Add metric sensors
         # TODO: Remove fixed string
         for key, value in DATA_ATTRS_SERVICE_INFO.items():
             if status.get(value):
                 if key == "exhaust fluid fill":
-                    attrs[
-                        key.title()
-                    ] = unit_conversion.DistanceConverter.convert(
+                    attrs[key.title()] = unit_conversion.DistanceConverter.convert(
                         int(status.get(value).title()),
                         UnitOfVolume.LITERS,
                         self._units,
                     )
                 else:
-                    attrs[
-                        key.title()
-                    ] = unit_conversion.DistanceConverter.convert(
+                    attrs[key.title()] = unit_conversion.DistanceConverter.convert(
                         int(status.get(value).title()),
                         UnitOfLength.KILOMETERS,
                         self._units,
@@ -354,17 +346,13 @@ class JLRVehicleRangeSensor(JLREntity):
             return (
                 self.vehicle.status_ev.get("EV_RANGE_ON_BATTERY_KM", "0")
                 if self._units == UnitOfLength.KILOMETERS
-                else self.vehicle.status_ev.get(
-                    "EV_RANGE_ON_BATTERY_MILES", "0"
-                )
+                else self.vehicle.status_ev.get("EV_RANGE_ON_BATTERY_MILES", "0")
             )
         if self.vehicle.engine_type == FUEL_TYPE_HYBRID:
             return (
                 self.vehicle.status_ev.get("EV_PHEV_RANGE_COMBINED_KM", "0")
                 if self._units == UnitOfLength.KILOMETERS
-                else self.vehicle.status_ev.get(
-                    "EV_PHEV_RANGE_COMBINED_MILES", "0"
-                )
+                else self.vehicle.status_ev.get("EV_PHEV_RANGE_COMBINED_MILES", "0")
             )
         # Fuel only
         return round(
@@ -391,8 +379,7 @@ class JLRVehicleRangeSensor(JLREntity):
 
         if self.vehicle.engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
             attrs["Battery Level"] = (
-                self.vehicle.status_ev.get("EV_STATE_OF_CHARGE", "0")
-                + PERCENTAGE
+                self.vehicle.status_ev.get("EV_STATE_OF_CHARGE", "0") + PERCENTAGE
             )
         # If hybrid
         if self.vehicle.engine_type == FUEL_TYPE_HYBRID:
@@ -407,9 +394,7 @@ class JLRVehicleRangeSensor(JLREntity):
             attrs["Battery Range"] = (
                 self.vehicle.status_ev.get("EV_RANGE_ON_BATTERY_KM", "0")
                 if self._units == UnitOfLength.KILOMETERS
-                else self.vehicle.status_ev.get(
-                    "EV_RANGE_ON_BATTERY_MILES", "0"
-                )
+                else self.vehicle.status_ev.get("EV_RANGE_ON_BATTERY_MILES", "0")
             )
 
         return attrs
@@ -459,20 +444,14 @@ class JLREVBatterySensor(JLREntity):
         # Max SOC Values Set
         if (
             status.get("EV_ONE_OFF_MAX_SOC_CHARGE_SETTING_CHOICE")
-            and status.get("EV_ONE_OFF_MAX_SOC_CHARGE_SETTING_CHOICE")
-            != "CLEAR"
+            and status.get("EV_ONE_OFF_MAX_SOC_CHARGE_SETTING_CHOICE") != "CLEAR"
         ):
-            attrs["Max SOC"] = status.get(
-                "EV_ONE_OFF_MAX_SOC_CHARGE_SETTING_CHOICE"
-            )
+            attrs["Max SOC"] = status.get("EV_ONE_OFF_MAX_SOC_CHARGE_SETTING_CHOICE")
         elif (
             status.get("EV_PERMANENT_MAX_SOC_CHARGE_SETTING_CHOICE")
-            and status.get("EV_PERMANENT_MAX_SOC_CHARGE_SETTING_CHOICE")
-            != "CLEAR"
+            and status.get("EV_PERMANENT_MAX_SOC_CHARGE_SETTING_CHOICE") != "CLEAR"
         ):
-            attrs["Max SOC"] = status.get(
-                "EV_PERMANENT_MAX_SOC_CHARGE_SETTING_CHOICE"
-            )
+            attrs["Max SOC"] = status.get("EV_PERMANENT_MAX_SOC_CHARGE_SETTING_CHOICE")
 
         attrs["Charging State"] = JLR_CHARGE_STATUS_TO_HA.get(
             status.get("EV_CHARGING_STATUS"),
@@ -514,15 +493,11 @@ class JLRVehicleLastTripSensor(JLREntity):
 
     @property
     def state(self):
-        if self.vehicle.last_trip and self.vehicle.last_trip.get(
-            "tripDetails"
-        ):
+        if self.vehicle.last_trip and self.vehicle.last_trip.get("tripDetails"):
             return round(
                 unit_conversion.DistanceConverter.convert(
                     int(
-                        self.vehicle.last_trip.get("tripDetails", "{}").get(
-                            "distance"
-                        )
+                        self.vehicle.last_trip.get("tripDetails", "{}").get("distance")
                     ),
                     UnitOfLength.METERS,
                     self._units,
@@ -543,26 +518,18 @@ class JLRVehicleLastTripSensor(JLREntity):
 
             if trip:
                 attrs["start"] = to_local_datetime(trip.get("startTime"))
-                attrs["origin_latitude"] = trip.get("startPosition").get(
-                    "latitude"
-                )
-                attrs["origin_longitude"] = trip.get("startPosition").get(
-                    "longitude"
-                )
+                attrs["origin_latitude"] = trip.get("startPosition").get("latitude")
+                attrs["origin_longitude"] = trip.get("startPosition").get("longitude")
                 attrs["origin"] = trip.get("startPosition").get("address")
 
                 attrs["end"] = to_local_datetime(trip.get("endTime"))
-                attrs["destination_latitude"] = trip.get("endPosition").get(
-                    "latitude"
-                )
+                attrs["destination_latitude"] = trip.get("endPosition").get("latitude")
                 attrs["destination_longitude"] = trip.get("endPosition").get(
                     "longitude"
                 )
                 attrs["destination"] = trip.get("endPosition").get("address")
                 if trip.get("totalEcoScore"):
-                    attrs["eco_score"] = trip.get("totalEcoScore").get(
-                        "score", 0
-                    )
+                    attrs["eco_score"] = trip.get("totalEcoScore").get("score", 0)
                 attrs["average_speed"] = round(
                     unit_conversion.DistanceConverter.convert(
                         int(trip.get("averageSpeed", 0)),
@@ -583,8 +550,7 @@ class JLRVehicleLastTripSensor(JLREntity):
                         )
                     else:
                         attrs["average_consumption"] = round(
-                            int(trip.get("averageFuelConsumption", 0))
-                            * 2.35215,
+                            int(trip.get("averageFuelConsumption", 0)) * 2.35215,
                             1,
                         )
 
@@ -618,9 +584,7 @@ class JLRVehicleClimateSensor(JLREntity):
     @property
     def state(self):
         return str(
-            self.vehicle.status.get(
-                "CLIMATE_STATUS_OPERATING_STATUS", "Unknown"
-            )
+            self.vehicle.status.get("CLIMATE_STATUS_OPERATING_STATUS", "Unknown")
         ).title()
 
     @property
