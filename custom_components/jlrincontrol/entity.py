@@ -1,3 +1,5 @@
+"""Base entity"""
+
 import asyncio
 import logging
 
@@ -16,9 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class JLREntity(CoordinatorEntity, Entity):
     """Base entity class"""
 
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, vin: str, name: str
-    ):
+    def __init__(self, coordinator: DataUpdateCoordinator, vin: str, name: str):
         """Create a new generic JLR sensor."""
         super().__init__(coordinator)
         self.vin = vin
@@ -48,9 +48,7 @@ class JLREntity(CoordinatorEntity, Entity):
 
     @property
     def name(self):
-        return (
-            f"{self.vehicle.attributes.get('nickname')} {self._name.title()}"
-        )
+        return f"{self.vehicle.attributes.get('nickname')} {self._name.title()}"
 
     @property
     def unique_id(self):

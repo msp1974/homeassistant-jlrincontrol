@@ -49,9 +49,7 @@ class JLRLock(JLREntity, LockEntity):
             kwargs["service_name"] = "lock"
             kwargs["service_code"] = "RDL"
             kwargs["pin"] = self.coordinator.pin
-            jlr_service = JLRService(
-                self.hass, self.coordinator.config_entry, self.vin
-            )
+            jlr_service = JLRService(self.hass, self.coordinator.config_entry, self.vin)
             await jlr_service.async_call_service(**kwargs)
             await self.async_force_update()
         else:
@@ -66,9 +64,7 @@ class JLRLock(JLREntity, LockEntity):
             kwargs["service_name"] = "unlock"
             kwargs["service_code"] = "RDU"
             kwargs["pin"] = self.coordinator.pin
-            jlr_service = JLRService(
-                self.hass, self.coordinator.config_entry, self.vin
-            )
+            jlr_service = JLRService(self.hass, self.coordinator.config_entry, self.vin)
             await jlr_service.async_call_service(**kwargs)
             await self.async_force_update()
         else:

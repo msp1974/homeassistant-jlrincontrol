@@ -16,22 +16,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Wiser climate device."""
 
     jlr_buttons = []
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][
-        JLR_DATA
-    ]  # Get Handler
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]  # Get Handler
 
     # Get list of supported services
     for vehicle in coordinator.vehicles:
         services = coordinator.vehicles[vehicle].supported_services
 
-        _LOGGER.debug(
-            "Setting up buttons for %s", coordinator.vehicles[vehicle].name
-        )
+        _LOGGER.debug("Setting up buttons for %s", coordinator.vehicles[vehicle].name)
         for service_code in SUPPORTED_BUTTON_SERVICES:
             if service_code in services:
-                jlr_buttons.append(
-                    JLRButton(coordinator, vehicle, service_code)
-                )
+                jlr_buttons.append(JLRButton(coordinator, vehicle, service_code))
 
     async_add_entities(jlr_buttons, True)
 
