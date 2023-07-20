@@ -6,7 +6,6 @@ Includes Sensor Devices and Services
 https://github.com/msp1974/homeassistant-jlrincontrol.git
 msparker@sky.com
 """
-import asyncio
 import logging
 import uuid
 from datetime import datetime, timedelta
@@ -167,10 +166,7 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
     await async_update_device_registry(hass, config_entry)
 
     # Setup platforms
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     # Add services
     for service, service_info in JLR_SERVICES.items():
@@ -216,17 +212,9 @@ async def async_unload_entry(hass, config_entry):
         _LOGGER.info("Unregister %s", service[0])
         hass.services.async_remove(DOMAIN, service[0])
 
-    # Stop scheduled updates
-    hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER]()
-
     # Remove platform components
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     if unload_ok:
