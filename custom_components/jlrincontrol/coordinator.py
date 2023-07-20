@@ -246,7 +246,9 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 temp=JLR_TO_HASS_UNITS.get(
                     uoms[2], self.hass.config.units.temperature_unit
                 ),
-                pressure=self.hass.config.units.pressure_unit,
+                pressure=self.hass.config.units.pressure_unit
+                if self.pressure_unit == "Default"
+                else self.pressure_unit,
                 energy_regenerated=JLR_TO_HASS_UNITS.get(
                     uoms[4], UnitOfEnergy.KILO_WATT_HOUR
                 ),

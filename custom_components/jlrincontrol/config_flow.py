@@ -14,8 +14,7 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
-    PRESSURE_BAR,
-    PRESSURE_PSI,
+    UnitOfPressure,
 )
 from homeassistant.core import callback
 
@@ -193,8 +192,8 @@ class JLRInControlOptionsFlowHandler(config_entries.OptionsFlow):
                 ): vol.Coerce(int),
                 vol.Required(
                     CONF_PRESSURE_UNIT,
-                    default=self.options.get(CONF_PRESSURE_UNIT, PRESSURE_BAR),
-                ): vol.In(["Default", PRESSURE_BAR, PRESSURE_PSI]),
+                    default=self.options.get(CONF_PRESSURE_UNIT, UnitOfPressure.BAR),
+                ): vol.In(["Default", UnitOfPressure.BAR, UnitOfPressure.PSI]),
                 vol.Required(
                     CONF_DEFAULT_CLIMATE_TEMP,
                     default=self.options.get(CONF_DEFAULT_CLIMATE_TEMP, 21),

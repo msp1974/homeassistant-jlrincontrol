@@ -216,7 +216,7 @@ class JLRVehicleTyreSensor(JLREntity):
                 units = self.coordinator.user.user_preferences.pressure
                 attrs[f"{key.title()} Pressure ({units})"] = round(
                     unit_conversion.PressureConverter.convert(
-                        tyre_pressure * 1000, UnitOfPressure.PA, units
+                        tyre_pressure, UnitOfPressure.KPA, units
                     ),
                     1,
                 )
@@ -313,16 +313,20 @@ class JLRVehicleServiceSensor(JLREntity):
         for key, value in DATA_ATTRS_SERVICE_INFO.items():
             if status.get(value):
                 if key == "exhaust fluid fill":
-                    attrs[key.title()] = unit_conversion.DistanceConverter.convert(
-                        int(status.get(value).title()),
-                        UnitOfVolume.LITERS,
-                        self._units,
+                    attrs[key.title()] = int(
+                        unit_conversion.DistanceConverter.convert(
+                            int(status.get(value).title()),
+                            UnitOfVolume.LITERS,
+                            self._units,
+                        )
                     )
                 else:
-                    attrs[key.title()] = unit_conversion.DistanceConverter.convert(
-                        int(status.get(value).title()),
-                        UnitOfLength.KILOMETERS,
-                        self._units,
+                    attrs[key.title()] = int(
+                        unit_conversion.DistanceConverter.convert(
+                            int(status.get(value).title()),
+                            UnitOfLength.KILOMETERS,
+                            self._units,
+                        )
                     )
         return attrs
 
