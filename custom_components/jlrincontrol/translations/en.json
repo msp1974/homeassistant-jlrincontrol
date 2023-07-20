@@ -15,6 +15,7 @@
         "data": {
           "username": "Email",
           "password": "Password",
+          "pin": "Pin",
           "use_china_servers": "China Region"
         },
         "description": "Please enter the email and password for your InControl account.",
@@ -28,11 +29,11 @@
       "user": {
         "data": {
           "pin": "Pin",
-          "scan_interval": "Scan Interval",
-          "health_update_interval": "Health Update Interval",
+          "scan_interval": "Scan Interval (mins)",
+          "health_update_interval": "Health Update Interval (mins)",
           "pressure_unit": "Pressure Unit Override",
-          "default_climate_temp": "Default Climate Temp",
-          "default_service_duration": "Default Service Duration"
+          "default_climate_temp": "Default Climate Temp (°C)",
+          "default_service_duration": "Default Service Duration (hrs)"
         },
         "description": "Amend your InControl options.",
         "title": "JLR InControl Options"

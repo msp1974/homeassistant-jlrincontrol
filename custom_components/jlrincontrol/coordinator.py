@@ -132,8 +132,9 @@ class JLRIncontrolHealthUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=self.update_interval),
         )
 
-    async def async_update_data(self):
+    async def async_update_data(self, *args):
         """Request update from vehicle"""
+        _LOGGER.debug("Update args: %s", args)
         try:
             for vehicle in self.connection.vehicles:
                 _LOGGER.debug(
@@ -175,7 +176,11 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         self.device_id = config_entry.data.get(CONF_DEVICE_ID)
         self.vehicles: dict[str, VehicleData] = {}
         self.entities = []
-        self.pin = config_entry.options.get(CONF_PIN)
+        self.pin = (
+            config_entry.data.get(CONF_PIN)
+            if config_entry.data.get(CONF_PIN) != "0000"
+            else None
+        )
         self.pressure_unit = config_entry.options.get(CONF_PRESSURE_UNIT)
         self.default_climate_temp = config_entry.options.get(
             CONF_DEFAULT_CLIMATE_TEMP, 21

@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PIN
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
@@ -79,8 +79,12 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         # Add fixed device id
         new_data[DEVICE_ID] = str(uuid.uuid4())
 
+        # Move pin to data from options
+        new_data[CONF_PIN] = new_options[CONF_PIN]
+
         # Remove no longer needed options
         remove_options = [
+            CONF_PIN,
             CONF_DISTANCE_UNIT,
             CONF_ALL_DATA_SENSOR,
             CONF_DEBUG_DATA,
@@ -122,6 +126,14 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
 
     await coordinator.async_config_entry_first_refresh()
 
+    # Update listener for config option changes
+    update_listener = config_entry.add_update_listener(_async_update_listener)
+
+    hass.data[DOMAIN][config_entry.entry_id] = {
+        JLR_DATA: coordinator,
+        UPDATE_LISTENER: update_listener,
+    }
+
     # Setup health update and repeat interval
     health_update_interval = config_entry.options.get(CONF_HEALTH_UPDATE_INTERVAL, 0)
 
@@ -135,6 +147,11 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
             hass, config_entry, coordinator
         )
 
+        # Add health update listener to config
+        hass.data[DOMAIN][config_entry.entry_id][
+            HEALTH_UPDATE_TRACKER
+        ] = health_update_coordinator
+
         # Do initial call to health_update service after HASS start up.
         # This speeds up restart.
         # 30 seconds should do it.
@@ -145,15 +162,6 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
             "Scheduled vehicle health update is disabled. %s",
             "Set interval in options to enable.",
         )
-
-    # Update listener for config option changes
-    update_listener = config_entry.add_update_listener(_async_update_listener)
-
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        JLR_DATA: coordinator,
-        HEALTH_UPDATE_TRACKER: health_update_coordinator,
-        UPDATE_LISTENER: update_listener,
-    }
 
     # Create vehicle devices
     await async_update_device_registry(hass, config_entry)

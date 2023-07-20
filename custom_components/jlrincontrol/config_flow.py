@@ -41,8 +41,8 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_PIN, default="0000"): str,
         vol.Required(CONF_USE_CHINA_SERVERS, default=False): bool,
-        vol.Required(CONF_DEVICE_ID, default=str(uuid.uuid4())): str,
     }
 )
 
@@ -122,6 +122,10 @@ class JLRInControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if "base" not in errors:
                 await self.async_set_unique_id(info[UNIQUE_ID])
                 self._abort_if_unique_id_configured()
+
+                # Add fixed device id
+                user_input[CONF_DEVICE_ID] = str(uuid.uuid4())
+
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
@@ -155,11 +159,27 @@ class JLRInControlOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_user(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            if user_input[CONF_PIN]:
+                data = {
+                    CONF_USERNAME: self.config_entry.data[CONF_USERNAME],
+                    CONF_PASSWORD: self.config_entry.data[CONF_PASSWORD],
+                    CONF_PIN: user_input[CONF_PIN],
+                    CONF_USE_CHINA_SERVERS: self.config_entry.data[
+                        CONF_USE_CHINA_SERVERS
+                    ],
+                }
+                user_input.pop(CONF_PIN)
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data=data
+                )
+            options = self.config_entry.options | user_input
+            return self.async_create_entry(title="", data=options)
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_PIN, default=self.options.get(CONF_PIN, "0000")): str,
+                vol.Required(
+                    CONF_PIN, default=self.config_entry.data.get(CONF_PIN, "0000")
+                ): str,
                 vol.Required(
                     CONF_SCAN_INTERVAL,
                     default=self.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),

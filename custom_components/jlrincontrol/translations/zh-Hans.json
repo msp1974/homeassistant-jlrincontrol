@@ -15,6 +15,7 @@
                 "data": {
                     "username": "Email",
                     "password": "密码",
+                    "pin": "Pin",
                     "use_china_servers": "使用中国服务器"
                 },
                 "description": "请输入 InControl 智能驭领 的账号（Email）和密码。",
@@ -30,10 +31,9 @@
                     "pin": "Pin",
                     "scan_interval": "扫描间隔",
                     "health_update_interval": "健康报告更新间隔",
-                    "distance_unit": "覆盖距离单位",
                     "pressure_unit": "覆盖压力单位",
-                    "debug_data": "调试数据",
-                    "all_data_sensor": "显示全部数据"
+                    "default_climate_temp": "Default Climate Temp (°C)",
+                    "default_service_duration": "Default Service Duration (hrs)"
                 },
                 "description": "调整 InControl 智能驭领 选项。",
                 "title": "捷豹路虎 InControl 智能驭领 选项"
