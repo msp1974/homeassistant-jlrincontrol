@@ -1,3 +1,5 @@
+"""Manage execution of services"""
+
 import asyncio
 import inspect
 import logging
@@ -14,6 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class StatusInfo:
+    """Holds process status info"""
+
     status: str
     timestamp: datetime
     start_time: datetime
@@ -44,7 +48,6 @@ class JLRService:
 
     def check_service_supported(self, service_code) -> bool:
         """Check service code is capable and enabled"""
-        # TODO: What is NA for?
         if service_code == "NA":
             return True
         if service_code in self.vehicle.supported_services:
