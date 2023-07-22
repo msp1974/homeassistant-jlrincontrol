@@ -1,14 +1,11 @@
 """Utility functions"""
-
-import json
 import logging
-import aiofiles
 from os.path import exists
 from typing import Any
 
+import aiofiles
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.util import dt
-
 
 _LOGGER = logging.getLogger(__name__)
 
