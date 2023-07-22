@@ -1,5 +1,4 @@
 """Handles updating data from jlrpy"""
-
 import json
 import logging
 from dataclasses import dataclass, field
@@ -36,7 +35,13 @@ from .const import (
     VERSION,
 )
 from .services import JLRService
-from .util import field_mask, get_is_date_active, get_value_match
+from .util import (
+    field_mask,
+    get_is_date_active,
+    get_user_prefs,
+    get_value_match,
+    save_user_prefs,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +56,9 @@ class UserPreferenceUnits:
     pressure: str
     energy_regenerated: str
     energy_consumed: str
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True)
 
 
 @dataclass
@@ -168,6 +176,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         """Initialize data update coordinator."""
 
         self.hass = hass
+        self.config_entry = config_entry
         self.connection: jlrpy.Connection = None
         self.user: UserData
         self.email = config_entry.data.get(CONF_USERNAME)
@@ -230,14 +239,19 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_get_user_info(self) -> None:
         """Get user info"""
-        user = (
-            await self.hass.async_add_executor_job(self.connection.get_user_info)
-        ).get("contact")
+        user = await self.hass.async_add_executor_job(self.connection.get_user_info)
+        _LOGGER.debug("USERINFO: %s", user)
+        user = user.get("contact")
 
-        uoms = str(user.get("userPreferences", {}).get("unitsOfMeasurement", "")).split(
-            " "
-        )
-        try:
+        uoms = str(user.get("userPreferences", {}).get("unitsOfMeasurement", ""))
+        if uoms:
+            # Save user prefs in .storage file
+            await save_user_prefs(self.hass, self.email, uoms)
+        else:
+            uoms = await get_user_prefs(self.hass, self.email)
+
+        if uoms:
+            uoms = uoms.split(" ")
             user_prefs = UserPreferenceUnits(
                 distance=JLR_TO_HASS_UNITS.get(
                     uoms[0], self.hass.config.units.length_unit
@@ -252,16 +266,16 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 energy_regenerated=JLR_TO_HASS_UNITS.get(
                     uoms[4], UnitOfEnergy.KILO_WATT_HOUR
                 ),
-                energy_consumed=uoms[5],
+                energy_consumed=JLR_TO_HASS_UNITS.get(uoms[5], "Unknown"),
             )
-        except IndexError:
+        else:
             user_prefs = UserPreferenceUnits(
                 distance=self.hass.config.units.length_unit,
                 fuel=self.hass.config.units.volume_unit,
                 temp=self.hass.config.units.temperature_unit,
                 pressure=self.hass.config.units.pressure_unit,
                 energy_regenerated=UnitOfEnergy.KILO_WATT_HOUR,
-                energy_consumed="Unknown",
+                energy_consumed=UnitOfEnergy.KILO_WATT_HOUR,
             )
 
         self.user = UserData(
@@ -476,6 +490,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
     async def async_update_data(self):
         """Update vehicle data"""
         try:
+            await self.async_get_user_info()
             for vehicle in self.connection.vehicles:
                 await self.async_get_vehicle_status(vehicle)
                 await self.async_get_guardian_mode_status(vehicle)

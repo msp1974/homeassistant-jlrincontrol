@@ -1,6 +1,9 @@
 """Utility functions"""
 
+import json
 import logging
+import aiofiles
+from os.path import exists
 from typing import Any
 
 from homeassistant.const import TEMP_CELSIUS
@@ -86,3 +89,26 @@ def get_attribute(obj, path: str) -> Any | None:
         else:
             return None
     return temp
+
+
+async def save_user_prefs(hass, user_id, uoms) -> bool:
+    """Write user preferences to file"""
+    file = f"{hass.config.config_dir}/.storage/jlrincontrol_data_{user_id}"
+    # Write to config file
+    async with aiofiles.open(file, mode="w") as config_file:
+        # try:
+        await config_file.write(uoms)
+        config_file.close()
+    return True
+
+
+async def get_user_prefs(hass, user_id) -> dict:
+    """Get user prefs from file"""
+    file = f"{hass.config.config_dir}/.storage/jlrincontrol_data_{user_id}"
+    if exists(file):
+        async with aiofiles.open(file, mode="r") as user_pref_file:
+            contents = await user_pref_file.read()
+            if contents:
+                uoms = contents
+            user_pref_file.close()
+        return uoms

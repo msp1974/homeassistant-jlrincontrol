@@ -50,9 +50,9 @@ JLR_TO_HASS_UNITS = {
     "Fahrenheit": UnitOfTemperature.FAHRENHEIT,
     "kWh": UnitOfEnergy.KILO_WATT_HOUR,
     "Wh": UnitOfEnergy.WATT_HOUR,
-    "kWhPer100Dist": "?",
-    "DistPerkWh": "?",
-    "WhPerDist": "?",
+    "kWhPer100Dist": UnitOfEnergy.KILO_WATT_HOUR,
+    "DistPerkWh": UnitOfLength.KILOMETERS,
+    "WhPerDist": UnitOfEnergy.WATT_HOUR,
 }
 
 FUEL_TYPE_BATTERY = "Electric"
