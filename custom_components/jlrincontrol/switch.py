@@ -141,17 +141,19 @@ class JLRSwitch(JLREntity, SwitchEntity):
         if "pin" in params:
             result["pin"] = self.coordinator.pin
 
-        # TODO: Set these to configurable values
         if "target_value" in params:
-            result["target_value"] = 21
+            result["target_value"] = self.coordinator.default_climate_temp
 
         if "target_temp" in params:
-            result["target_temp"] = 21
+            result["target_temp"] = self.coordinator.default_climate_temp
 
         if "expiration" in params:
             if is_turn_on:
                 result["expiration_time"] = int(
-                    (datetime.now(timezone.utc) + timedelta(hours=24)).timestamp()
+                    (
+                        datetime.now(timezone.utc)
+                        + timedelta(hours=self.coordinator.default_service_duration)
+                    ).timestamp()
                     * 1000
                 )
             else:
@@ -161,7 +163,8 @@ class JLRSwitch(JLREntity, SwitchEntity):
         if "expiration_formatted" in params:
             if is_turn_on:
                 result["expiration_time"] = (
-                    datetime.now(timezone.utc) + timedelta(hours=24)
+                    datetime.now(timezone.utc)
+                    + timedelta(hours=self.coordinator.default_service_duration)
                 ).strftime("%Y-%m-%dT%H:%M:00.000Z")
             else:
                 result["expiration_time"] = datetime.now(timezone.utc).strftime(
