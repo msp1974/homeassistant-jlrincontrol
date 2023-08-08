@@ -30,6 +30,8 @@ from .const import (
     CONF_DEBUG_DATA,
     CONF_DISTANCE_UNIT,
     CONF_HEALTH_UPDATE_INTERVAL,
+    CUSTOM_SERVICES,
+    DEPRECATED_SERVICES,
     DOMAIN,
     HEALTH_UPDATE_TRACKER,
     JLR_DATA,
@@ -96,9 +98,7 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
                 pass
 
         config_entry.version = 2
-        hass.config_entries.async_update_entry(
-            config_entry, data=new_data, options=new_options
-        )
+        hass.config_entries.async_update_entry(config_entry, data=new_data, options=new_options)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
@@ -111,7 +111,7 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
     def get_schema(schema_list):
         result = {}
         for schema in schema_list:
-            result.update(eval(schema))
+            result.update(eval(schema))  # pylint: disable=eval-used
         return vol.Schema(cv.make_entity_service_schema(result))
 
     hass.data.setdefault(DOMAIN, {})
@@ -142,14 +142,10 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
             int(health_update_interval),
         )
 
-        health_update_coordinator = JLRIncontrolHealthUpdateCoordinator(
-            hass, config_entry, coordinator
-        )
+        health_update_coordinator = JLRIncontrolHealthUpdateCoordinator(hass, config_entry, coordinator)
 
         # Add health update listener to config
-        hass.data[DOMAIN][config_entry.entry_id][
-            HEALTH_UPDATE_TRACKER
-        ] = health_update_coordinator
+        hass.data[DOMAIN][config_entry.entry_id][HEALTH_UPDATE_TRACKER] = health_update_coordinator
 
         # Do initial call to health_update service after HASS start up.
         # This speeds up restart.
@@ -169,13 +165,13 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     # Add services
-    for service, service_info in JLR_SERVICES.items():
+    for service in CUSTOM_SERVICES + DEPRECATED_SERVICES:
         _LOGGER.debug("Adding %s service", service)
         hass.services.async_register(
             DOMAIN,
             service,
             coordinator.async_call_service,
-            schema=get_schema(service_info.get("schema")),
+            schema=get_schema(JLR_SERVICES[service].get("schema")),
         )
 
     return True
@@ -228,9 +224,7 @@ async def async_unload_entry(hass, config_entry):
         hass.services.async_remove(DOMAIN, service[0])
 
     # Remove platform components
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
