@@ -479,7 +479,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             # Log warning if deprecated service call
             if service.service in DEPRECATED_SERVICES:
                 _LOGGER.warning(
-                    "%s service has been deprecated.  Please update to use new service for this function.",
+                    "%s service has been deprecated.  Please update to use the new service for this function.",
                     service.service,
                 )
 

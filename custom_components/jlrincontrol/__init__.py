@@ -30,8 +30,6 @@ from .const import (
     CONF_DEBUG_DATA,
     CONF_DISTANCE_UNIT,
     CONF_HEALTH_UPDATE_INTERVAL,
-    CUSTOM_SERVICES,
-    DEPRECATED_SERVICES,
     DOMAIN,
     HEALTH_UPDATE_TRACKER,
     JLR_DATA,
@@ -165,14 +163,15 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     # Add services
-    for service in CUSTOM_SERVICES + DEPRECATED_SERVICES:
-        _LOGGER.debug("Adding %s service", service)
-        hass.services.async_register(
-            DOMAIN,
-            service,
-            coordinator.async_call_service,
-            schema=get_schema(JLR_SERVICES[service].get("schema")),
-        )
+    for service, service_info in JLR_SERVICES.items():
+        if service_info.get("custom_service", False):
+            _LOGGER.debug("Adding %s service", service)
+            hass.services.async_register(
+                DOMAIN,
+                service,
+                coordinator.async_call_service,
+                schema=get_schema(service_info.get("schema")),
+            )
 
     return True
 

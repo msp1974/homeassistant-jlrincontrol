@@ -209,14 +209,6 @@ DATA_ATTRS_WINDOW_STATUS = {
 
 SERVICE_STATUS_OK = ["CLEAR", "FUNCTIONING", "NORMAL", "NORMAL_UNBLOCKED"]
 
-CUSTOM_SERVICES = [
-    "start_vehicle",
-    "stop_vehicle",
-    "start_preconditioning",
-    "stop_preconditioning",
-    "set_max_charge_level",
-    "set_one_off_max_charge_level",
-]
 DEPRECATED_SERVICES = [
     "update_health_status",
     "lock_vehicle",
@@ -290,31 +282,37 @@ SUPPORTED_SWITCH_SERVICES = {
 
 JLR_SERVICES = {
     "update_health_status": {
+        "custom_service": True,
         "function_name": "get_health_status",
         "service_code": "VHS",
         "schema": [],
     },
     "lock_vehicle": {
+        "custom_service": True,
         "function_name": "lock",
         "service_code": "RDL",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
     },
     "unlock_vehicle": {
+        "custom_service": True,
         "function_name": "unlock",
         "service_code": "RDU",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
     },
     "reset_alarm": {
+        "custom_service": True,
         "function_name": "reset_alarm",
         "service_code": "ALOFF",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
     },
     "honk_blink": {
+        "custom_service": True,
         "function_name": "honk_blink",
         "service_code": "HBLF",
         "schema": ["SERVICES_BASE_SCHEMA"],
     },
     "start_vehicle": {
+        "custom_service": True,
         "function_name": "remote_engine_start",
         "service_code": "REON",
         "schema": [
@@ -324,51 +322,61 @@ JLR_SERVICES = {
         ],
     },
     "stop_vehicle": {
+        "custom_service": True,
         "function_name": "remote_engine_stop",
         "service_code": "REOFF",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
     },
     "start_charging": {
+        "custom_service": True,
         "function_name": "charging_start",
         "service_code": "CP",
         "schema": ["SERVICES_BASE_SCHEMA"],
     },
     "stop_charging": {
+        "custom_service": True,
         "function_name": "charging_stop",
         "service_code": "CP",
         "schema": ["SERVICES_BASE_SCHEMA"],
     },
     "start_preconditioning": {
+        "custom_service": True,
         "function_name": "preconditioning_start",
         "service_code": "ECC",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_TARGET_TEMP_SCHEMA"],
     },
     "stop_preconditioning": {
+        "custom_service": True,
         "function_name": "preconditioning_stop",
         "service_code": "ECC",
         "schema": ["SERVICES_BASE_SCHEMA"],
     },
     "set_max_charge_level": {
+        "custom_service": True,
         "function_name": "set_max_soc",
         "service_code": "CP",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_CHARGE_LEVEL_SCHEMA"],
     },
     "set_one_off_max_charge_level": {
+        "custom_service": True,
         "function_name": "set_one_off_max_soc",
         "service_code": "CP",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_CHARGE_LEVEL_SCHEMA"],
     },
     "enable_journey_recording": {
+        "custom_service": True,
         "function_name": "disable_privacy_mode",
         "service_code": "PM",
         "schema": ["SERVICES_BASE_SCHEMA"],
     },
     "disable_journey_recording": {
+        "custom_service": True,
         "function_name": "enable_privacy_mode",
         "service_code": "PM",
         "schema": ["SERVICES_BASE_SCHEMA"],
     },
     "enable_guardian_mode": {
+        "custom_service": True,
         "function_name": "enable_guardian_mode",
         "service_code": "GMCC",
         "schema": [
@@ -378,11 +386,13 @@ JLR_SERVICES = {
         ],
     },
     "disable_guardian_mode": {
+        "custom_service": True,
         "function_name": "enable_guardian_mode",
         "service_code": "GMCC",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
     },
     "enable_service_mode": {
+        "custom_service": True,
         "function_name": "enable_service_mode",
         "service_code": "SM",
         "schema": [
@@ -392,11 +402,13 @@ JLR_SERVICES = {
         ],
     },
     "disable_service_mode": {
+        "custom_service": True,
         "function_name": "enable_service_mode",
         "service_code": "SM",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
     },
     "enable_transport_mode": {
+        "custom_service": True,
         "function_name": "enable_transport_mode",
         "service_code": "TM",
         "schema": [
@@ -406,6 +418,7 @@ JLR_SERVICES = {
         ],
     },
     "disable_transport_mode": {
+        "custom_service": True,
         "function_name": "enable_transport_mode",
         "service_code": "TM",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
