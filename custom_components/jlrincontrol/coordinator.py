@@ -26,6 +26,7 @@ from .const import (
     CONF_PRESSURE_UNIT,
     CONF_USE_CHINA_SERVERS,
     DEFAULT_SCAN_INTERVAL,
+    DEPRECATED_SERVICES,
     DOMAIN,
     FUEL_TYPE_BATTERY,
     FUEL_TYPE_HYBRID,
@@ -149,9 +150,7 @@ class JLRIncontrolHealthUpdateCoordinator(DataUpdateCoordinator):
                     "Requesting health update from %s",
                     self.coordinator.vehicles[vehicle.vin].name,
                 )
-                jlr_service = JLRService(
-                    self.coordinator, vehicle.vin, "update_health_status"
-                )
+                jlr_service = JLRService(self.coordinator, vehicle.vin, "update_health_status")
                 success = await jlr_service.async_call_service()
                 if success:
                     # await self.hass.async_add_executor_job(vehicle.get_health_status)
@@ -185,24 +184,12 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         self.device_id = config_entry.data.get(CONF_DEVICE_ID)
         self.vehicles: dict[str, VehicleData] = {}
         self.entities = []
-        self.pin = (
-            config_entry.data.get(CONF_PIN)
-            if config_entry.data.get(CONF_PIN) != "0000"
-            else None
-        )
+        self.pin = config_entry.data.get(CONF_PIN) if config_entry.data.get(CONF_PIN) != "0000" else None
         self.pressure_unit = config_entry.options.get(CONF_PRESSURE_UNIT)
-        self.default_climate_temp = config_entry.options.get(
-            CONF_DEFAULT_CLIMATE_TEMP, 21
-        )
-        self.default_service_duration = config_entry.options.get(
-            CONF_DEFAULT_SERVICE_DURATION, 24
-        )
-        self.update_interval = config_entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
-        self.health_update_interval = config_entry.options.get(
-            CONF_HEALTH_UPDATE_INTERVAL
-        )
+        self.default_climate_temp = config_entry.options.get(CONF_DEFAULT_CLIMATE_TEMP, 21)
+        self.default_service_duration = config_entry.options.get(CONF_DEFAULT_SERVICE_DURATION, 24)
+        self.update_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        self.health_update_interval = config_entry.options.get(CONF_HEALTH_UPDATE_INTERVAL)
 
         super().__init__(
             hass,
@@ -253,19 +240,13 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         if uoms:
             uoms = uoms.split(" ")
             user_prefs = UserPreferenceUnits(
-                distance=JLR_TO_HASS_UNITS.get(
-                    uoms[0], self.hass.config.units.length_unit
-                ),
+                distance=JLR_TO_HASS_UNITS.get(uoms[0], self.hass.config.units.length_unit),
                 fuel=JLR_TO_HASS_UNITS.get(uoms[1], self.hass.config.units.volume_unit),
-                temp=JLR_TO_HASS_UNITS.get(
-                    uoms[2], self.hass.config.units.temperature_unit
-                ),
+                temp=JLR_TO_HASS_UNITS.get(uoms[2], self.hass.config.units.temperature_unit),
                 pressure=self.hass.config.units.pressure_unit
                 if self.pressure_unit == "Default"
                 else self.pressure_unit,
-                energy_regenerated=JLR_TO_HASS_UNITS.get(
-                    uoms[4], UnitOfEnergy.KILO_WATT_HOUR
-                ),
+                energy_regenerated=JLR_TO_HASS_UNITS.get(uoms[4], UnitOfEnergy.KILO_WATT_HOUR),
                 energy_consumed=JLR_TO_HASS_UNITS.get(uoms[5], "Unknown"),
             )
         else:
@@ -314,9 +295,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             )
             self.vehicles[vehicle.vin].attributes = attributes
             self.vehicles[vehicle.vin].fuel = attributes.get("fuelType")
-            self.vehicles[vehicle.vin].name = self.vehicles[vehicle.vin].attributes.get(
-                "nickname"
-            )
+            self.vehicles[vehicle.vin].name = self.vehicles[vehicle.vin].attributes.get("nickname")
             self.get_vehicle_engine_type(self.vehicles[vehicle.vin])
 
             # Set supported services
@@ -331,9 +310,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
             # Add preconditioning On and Off
             if "ECC" in self.vehicles[vehicle.vin].supported_services:
-                self.vehicles[vehicle.vin].supported_services.extend(
-                    ["ECCON", "ECCOFF"]
-                )
+                self.vehicles[vehicle.vin].supported_services.extend(["ECCON", "ECCOFF"])
 
         else:
             _LOGGER.debug(
@@ -351,19 +328,13 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 field_mask(vehicle.vin, 3, 2),
             )
             if status["vehicleStatus"].get("coreStatus"):
-                status_data = {
-                    d["key"]: d["value"] for d in status["vehicleStatus"]["coreStatus"]
-                }
+                status_data = {d["key"]: d["value"] for d in status["vehicleStatus"]["coreStatus"]}
                 self.vehicles[vehicle.vin].status = dict(sorted(status_data.items()))
                 self.vehicles[vehicle.vin].last_updated = status.get("lastUpdatedTime")
 
             if status["vehicleStatus"].get("evStatus"):
-                status_ev_data = {
-                    d["key"]: d["value"] for d in status["vehicleStatus"]["evStatus"]
-                }
-                self.vehicles[vehicle.vin].status_ev = dict(
-                    sorted(status_ev_data.items())
-                )
+                status_ev_data = {d["key"]: d["value"] for d in status["vehicleStatus"]["evStatus"]}
+                self.vehicles[vehicle.vin].status_ev = dict(sorted(status_ev_data.items()))
 
             self.get_tracked_statuses(self.vehicles[vehicle.vin])
 
@@ -376,9 +347,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         # Get climate temp preference
         # TODO: Check if different for EV
         try:
-            climate_temp_data = await self.hass.async_add_executor_job(
-                vehicle.get_rcc_target_value
-            )
+            climate_temp_data = await self.hass.async_add_executor_job(vehicle.get_rcc_target_value)
             _LOGGER.debug("CLIMATE TEMP: %s", climate_temp_data)
             temp = int(float(climate_temp_data.get("value", "42"))) / 2
             self.vehicles[vehicle.vin].target_climate_temp = temp
@@ -400,29 +369,19 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             )
 
         # Guardian mode
-        vehicle.tracked_status.guardian_mode_active = get_value_match(
-            vehicle.guardian_mode, "status", "ACTIVE"
-        )
+        vehicle.tracked_status.guardian_mode_active = get_value_match(vehicle.guardian_mode, "status", "ACTIVE")
 
         # Charging
-        vehicle.tracked_status.is_charging = get_value_match(
-            vehicle.status_ev, "EV_IS_CHARGING", "TRUE"
-        )
+        vehicle.tracked_status.is_charging = get_value_match(vehicle.status_ev, "EV_IS_CHARGING", "TRUE")
 
         # Privacy mode status
-        vehicle.tracked_status.privacy_mode_enabled = get_value_match(
-            vehicle.status, "PRIVACY_SWITCH", "FALSE"
-        )
+        vehicle.tracked_status.privacy_mode_enabled = get_value_match(vehicle.status, "PRIVACY_SWITCH", "FALSE")
 
         # Service mode
-        vehicle.tracked_status.service_mode_enabled = get_is_date_active(
-            vehicle.status, "SERVICE_MODE_STOP"
-        )
+        vehicle.tracked_status.service_mode_enabled = get_is_date_active(vehicle.status, "SERVICE_MODE_STOP")
 
         # Transport mode
-        vehicle.tracked_status.transport_mode_enabled = get_is_date_active(
-            vehicle.status, "TRANSPORT_MODE_STOP"
-        )
+        vehicle.tracked_status.transport_mode_enabled = get_is_date_active(vehicle.status, "TRANSPORT_MODE_STOP")
 
     def get_vehicle_engine_type(self, vehicle: VehicleData) -> None:
         """Determine vehicle engine type"""
@@ -459,16 +418,12 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         """Get guardian mode status"""
         if "GMCC" in self.vehicles[vehicle.vin].supported_services:
             try:
-                self.vehicles[
-                    vehicle.vin
-                ].guardian_mode = await self.hass.async_add_executor_job(
+                self.vehicles[vehicle.vin].guardian_mode = await self.hass.async_add_executor_job(
                     vehicle.get_guardian_mode_status
                 )
             except HTTPError:
                 # If not supported
-                self.vehicles[vehicle.vin].guardian_mode = GuardianData(
-                    capable=False, active=False, expiry="0"
-                )
+                self.vehicles[vehicle.vin].guardian_mode = GuardianData(capable=False, active=False, expiry="0")
 
     async def async_get_vehicle_last_trip_data(self, vehicle: jlrpy.Vehicle) -> None:
         """Get vehicle trip data"""
@@ -521,6 +476,13 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             entity_device_ids = []
             vin_list = []
 
+            # Log warning if deprecated service call
+            if service.service in DEPRECATED_SERVICES:
+                _LOGGER.warning(
+                    "%s service has been deprecated.  Please update to use new service for this function.",
+                    service.service,
+                )
+
             # Make list of config_entry_ids and vins
 
             area_ids = service.data.get("area_id", [])
@@ -528,9 +490,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             # If entity_ids, get device_ids for entity or areas
             if entity_ids := service.data.get("entity_id") or area_ids:
                 entity_reg = er.async_get(self.hass)
-                entities = er.async_entries_for_config_entry(
-                    entity_reg, self.config_entry.entry_id
-                )
+                entities = er.async_entries_for_config_entry(entity_reg, self.config_entry.entry_id)
                 entity_device_ids = [
                     entity.device_id
                     for entity in entities
@@ -540,15 +500,11 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             # Get device ids for this instance and areas
             if device_ids := service.data.get("entity_id") or area_ids:
                 device_reg = dr.async_get(self.hass)
-                devices = dr.async_entries_for_config_entry(
-                    device_reg, self.config_entry.entry_id
-                )
+                devices = dr.async_entries_for_config_entry(device_reg, self.config_entry.entry_id)
                 vin_list = [
                     dict((x, y) for x, y in device.identifiers).get(DOMAIN)
                     for device in devices
-                    if device.id in device_ids
-                    or device.id in entity_device_ids
-                    or device.area_id in area_ids
+                    if device.id in device_ids or device.id in entity_device_ids or device.area_id in area_ids
                 ]
 
             _LOGGER.debug("VIN list: %s", vin_list)

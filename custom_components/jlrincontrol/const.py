@@ -209,10 +209,25 @@ DATA_ATTRS_WINDOW_STATUS = {
 
 SERVICE_STATUS_OK = ["CLEAR", "FUNCTIONING", "NORMAL", "NORMAL_UNBLOCKED"]
 
+CUSTOM_SERVICES = ["set_max_charge_level", "set_one_off_max_charge_level"]
+DEPRECATED_SERVICES = [
+    "update_health_status",
+    "lock_vehicle",
+    "unlock_vehicle",
+    "reset_alarm",
+    "honk_blink",
+    "start_vehicle",
+    "stop_vehicle",
+    "start_charging",
+    "stop_charging",
+    "start_preconditioning",
+    "stop_preconditioning",
+]
+
 SUPPORTED_BUTTON_SERVICES = {
     "ALOFF": {"name": "Reset Alarm", "service": "reset_alarm"},
     "HBLF": {"name": "Honk Blink", "service": "honk_blink"},
-    "VHS": {"name": "Update From Vehcile", "service": "update_health_status"},
+    "VHS": {"name": "Update From Vehicle", "service": "update_health_status"},
 }
 
 SUPPORTED_SWITCH_SERVICES = {
