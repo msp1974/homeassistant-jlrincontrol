@@ -1,6 +1,6 @@
-"""Diagnostics support for Wiser"""
+"""Diagnostics support for JLRInControl"""
 from __future__ import annotations
-
+import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -9,12 +9,26 @@ from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN, JLR_DATA
 
-# from aioWiserHeatAPI.cli import anonymise_data
+_LOGGER = logging.getLogger(__name__)
+
+ANON_KEYS = [
+    "vin",
+    "longitude",
+    "latitude",
+    "minLongitude",
+    "minLatitude",
+    "maxLongitude",
+    "maxLatitude",
+    "address",
+    "postalCode",
+    "city",
+    "registrationNumber",
+    "serialNumber",
+    "TU_STATUS_IMEI",
+]
 
 
-async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> dict[str, Any]:
+async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     return _async_get_diagnostics(hass, entry)
 
@@ -29,8 +43,25 @@ def _async_get_diagnostics(
 
     diag_data = {}
 
+    diag_data["Device"] = device
+
     diag_data["User"] = data.user.__dict__
     for vehicle in data.vehicles:
-        diag_data[vehicle] = data.vehicles[vehicle].__dict__
-    # TODO: Redact sensitive info
+        diag_data[anonymise_vin(vehicle)] = anonymise_data(data.vehicles[vehicle].__dict__)
     return diag_data
+
+
+def anonymise_data(data: dict) -> dict:
+    """Anonymise sensitive data."""
+    for key, value in data.items():
+        if isinstance(value, dict):
+            data[key] = anonymise_data(value)
+        else:
+            if key in ANON_KEYS:
+                data[key] = "**REDACTED**"
+    return data
+
+
+def anonymise_vin(vin) -> str:
+    """Anonymise vin number"""
+    return vin[:11] + "XXXXXX"
