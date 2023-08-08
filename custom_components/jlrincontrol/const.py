@@ -209,19 +209,22 @@ DATA_ATTRS_WINDOW_STATUS = {
 
 SERVICE_STATUS_OK = ["CLEAR", "FUNCTIONING", "NORMAL", "NORMAL_UNBLOCKED"]
 
-CUSTOM_SERVICES = ["set_max_charge_level", "set_one_off_max_charge_level"]
+CUSTOM_SERVICES = [
+    "start_vehicle",
+    "stop_vehicle",
+    "start_preconditioning",
+    "stop_preconditioning",
+    "set_max_charge_level",
+    "set_one_off_max_charge_level",
+]
 DEPRECATED_SERVICES = [
     "update_health_status",
     "lock_vehicle",
     "unlock_vehicle",
     "reset_alarm",
     "honk_blink",
-    "start_vehicle",
-    "stop_vehicle",
     "start_charging",
     "stop_charging",
-    "start_preconditioning",
-    "stop_preconditioning",
 ]
 
 SUPPORTED_BUTTON_SERVICES = {
