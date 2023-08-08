@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PIN
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_call_later
@@ -200,6 +200,21 @@ async def async_update_device_registry(hass, config_entry):
             model=data.vehicles[vin].attributes.get("vehicleType"),
             sw_version=data.vehicles[vin].status.get("TU_STATUS_SW_VERSION_MAIN"),
         )
+
+
+async def async_remove_config_entry_device(hass, config_entry, device_entry) -> bool:
+    """Delete device if no longer on account"""
+    _LOGGER.warning(device_entry)
+    vin = list(device_entry.identifiers)[0][1]
+    _LOGGER.warning(vin)
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]
+
+    if vin in coordinator.vehicles:
+        raise HomeAssistantError(
+            f"You cannot delete vehicle {device_entry.name} because it is still active on your InControl account"
+        )
+
+    return True
 
 
 async def async_unload_entry(hass, config_entry):
