@@ -11,7 +11,7 @@ This repository contains a Home Assistant integration for the Jaguar Landrover I
 
 Due to changes in Home Assistant, this integration requires a minimum of HA v2022.10.
 
-# Functionality
+## Functionality
 
 Currently this loads a series of sensors for
 
@@ -28,6 +28,21 @@ Currently this loads a series of sensors for
 - Last Trip
 - All Vehicle Data (see Note 3)
 
+Has buttons for
+
+- Honk Blink
+- Reset Alarm
+- Update from Vehicle
+
+Has switches for
+
+- Climate (ICE only)
+- Preconditioning (EV & PHEV only)
+- Guardian Mode
+- Service Mode
+- Transport Mode
+- Journey Recording
+
 And has services for
 
 - Update Health Status (forces update from vehicle)
@@ -39,7 +54,7 @@ And has services for
 - Start Preconditioning/Stop Preconditioning
 - Set Max Charge (Always and One Off)
 
-**Note:** Not all services are available on all models and the error log will show this if not available on your vehicle.
+**Note:** Not all functions are available on all models and therefore the buttons/switches may not be created.  If you call services that are not supported you will get an error in the error log.
 
 **Note 2**: When calling a service, HA will monitor the status of the service call and report in the error log if it failed.
 
@@ -47,7 +62,7 @@ And has services for
 
 Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations welcome!), there maybe issues with some models not supporting some functions. Please raise an issue for these and say what vehicle you have and post the log.
 
-# Sample Images
+## Sample Images
 
 ![](https://raw.githubusercontent.com/msp1974/homeassistant-jlrincontrol/master/docs/panel1.png)
 
@@ -55,28 +70,21 @@ Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations we
 
 Add via Configuration -> Integrations in the UI
 
-**Required Parameters**
+### Required Parameters
 
-```
-  email: <your InControl email address>
-  password: <your InControl password>
-```
+- email: [your InControl email address]
+- password: [your InControl password]
 
-**Config Options**
+### Config Options
 
-1. scan interval - in minutes. Default update interval is 5 minutes. Use this to change that. Minimum is 1 minute.
-2. pin - set this to be able to use the lock/unlock on the lock sensor.
-3. distance unit - set this to 'mi' or 'km' to override the HA default metric for mileages (mainly for funny UK system of miles and litres!).
-4. pressure unit - set this to 'bar' or 'psi' to override the HA default unit for pressure (mainly for UK also).
-5. health update interval - see health update section.
-6. debug data: - see debugging below.
-7. show all data sensor
+1. **Pin**: set this to be able to use the lock/unlock on the lock sensor.
+2. **Scan interval**: in minutes. Default update interval is 5 minutes. Use this to change that. Minimum is 1 minute.
+3. health update interval - see health update section.
+4. **Pressure Unit:** set this to 'bar' or 'psi' to override the HA default unit for pressure (mainly for UK also).
+5. Default climate temp:
+6. Default service duration:
 
-### Migrating From Previous Versions
-
-The new config flow will import your settings from configuration.yaml. It is recommended to remove them after this has happened, otherwise changes via the UI can be reverted by the entries in configuration.yaml.
-
-# Health Status Update
+## Health Status Update
 
 This integration has the ability to perform a scheduled health status update request from your vehicle. By default this is disabled. Setting the interval and your pin in the config options will enable this.
 
@@ -86,7 +94,7 @@ Alternatively, you can make a more intelligent health update request automation 
 
 I.e. on EV vehicles you could only call it if the vehicle is charging, or on all vehicles, only call it during the day and it was more than x period since the last update.
 
-# Creating Custom Sensors
+## Creating Custom Sensors
 
 As all use cases cannot be covered and to allow the best benefit to all of this integration, version 2.1.0 introduced and 'All Info' sensor. This sensor displays the attribute, status and position information being received from the JLR servers and allows the creation of custom sensors and use of any of this data in scripts and automations.
 
@@ -94,34 +102,34 @@ The [recipes](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/
 
 **NOTE**: By default this sensor is not created and must be enabled in the config options. Configuration -> Integrations -> Select Options on the JLR Incontrol integration. You do not need to restart HA to enable or disable this sensor, but you may need to add it into your Lovelace UI after enabling it.
 
-# Installation
+## Installation
 
 **Installing via HACS and configuring via the UI is the recommended method.**
 
-## Manual Code Installation
+### Manual Code Installation
 
 1. On your server clone the github repository into a suitable directory using the git clone command.<br>
    `git clone https://github.com/msp1974/homeassistant-jlrincontrol.git`
 2. Copy the jlrincontrol folder to the custom_components directory of your Home Assistant installation.
 3. Configure via the integrations page in the UI.
 
-## Branch Versions
+### Branch Versions
 
 As of v1.0.0, the dev branch is now where the very latest version is held. Please note that there maybe issues with new functions or fixes that have not been fully tested. It will also be updated regularly as new fixes/functions are developed, so please check you have the latest update before raising an issue. The master branch is the current release.
 
-# Community Recipes
+## Community Recipes
 
 The [recipes](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Recipes.md) page is a collection of ideas contributed by the community to help you get the most out of using this integration.
 
-# Suggestions
+## Suggestions
 
 I am looking for suggestions to improve this integration and make it useful for many people. Please raise an issue for any functionality you would like to see.
 
-# Contributors
+## Contributors
 
 This integration uses the jlrpy api written by [ardevd](https://github.com/ardevd/jlrpy). A big thanks for all the work you have done on this.
 
-# Debugging
+## Debugging
 
 1. To enable debug logging for this component, add the following to your configuration.yaml
 
@@ -134,22 +142,22 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 
 2. To enable logging of the attributes and status data in the debug log, set the debug data option in config options with debugging turned on as above.
 
-# Change Log
+## Change Log
 
-## v2.2.3
+### v2.2.3
 - Fix usage of deprecated device class constant [#84](https://github.com/msp1974/homeassistant-jlrincontrol/issues/84)
 
-## v2.2.2
+### v2.2.2
 - Fix deprecation issue of async_get_registry [#74](https://github.com/msp1974/homeassistant-jlrincontrol/issues/74)
 - Fix distance and pressure deprecated to use unit_conversion
 - Add config option for China region
 
-## v2.2.1 (includes v2.1.4 Pre Release changes)
+### v2.2.1 (includes v2.1.4 Pre Release changes)
 - Bump jlrpy to v1.4.1
 - Added support for PHEV vehicles
 - Debug data outputs all received data
 
-## v2.1.4 - Pre Release
+### v2.1.4 - Pre Release
 - Updated device_state_attributes to extra_state_attributes
 - Fixed spelling mistakes in services.yaml - PR #58.  Thanks @seanauff
 - Fixed: Service returned as a failure if status returned a status of 'running'
@@ -158,32 +166,32 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 - Updated: Set service call errors to error instead of debug to better show in logs
 - Removed: Battery_EV sensor as replaced by better Battery sensor for EVs
 
-## v2.1.3
+### v2.1.3
 - Added version to manifest
 
-## v2.1.2
+### v2.1.2
 - Fixed: Change to constant UNIT_PERCENTAGE to PERCENTAGE in HA core
 
-## v2.1.1
+### v2.1.1
 
 - Fixed: Lock/Unlock errors if all info sensor enabled
 
-## v2.1
+### v2.1
 
 - Added: All data sensor to show returned info from vehicle
 
-## v2.0.2
+### v2.0.2
 
 - Fixed: error when locking/unlocking via lock device sensor. Issue #39
 - Fixed: not updating from server after lock/unlock call from device sensor
 - Updated: improved handling of service call returns
 - Updated: get status update from server when service call fails
 
-## v2.0.1
+### v2.0.1
 
 - Fixed: errors on non unique id when changing config options
 
-## v2.0.0beta
+### v2.0.0beta
 
 - Deprecated: EV_Battery sensor - this will be removed in future version
 - Added: Setup and options via config flow
@@ -191,12 +199,12 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 - Fixed: Deprecation warnings in HA0.110.x
 - Fixed: Service temp settings now in local temp units (C/F)
 
-## v1.3.1
+### v1.3.1
 
 - Added: Does not load trip sensor if privacy mode enabled
 - Fixed: Integration errors if no position or trip data
 
-## v1.3.0
+### v1.3.0
 
 - Added: New status sensor to show engine running status
 - Added: Tyre pressure unit override to cope with UK units system
@@ -207,7 +215,7 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 - Fixed: Tyre pressure units should now show correctly - feedback wanted for your vehicle
 - Fixed: Tidy up of attribute values in service sensor
 
-## v1.2.0
+### v1.2.0
 
 - Updated: Improved debug logging messages
 - Updated: Handled errors from service calls are now debug instead of warning
@@ -215,16 +223,16 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 - Fixed: Better handling of multiple concurrent service calls
 - Fixed: Scheduled health update now calls 30s after HA start
 
-## v1.1.0
+### v1.1.0
 
 - Added: Last trip sensor
 - Fixed: Multiple vehicles on account only showed first one.
 
-## v1.0.0
+### v1.0.0
 
 - First official release - yeah!
 
-## v0.5alpha
+### v0.5alpha
 
 - Added: Alarm sensor.
 - Added: jlrincontrol services as listed in functionality to control vehicle.
@@ -236,26 +244,26 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 - Fixed: Unlock/Lock on door sensor did not work. Need to add pin to configuration.yaml. See additional parameters.
 - Fixed: Device tracker not updating state.
 
-## v0.4alpha
+### v0.4alpha
 
 - Added: Improved debugging info to aid diagnosing differences in models
 
-## v0.3alpha
+### v0.3alpha
 
 - Fixed: Range sensor now handles EVs
 - Added: New EV Charge sensor to show charge information (not fully tested)
 
-## v0.2alpha
+### v0.2alpha
 
 - Updated to use jlrpy 1.3.3
 - Added a bunch of new sensor information
 - Better handles vehicles that do not present some sensor info
 
-## v0.1alpha
+### v0.1alpha
 
 Initial build of the component to read basic sensors
 
-### Known Issues
+## Known Issues
 
-- Distance to service only shows in KMs.
 - Service Info sensor shows ok even if car is needing service or adblue top up.
+- Sometimes the JLR servers do not provide user units preference info, in which case the integration defaults to HA units.  Look to save this if provided.
