@@ -5,6 +5,7 @@ from typing import Any
 
 import aiofiles
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,18 +89,17 @@ def get_attribute(obj, path: str) -> Any | None:
     return temp
 
 
-async def save_user_prefs(hass, user_id, uoms) -> bool:
+async def save_user_prefs(hass: HomeAssistant, user_id, uoms) -> bool:
     """Write user preferences to file"""
     file = f"{hass.config.config_dir}/.storage/jlrincontrol_data_{user_id}"
     # Write to config file
     async with aiofiles.open(file, mode="w") as config_file:
         # try:
         await config_file.write(uoms)
-        config_file.close()
     return True
 
 
-async def get_user_prefs(hass, user_id) -> dict:
+async def get_user_prefs(hass: HomeAssistant, user_id) -> dict:
     """Get user prefs from file"""
     file = f"{hass.config.config_dir}/.storage/jlrincontrol_data_{user_id}"
     if exists(file):
@@ -107,5 +107,4 @@ async def get_user_prefs(hass, user_id) -> dict:
             contents = await user_pref_file.read()
             if contents:
                 uoms = contents
-            user_pref_file.close()
         return uoms
