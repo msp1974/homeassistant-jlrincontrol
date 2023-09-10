@@ -2,8 +2,9 @@
 import logging
 from urllib.error import HTTPError
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, JLR_DATA
@@ -12,7 +13,7 @@ from .entity import JLREntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """Setup device tracker"""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]
     devices = []
@@ -23,7 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         else:
             _LOGGER.debug(
-                "Vehicle %s is not providing any position information.",
+                "Vehicle %s is not providing any position information",
                 coordinator.vehicles[vehicle].attributes.get("nickname"),
             )
 
@@ -94,4 +95,4 @@ class JLRDeviceTracker(JLREntity, TrackerEntity):
     @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
+        return SourceType.GPS

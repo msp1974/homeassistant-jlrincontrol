@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, JLR_DATA, SUPPORTED_SWITCH_SERVICES
@@ -15,7 +15,7 @@ from .util import get_attribute, requires_pin, to_local_datetime
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """Set up Wiser climate device."""
 
     jlr_switches = []
@@ -41,7 +41,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
         coordinator,
         vin: str,
         service_code: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(
             coordinator,

@@ -38,7 +38,7 @@ class JLRService:
         coordinator,
         vin: str,
         service: str,
-    ):
+    ) -> None:
         self.hass = coordinator.hass
         self.coordinator = coordinator
         self.vin = vin
@@ -195,7 +195,7 @@ class JLRService:
                     service_status.get("failureReason"),
                 )
 
-                _LOGGER.debug("Full status return is %s.", service_status)
+                _LOGGER.debug("Full status return is %s", service_status)
                 return False
         else:
             return False

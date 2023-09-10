@@ -8,6 +8,7 @@ import uuid
 
 import jlrpy
 import voluptuous as vol
+
 from homeassistant import config_entries, exceptions
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -16,7 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     UnitOfPressure,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import (
     CONF_DEFAULT_CLIMATE_TEMP,
@@ -47,12 +48,12 @@ DATA_SCHEMA = vol.Schema(
 
 
 @callback
-def configured_instances(hass):
+def configured_instances(hass: HomeAssistant):
     """Return a set of configured JLR InControl instances."""
     return {entry.title for entry in hass.config_entries.async_entries(DOMAIN)}
 
 
-async def validate_input(hass, data):
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect"""
 
     try:
@@ -89,7 +90,7 @@ class JLRInControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the jlrincontrol flow."""
         self.conf = {}
 
@@ -146,7 +147,7 @@ class JLRInControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class JLRInControlOptionsFlowHandler(config_entries.OptionsFlow):
     """Handles JLRIncontrol options"""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize deCONZ options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)

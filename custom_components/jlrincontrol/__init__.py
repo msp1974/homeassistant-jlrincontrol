@@ -11,14 +11,15 @@ import uuid
 from datetime import datetime, timedelta
 
 import voluptuous as vol
+from custom_components.jlrincontrol.config_flow import DEVICE_ID
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PIN
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_call_later
-
-from custom_components.jlrincontrol.config_flow import DEVICE_ID
 
 from .const import (
     ATTR_CHARGE_LEVEL,
@@ -67,7 +68,7 @@ SERVICES_EXPIRY_SCHEMA = {
 }
 
 
-async def async_migrate_entry(hass, config_entry: ConfigEntry):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -96,14 +97,16 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
                 pass
 
         config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=new_data, options=new_options)
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, options=new_options
+        )
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
     return True
 
 
-async def async_setup_entry(hass, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Setup JLR InConnect component"""
 
     def get_schema(schema_list):
@@ -136,14 +139,18 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
 
     if health_update_interval and health_update_interval > 0:
         _LOGGER.info(
-            "Vehicle health update on %s minute interval.",
+            "Vehicle health update on %s minute interval",
             int(health_update_interval),
         )
 
-        health_update_coordinator = JLRIncontrolHealthUpdateCoordinator(hass, config_entry, coordinator)
+        health_update_coordinator = JLRIncontrolHealthUpdateCoordinator(
+            hass, config_entry, coordinator
+        )
 
         # Add health update listener to config
-        hass.data[DOMAIN][config_entry.entry_id][HEALTH_UPDATE_TRACKER] = health_update_coordinator
+        hass.data[DOMAIN][config_entry.entry_id][
+            HEALTH_UPDATE_TRACKER
+        ] = health_update_coordinator
 
         # Do initial call to health_update service after HASS start up.
         # This speeds up restart.
@@ -176,12 +183,12 @@ async def async_setup_entry(hass, config_entry: ConfigEntry):
     return True
 
 
-async def _async_update_listener(hass, config_entry):
+async def _async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_update_device_registry(hass, config_entry):
+async def async_update_device_registry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Update device registry."""
     data = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]
     device_registry = dr.async_get(hass)
@@ -197,7 +204,9 @@ async def async_update_device_registry(hass, config_entry):
         )
 
 
-async def async_remove_config_entry_device(hass, config_entry, device_entry) -> bool:
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry
+) -> bool:
     """Delete device if no longer on account"""
     _LOGGER.warning(device_entry)
     vin = list(device_entry.identifiers)[0][1]
@@ -212,7 +221,7 @@ async def async_remove_config_entry_device(hass, config_entry, device_entry) -> 
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload a config entry."""
     _LOGGER.info("Unloading JLR InControl Component")
 
@@ -223,7 +232,9 @@ async def async_unload_entry(hass, config_entry):
         hass.services.async_remove(DOMAIN, service[0])
 
     # Remove platform components
-    unload_ok = await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)

@@ -4,17 +4,10 @@ import logging
 from homeassistant.components.sensor import SensorDeviceClass
 
 # from homeassistant.const import STATE_OFF, UNIT_PERCENTAGE
-from homeassistant.const import (
-    LENGTH_KILOMETERS,
-    PERCENTAGE,
-    UnitOfLength,
-    UnitOfPressure,
-    UnitOfVolume,
-)
+from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfPressure, UnitOfVolume
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import icon
 from homeassistant.util import dt, unit_conversion
-
-from .util import to_local_datetime
 
 from .const import (
     DATA_ATTRS_CAR_INFO,
@@ -34,11 +27,12 @@ from .const import (
     SERVICE_STATUS_OK,
 )
 from .entity import JLREntity
+from .util import to_local_datetime
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """Setup sensor entities"""
     component = hass.data[DOMAIN]
     coordinator = component[config_entry.entry_id][JLR_DATA]
@@ -88,7 +82,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class JLRVehicleAllDataSensor(JLREntity):
     """All info sensor"""
 
-    def __init__(self, coordinator, vin):
+    def __init__(self, coordinator, vin) -> None:
         super().__init__(coordinator, vin, "all info")
         self._icon = "mdi:cloud"
 
@@ -139,7 +133,7 @@ class JLRVehicleAllDataSensor(JLREntity):
 class JLRVehicleSensor(JLREntity):
     """Vehicle info sensor"""
 
-    def __init__(self, coordinator, vin):
+    def __init__(self, coordinator, vin) -> None:
         super().__init__(coordinator, vin, "info")
         self._icon = "mdi:car-info"
 
@@ -176,7 +170,7 @@ class JLRVehicleSensor(JLREntity):
 class JLRVehicleTyreSensor(JLREntity):
     """Tyre status sensor"""
 
-    def __init__(self, coordinator, vin):
+    def __init__(self, coordinator, vin) -> None:
         super().__init__(coordinator, vin, "tyres")
         self._icon = "mdi:car-tire-alert"
 
@@ -227,7 +221,7 @@ class JLRVehicleTyreSensor(JLREntity):
 class JLRVehicleWindowSensor(JLREntity):
     """Window status entity"""
 
-    def __init__(self, coordinator, vin):
+    def __init__(self, coordinator, vin) -> None:
         super().__init__(coordinator, vin, "windows")
         self._icon = "mdi:car-door"
 
@@ -265,7 +259,7 @@ class JLRVehicleWindowSensor(JLREntity):
 class JLRVehicleAlarmSensor(JLREntity):
     """Alarm info entity"""
 
-    def __init__(self, coordinator, vin):
+    def __init__(self, coordinator, vin) -> None:
         super().__init__(coordinator, vin, "alarm")
         self._icon = "mdi:security"
 
@@ -282,7 +276,7 @@ class JLRVehicleAlarmSensor(JLREntity):
 class JLRVehicleServiceSensor(JLREntity):
     """Service status entity"""
 
-    def __init__(self, coordinator, vin):
+    def __init__(self, coordinator, vin) -> None:
         super().__init__(coordinator, vin, "service info")
         self._units = self.coordinator.user.user_preferences.distance
         self._icon = "mdi:wrench"
@@ -334,7 +328,7 @@ class JLRVehicleServiceSensor(JLREntity):
 class JLRVehicleRangeSensor(JLREntity):
     """Fuel/Battery range entity"""
 
-    def __init__(self, coordinator, vin):
+    def __init__(self, coordinator, vin) -> None:
         super().__init__(coordinator, vin, "range")
         self._units = self.coordinator.user.user_preferences.distance
         self._icon = (
@@ -362,7 +356,7 @@ class JLRVehicleRangeSensor(JLREntity):
         return round(
             unit_conversion.DistanceConverter.convert(
                 int(self.vehicle.status.get("DISTANCE_TO_EMPTY_FUEL")),
-                LENGTH_KILOMETERS,
+                UnitOfLength.KILOMETERS,
                 self._units,
             )
         )
@@ -390,7 +384,7 @@ class JLRVehicleRangeSensor(JLREntity):
             attrs["Fuel Range"] = round(
                 unit_conversion.DistanceConverter.convert(
                     int(self.vehicle.status.get("DISTANCE_TO_EMPTY_FUEL")),
-                    LENGTH_KILOMETERS,
+                    UnitOfLength.KILOMETERS,
                     self._units,
                 )
             )
@@ -405,7 +399,7 @@ class JLRVehicleRangeSensor(JLREntity):
 
 
 class JLREVBatterySensor(JLREntity):
-    def __init__(self, coordinator, vin):
+    def __init__(self, coordinator, vin) -> None:
         super().__init__(coordinator, vin, "battery")
         self._units = self.coordinator.user.user_preferences.distance
         self._charging_state = False
@@ -490,7 +484,7 @@ class JLREVBatterySensor(JLREntity):
 class JLRVehicleLastTripSensor(JLREntity):
     """Last trip info sensor"""
 
-    def __init__(self, coordinator, vin):
+    def __init__(self, coordinator, vin) -> None:
         super().__init__(coordinator, vin, "last trip")
         self._units = self.coordinator.user.user_preferences.distance
         self._icon = "mdi:map"
@@ -537,7 +531,7 @@ class JLRVehicleLastTripSensor(JLREntity):
                 attrs["average_speed"] = round(
                     unit_conversion.DistanceConverter.convert(
                         int(trip.get("averageSpeed", 0)),
-                        LENGTH_KILOMETERS,
+                        UnitOfLength.KILOMETERS,
                         self._units,
                     )
                 )
@@ -548,7 +542,7 @@ class JLRVehicleLastTripSensor(JLREntity):
                         avg_consumption = 0
                     attrs["average_consumption"] = round(avg_consumption, 1)
                 else:
-                    if self._units == LENGTH_KILOMETERS:
+                    if self._units == UnitOfLength.KILOMETERS:
                         attrs["average_consumption"] = round(
                             trip.get("averageFuelConsumption", 0), 1
                         )
@@ -564,7 +558,7 @@ class JLRVehicleLastTripSensor(JLREntity):
 class JLRVehicleStatusSensor(JLREntity):
     """Status sensor"""
 
-    def __init__(self, coordinator, vin):
+    def __init__(self, coordinator, vin) -> None:
         super().__init__(coordinator, vin, "status")
         self._icon = "mdi:car"
 
@@ -581,7 +575,7 @@ class JLRVehicleStatusSensor(JLREntity):
 class JLRVehicleClimateSensor(JLREntity):
     """Climate status sensor"""
 
-    def __init__(self, coordinator, vin):
+    def __init__(self, coordinator, vin) -> None:
         super().__init__(coordinator, vin, "climate")
         self._icon = "mdi:air-conditioner"
 

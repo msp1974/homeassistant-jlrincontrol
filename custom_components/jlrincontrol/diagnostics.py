@@ -1,5 +1,6 @@
 """Diagnostics support for JLRInControl"""
 from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -28,7 +29,9 @@ ANON_KEYS = [
 ]
 
 
-async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
+async def async_get_config_entry_diagnostics(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     return _async_get_diagnostics(hass, entry)
 
@@ -47,7 +50,9 @@ def _async_get_diagnostics(
 
     diag_data["User"] = data.user.__dict__
     for vehicle in data.vehicles:
-        diag_data[anonymise_vin(vehicle)] = anonymise_data(data.vehicles[vehicle].__dict__)
+        diag_data[anonymise_vin(vehicle)] = anonymise_data(
+            data.vehicles[vehicle].__dict__
+        )
     return diag_data
 
 

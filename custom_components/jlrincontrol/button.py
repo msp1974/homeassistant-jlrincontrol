@@ -2,6 +2,8 @@
 import logging
 
 from homeassistant.components.button import ButtonEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, JLR_DATA, SUPPORTED_BUTTON_SERVICES
@@ -12,7 +14,9 @@ from .util import requires_pin
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
     """Set up Wiser climate device."""
 
     jlr_buttons = []
@@ -38,7 +42,7 @@ class JLRButton(JLREntity, ButtonEntity):
         coordinator,
         vin: str,
         service_code: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(
             coordinator,

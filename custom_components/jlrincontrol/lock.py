@@ -3,20 +3,16 @@
 import logging
 
 from homeassistant.components.lock import LockEntity
+from homeassistant.core import HomeAssistant
 
-from .const import (
-    DATA_ATTRS_DOOR_POSITION,
-    DATA_ATTRS_DOOR_STATUS,
-    DOMAIN,
-    JLR_DATA,
-)
+from .const import DATA_ATTRS_DOOR_POSITION, DATA_ATTRS_DOOR_STATUS, DOMAIN, JLR_DATA
 from .entity import JLREntity
 from .services import JLRService
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """Setup lock entities"""
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]
@@ -31,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class JLRLock(JLREntity, LockEntity):
     """Handles lock entity"""
 
-    def __init__(self, coordinator, vin):
+    def __init__(self, coordinator, vin) -> None:
         super().__init__(coordinator, vin, "doors")
         self._icon = "mdi:car-key"
 
@@ -53,7 +49,7 @@ class JLRLock(JLREntity, LockEntity):
             await jlr_service.async_call_service(**kwargs)
             await self.async_force_update()
         else:
-            _LOGGER.warning("Cannot lock vehicle - pin not set in options.")
+            _LOGGER.warning("Cannot lock vehicle - pin not set in options")
 
     async def async_unlock(self, **kwargs):
         """Unlock the car."""
@@ -68,7 +64,7 @@ class JLRLock(JLREntity, LockEntity):
             await jlr_service.async_call_service(**kwargs)
             await self.async_force_update()
         else:
-            _LOGGER.warning("Cannot unlock vehicle - pin not set in options.")
+            _LOGGER.warning("Cannot unlock vehicle - pin not set in options")
 
     @property
     def extra_state_attributes(self):
