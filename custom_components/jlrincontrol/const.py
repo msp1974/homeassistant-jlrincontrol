@@ -14,6 +14,9 @@ DATA_JLR_CONFIG = "jlrincontrol_config"
 JLR_DATA = "jlr_data"
 VERSION = "3.0.0"
 
+UNIQUE_ID = "unique_id"
+DEVICE_ID = "device_id"
+
 CONF_USE_CHINA_SERVERS = "use_china_servers"
 CONF_DEVICE_ID = "device_id"
 CONF_DISTANCE_UNIT = "distance_unit"

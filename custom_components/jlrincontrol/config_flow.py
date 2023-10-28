@@ -30,10 +30,8 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MIN_SCAN_INTERVAL,
+    UNIQUE_ID,
 )
-
-UNIQUE_ID = "unique_id"
-DEVICE_ID = "device_id"
 
 _LOGGER = logging.getLogger(__name__)
 
