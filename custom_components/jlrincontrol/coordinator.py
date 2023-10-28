@@ -151,7 +151,7 @@ class JLRIncontrolHealthUpdateCoordinator(DataUpdateCoordinator):
             "Health Update Init on %d min interval", self.health_update_interval
         )
 
-    async def async_update_data(self, *args):
+    async def async_update_data(self):
         """Request update from vehicle"""
         try:
             for vehicle in self.connection.vehicles:
@@ -175,9 +175,12 @@ class JLRIncontrolHealthUpdateCoordinator(DataUpdateCoordinator):
                 ex,
             )
 
-    async def async_initial_update_data(self, *args):
+    async def async_initial_update_data(self):
+        """Do initial health update and call Data update once complete"""
         await self.async_update_data()
-        self.config_entry.async_create_background_task(self.hass, self.coordinator.async_update_data(), "Update vehicle data")
+        self.config_entry.async_create_background_task(
+            self.hass, self.coordinator.async_update_data(), "Update vehicle data"
+        )
 
 
 class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
@@ -227,6 +230,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
     @callback
     def refresh(self):
+        """Non async data update"""
         self.hass.loop.call_soon_threadsafe(self.async_update_data)
 
     async def async_connect(self) -> bool:
