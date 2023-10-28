@@ -21,6 +21,7 @@ class JLREntity(CoordinatorEntity, Entity):
     def __init__(self, coordinator: DataUpdateCoordinator, vin: str, name: str) -> None:
         """Create a new generic JLR sensor."""
         super().__init__(coordinator)
+        self.hass = coordinator.hass
         self.vin = vin
         self._name = name
         self._icon = "mdi:cloud"
