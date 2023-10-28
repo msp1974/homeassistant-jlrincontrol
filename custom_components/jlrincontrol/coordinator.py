@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     UnitOfEnergy,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -133,20 +133,26 @@ class JLRIncontrolHealthUpdateCoordinator(DataUpdateCoordinator):
 
         self.hass = hass
         self.coordinator = coordinator
+        self.config_entry = config_entry
         self.connection: jlrpy.Connection = coordinator.connection
-        self.update_interval = config_entry.options.get(CONF_HEALTH_UPDATE_INTERVAL, 0)
+        self.health_update_interval = config_entry.options.get(
+            CONF_HEALTH_UPDATE_INTERVAL, 0
+        )
 
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN} ({config_entry.unique_id}-HU)",
             update_method=self.async_update_data,
-            update_interval=timedelta(minutes=self.update_interval),
+            update_interval=timedelta(minutes=self.health_update_interval),
+        )
+
+        _LOGGER.debug(
+            "Health Update Init on %d min interval", self.health_update_interval
         )
 
     async def async_update_data(self, *args):
         """Request update from vehicle"""
-        _LOGGER.debug("Update args: %s", args)
         try:
             for vehicle in self.connection.vehicles:
                 _LOGGER.debug(
@@ -163,12 +169,15 @@ class JLRIncontrolHealthUpdateCoordinator(DataUpdateCoordinator):
                         "Health update successful for %s",
                         self.coordinator.vehicles[vehicle.vin].name,
                     )
-                    await self.coordinator.async_refresh()
         except HTTPError as ex:
             _LOGGER.debug(
                 "Error when requesting health status update. Error is %s",
                 ex,
             )
+
+    async def async_initial_update_data(self, *args):
+        await self.async_update_data()
+        self.config_entry.async_create_background_task(self.hass, self.coordinator.async_update_data(), "Update vehicle data")
 
 
 class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
@@ -215,6 +224,10 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             update_method=self.async_update_data,
             update_interval=timedelta(minutes=self.update_interval),
         )
+
+    @callback
+    def refresh(self):
+        self.hass.loop.call_soon_threadsafe(self.async_update_data)
 
     async def async_connect(self) -> bool:
         """Connnect to api"""
@@ -415,7 +428,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
         # Privacy mode status
         vehicle.tracked_status.privacy_mode_enabled = get_value_match(
-            vehicle.status, "PRIVACY_SWITCH", "FALSE"
+            vehicle.status, "PRIVACY_SWITCH", "TRUE"
         )
 
         # Service mode

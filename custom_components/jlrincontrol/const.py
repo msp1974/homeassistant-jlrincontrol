@@ -29,6 +29,7 @@ MIN_SCAN_INTERVAL = 1
 DEFAULT_HEATH_UPDATE_INTERVAL = 0  # Default disabled
 
 HEALTH_UPDATE_TRACKER = "health_update_tracker"
+HEALTH_UPDATE_LISTENER = "health_update_listener"
 UPDATE_LISTENER = "update_listener"
 
 PLATFORMS = ["sensor", "lock", "device_tracker", "button", "switch"]
@@ -250,9 +251,9 @@ SUPPORTED_SWITCH_SERVICES = {
         "attrs": {"expires": "guardian_mode.expiry"},
     },
     "PM": {
-        "name": "Journey Recording",
-        "on_service": "enable_journey_recording",
-        "off_service": "disable_journey_recording",
+        "name": "Privacy Mode",
+        "on_service": "enable_privacy_mode",
+        "off_service": "disable_privacy_mode",
         "params": ["pin"],
         "state": "privacy_mode_enabled",
     },

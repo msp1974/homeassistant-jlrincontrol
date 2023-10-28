@@ -15,7 +15,7 @@ from custom_components.jlrincontrol.config_flow import DEVICE_ID
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
@@ -32,6 +32,7 @@ from .const import (
     CONF_DISTANCE_UNIT,
     CONF_HEALTH_UPDATE_INTERVAL,
     DOMAIN,
+    HEALTH_UPDATE_LISTENER,
     HEALTH_UPDATE_TRACKER,
     JLR_DATA,
     JLR_SERVICES,
@@ -148,14 +149,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         )
 
         # Add health update listener to config
-        hass.data[DOMAIN][config_entry.entry_id][
-            HEALTH_UPDATE_TRACKER
-        ] = health_update_coordinator
+        hass.data[DOMAIN][config_entry.entry_id].update(
+            {HEALTH_UPDATE_TRACKER: health_update_coordinator}
+        )
+
+        # Call async_refresh on coordinator after succesful health update
+        health_update_listener = health_update_coordinator.async_add_listener(coordinator.refresh)
+
+        # Add health update listener to config
+        hass.data[DOMAIN][config_entry.entry_id].update(
+            {HEALTH_UPDATE_LISTENER: health_update_listener}
+        )
 
         # Do initial call to health_update service after HASS start up.
         # This speeds up restart.
-        # 30 seconds should do it.
-        async_call_later(hass, 30, health_update_coordinator.async_update_data)
+        config_entry.async_create_background_task(hass, health_update_coordinator.async_initial_update_data(), "Initial vehicle health update")
 
     else:
         _LOGGER.info(
@@ -181,7 +189,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             )
 
     return True
-
 
 async def _async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
     """Handle options update."""
@@ -226,10 +233,16 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     _LOGGER.info("Unloading JLR InControl Component")
 
     # Deregister services
-    _LOGGER.info("Unregister JLR InControl Services")
+    _LOGGER.debug("Unregister JLR InControl Services")
     for service in JLR_SERVICES.items():
-        _LOGGER.info("Unregister %s", service[0])
+        _LOGGER.debug("Unregister %s", service[0])
         hass.services.async_remove(DOMAIN, service[0])
+
+    # Remove listeners
+    _LOGGER.debug("Removing health update listener")
+    health_update_listener = hass.data[DOMAIN][config_entry.entry_id].get(HEALTH_UPDATE_LISTENER)
+    if health_update_listener:
+        health_update_listener()
 
     # Remove platform components
     unload_ok = await hass.config_entries.async_unload_platforms(
