@@ -9,7 +9,7 @@
   "documentation": "https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/README.Md",
   "iot_class": "cloud_polling",
   "requirements": [
-    "jlrpy==1.4.1"
+    "jlrpy==1.5.1"
   ],
   "version": "3.0.0"
 }
