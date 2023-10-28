@@ -38,7 +38,7 @@ class JLRDeviceTracker(JLREntity, TrackerEntity):
         super().__init__(coordinator, vin, "device tracker")
         self._position = None
         self._last_position = None
-        self._address = None
+        self._address = {"formattedAddress": "Unknown"}
         self._icon = "mdi:car-connected"
 
     def has_position_changed(self) -> bool:
@@ -65,11 +65,15 @@ class JLRDeviceTracker(JLREntity, TrackerEntity):
         # Only call geocode if position has changed
         if self.has_position_changed():
             try:
-                self._address = await self.hass.async_add_executor_job(
+                address = await self.hass.async_add_executor_job(
                     self.coordinator.connection.reverse_geocode,
                     round(self._position.get("latitude"), 8),
                     round(self._position.get("longitude"), 8),
                 )
+                if address:
+                    self._address = address
+                else:
+                    self._address = {"formattedAddress": "Unknown"}
             except HTTPError:
                 self._address = {"formattedAddress": "Unknown"}
 
