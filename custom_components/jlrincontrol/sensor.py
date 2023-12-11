@@ -592,4 +592,7 @@ class JLRVehicleClimateSensor(JLREntity):
         for name, attr in DATA_ATTRS_CLIMATE.items():
             if value := self.vehicle.status.get(attr):
                 attrs[name] = value
+
+        #  Add target temp
+        attrs["climate_target_temp"] = self.vehicle.target_climate_temp
         return attrs
