@@ -109,6 +109,26 @@ stop_charging:
     entity:
       integration: jlrincontrol
       domain: sensor
+set_departure_timer:
+  description: "Set a departure timer."
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
+  fields:
+    departure_datetime:
+      name: "Departure time"
+      description: "Date and time of departure."
+      example: "2023-05-10 18:45:00"
+      required: true
+      selector:
+        datetime:
+delete_departure_timer:
+  description: "Delete the departure timer."
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
 start_preconditioning:
   description: "Start vehicle preconditioning and set temp."
   target:

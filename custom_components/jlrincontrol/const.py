@@ -42,6 +42,7 @@ ATTR_EXPIRY = "expiration_time"
 ATTR_CHARGE_LEVEL = "max_charge_level"
 ATTR_TARGET_VALUE = "target_value"
 ATTR_TARGET_TEMP = "target_temp"
+ATTR_DEPARTURE_DATETIME = "departure_datetime"
 
 
 JLR_TO_HASS_UNITS = {
@@ -341,6 +342,18 @@ JLR_SERVICES = {
         "custom_service": True,
         "function_name": "charging_stop",
         "service_code": "CP",
+        "schema": ["SERVICES_BASE_SCHEMA"],
+    },
+    "set_departure_timer": {
+        "custom_service": True,
+        "function_name": "add_departure_timer",
+        "service_code": "NA",  # TODO Modify this to CP
+        "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_DEPARTURE_TIME_SCHEMA"],
+    },
+    "delete_departure_timer": {
+        "custom_service": True,
+        "function_name": "delete_departure_timer",
+        "service_code": "NA",  # TODO Modify this to CP
         "schema": ["SERVICES_BASE_SCHEMA"],
     },
     "start_preconditioning": {

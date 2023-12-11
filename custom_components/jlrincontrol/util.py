@@ -1,4 +1,5 @@
 """Utility functions"""
+from datetime import datetime
 import logging
 from os.path import exists
 from typing import Any
@@ -70,12 +71,23 @@ def convert_temp_value(temp_unit, service_code, target_value):
             return min(285, max(155, int(((target_value - 27) / 2) * 10)))
 
 
-def to_local_datetime(datetime: str):
+def to_local_datetime(dte: str):
     """Convert to local time"""
     try:
-        return dt.as_local(dt.parse_datetime(datetime))
+        return dt.as_local(dt.parse_datetime(dte))
     except (ValueError, TypeError):
         return None
+
+
+def split_datetime(dte: datetime) -> dict:
+    """Split a datetime value into component parts and return dict"""
+    output = {}
+    output["year"] = dte.year
+    output["month"] = dte.month
+    output["day"] = dte.day
+    output["hour"] = dte.hour
+    output["minute"] = dte.minute
+    return output
 
 
 def get_attribute(obj, path: str) -> Any | None:

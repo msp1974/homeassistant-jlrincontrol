@@ -22,6 +22,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import (
     ATTR_CHARGE_LEVEL,
+    ATTR_DEPARTURE_DATETIME,
     ATTR_EXPIRY,
     ATTR_PIN,
     ATTR_TARGET_TEMP,
@@ -66,6 +67,10 @@ SERVICES_CHARGE_LEVEL_SCHEMA = {
 }
 SERVICES_EXPIRY_SCHEMA = {
     vol.Required(ATTR_EXPIRY): vol.Coerce(datetime),
+}
+
+SERVICES_DEPARTURE_TIME_SCHEMA = {
+    vol.Required(ATTR_DEPARTURE_DATETIME): vol.Coerce(str)
 }
 
 
