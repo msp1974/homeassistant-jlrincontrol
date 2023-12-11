@@ -4,7 +4,11 @@
   "config_flow": true,
   "documentation": "https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/README.Md",
   "dependencies": [],
-  "codeowners": ["@msp1974"],
-  "requirements": ["jlrpy==1.4.1"],
+  "codeowners": [
+    "@msp1974"
+  ],
+  "requirements": [
+    "jlrpy==1.5.2"
+  ],
   "version": "2.2.3"
 }
