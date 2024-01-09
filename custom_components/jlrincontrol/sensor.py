@@ -5,8 +5,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 # from homeassistant.const import STATE_OFF, UNIT_PERCENTAGE
 from homeassistant.const import (
     PERCENTAGE,
-    LENGTH_KILOMETERS,
-    LENGTH_METERS,
+    UnitOfLength,
     UnitOfPressure,
 )
 from homeassistant.helpers import icon
@@ -327,20 +326,20 @@ class JLRVehicleRangeSensor(JLREntity):
         if self._engine_type == FUEL_TYPE_BATTERY:
             return (
                 self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_KM", "0")
-                if self._units == LENGTH_KILOMETERS
+                if self._units == UnitOfLength.KILOMETERS
                 else self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_MILES", "0")
             )
         if self._engine_type == FUEL_TYPE_HYBRID:
             return (
                 self._vehicle.status_ev.get("EV_PHEV_RANGE_COMBINED_KM", "0")
-                 if self._units == LENGTH_KILOMETERS
+                 if self._units == UnitOfLength.KILOMETERS
                 else self._vehicle.status_ev.get("EV_PHEV_RANGE_COMBINED_MILES", "0")
             )
         # Fuel only
         return round(
             unit_conversion.DistanceConverter.convert(
                 int(self._vehicle.status.get("DISTANCE_TO_EMPTY_FUEL")),
-                LENGTH_KILOMETERS,
+                UnitOfLength.KILOMETERS,
                 self._units,
             )
         )
@@ -369,14 +368,14 @@ class JLRVehicleRangeSensor(JLREntity):
         if self._engine_type == FUEL_TYPE_HYBRID:
             attrs["Fuel Range"] = round(unit_conversion.DistanceConverter.convert(
                 int(self._vehicle.status.get("DISTANCE_TO_EMPTY_FUEL")),
-                LENGTH_KILOMETERS,
+                UnitOfLength.KILOMETERS,
                 self._units,
                 )
             )
 
             attrs["Battery Range"] = (
                 self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_KM", "0")
-                if self._units == LENGTH_KILOMETERS
+                if self._units == UnitOfLength.KILOMETERS
                 else self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_MILES", "0")
             )
 
@@ -414,7 +413,7 @@ class JLREVBatterySensor(JLREntity):
     @property
     def extra_state_attributes(self):
         attrs = {}
-        units = "KM" if self._units == LENGTH_KILOMETERS else "MILES"
+        units = "KM" if self._units == UnitOfLength.KILOMETERS else "MILES"
         s = self._vehicle.status_ev
 
         # Charging status
@@ -491,7 +490,7 @@ class JLRVehicleLastTripSensor(JLREntity):
                             "distance"
                         )
                     ),
-                    LENGTH_METERS,
+                    UnitOfLength.METERS,
                     self._units,
                 )
             )
@@ -531,7 +530,7 @@ class JLRVehicleLastTripSensor(JLREntity):
                 attrs["average_speed"] = round(
                     unit_conversion.DistanceConverter.convert(
                         int(t.get("averageSpeed",0)),
-                        LENGTH_KILOMETERS,
+                        UnitOfLength.KILOMETERS,
                         self._units,
                     )
                 )
@@ -544,7 +543,7 @@ class JLRVehicleLastTripSensor(JLREntity):
                         avg_consumption, 1
                     )
                 else:
-                    if self._units == LENGTH_KILOMETERS:
+                    if self._units == UnitOfLength.KILOMETERS:
                         attrs["average_consumption"] = round(
                             t.get("averageFuelConsumption",0), 1
                         )

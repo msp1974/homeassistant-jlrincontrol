@@ -30,8 +30,7 @@ from homeassistant.const import (
     CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
+    UnitOfLength,
     UnitOfPressure,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -113,7 +112,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Required(CONF_USE_CHINA_SERVERS, default=False): cv.boolean,
                 vol.Optional(CONF_DISTANCE_UNIT): vol.In(
-                    [LENGTH_KILOMETERS, LENGTH_MILES]
+                    [UnitOfLength.KILOMETERS, UnitOfLength.MILES]
                 ),
                 vol.Optional(CONF_PRESSURE_UNIT): vol.In(
                     [UnitOfPressure.BAR, UnitOfPressure.PSI]

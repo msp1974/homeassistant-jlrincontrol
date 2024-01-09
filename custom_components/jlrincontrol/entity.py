@@ -1,6 +1,6 @@
 import logging
 from homeassistant.const import (
-    LENGTH_KILOMETERS,
+    UnitOfLength,
     UnitOfPressure,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -109,7 +109,7 @@ class JLREntity(Entity):
 
     def get_odometer(self, vehicle):
         self.units = self.get_distance_units()
-        if self.units == LENGTH_KILOMETERS:
+        if self.units == UnitOfLength.KILOMETERS:
             return int(int(vehicle.status.get("ODOMETER_METER")) / 1000)
         else:
             return int(vehicle.status.get("ODOMETER_MILES"))

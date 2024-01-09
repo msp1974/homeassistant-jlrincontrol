@@ -11,8 +11,7 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
+    UnitOfLength,
     UnitOfPressure,
 )
 from homeassistant.core import callback
@@ -174,9 +173,9 @@ class JLRInControlOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_DISTANCE_UNIT,
                     default=self.options.get(
-                        CONF_DISTANCE_UNIT, LENGTH_KILOMETERS
+                        CONF_DISTANCE_UNIT, UnitOfLength.KILOMETERS
                     ),
-                ): vol.In(["Default", LENGTH_KILOMETERS, LENGTH_MILES]),
+                ): vol.In(["Default", UnitOfLength.KILOMETERS, UnitOfLength.MILES]),
                 vol.Optional(
                     CONF_PRESSURE_UNIT,
                     default=self.options.get(CONF_PRESSURE_UNIT, UnitOfPressure.BAR),

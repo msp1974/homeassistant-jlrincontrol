@@ -3,8 +3,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
+    UnitOfLength,
     VOLUME_LITERS,
     VOLUME_GALLONS,
 )
@@ -66,7 +65,7 @@ JLR_USER_PREF_PARAMS = [
 ]
 
 JLR_TO_HA_UNITS = {
-    "distance": {"Km": LENGTH_KILOMETERS, "Miles": LENGTH_MILES},
+    "distance": {"Km": UnitOfLength.KILOMETERS, "Miles": UnitOfLength.MILES},
     "volume": {
         "Litre": VOLUME_LITERS,
         "UkGallons": VOLUME_GALLONS,
