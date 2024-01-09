@@ -32,8 +32,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     UnitOfLength,
     UnitOfPressure,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.discovery import async_load_platform

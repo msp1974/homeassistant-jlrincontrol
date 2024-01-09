@@ -1,4 +1,4 @@
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 
 
 def field_mask(str_value, from_start=0, from_end=0):
@@ -16,7 +16,7 @@ def convert_temp_value(temp_unit, service_code, target_value):
     # Engine start/set rcc value
     if service_code == "REON":
         # Get temp units
-        if temp_unit == TEMP_CELSIUS:
+        if temp_unit == UnitOfTemperature.CELSIUS:
             # Convert from C
             return min(57, max(31, int(target_value * 2)))
         else:
@@ -25,7 +25,7 @@ def convert_temp_value(temp_unit, service_code, target_value):
 
     # Climate preconditioning
     if service_code == "ECC":
-        if temp_unit == TEMP_CELSIUS:
+        if temp_unit == UnitOfTemperature.CELSIUS:
             return min(285, max(155, int(target_value * 10)))
         else:
             # Convert from F
