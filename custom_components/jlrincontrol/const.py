@@ -3,8 +3,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     UnitOfTemperature,
     UnitOfLength,
-    VOLUME_LITERS,
-    VOLUME_GALLONS,
+    UnitOfVolume,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,9 +65,9 @@ JLR_USER_PREF_PARAMS = [
 JLR_TO_HA_UNITS = {
     "distance": {"Km": UnitOfLength.KILOMETERS, "Miles": UnitOfLength.MILES},
     "volume": {
-        "Litre": VOLUME_LITERS,
-        "UkGallons": VOLUME_GALLONS,
-        "UsGallons": VOLUME_GALLONS,
+        "Litre": UnitOfVolume.LITERS,
+        "UkGallons": UnitOfVolume.GALLONS,
+        "UsGallons": UnitOfVolume.GALLONS,
     },
     "temperature": {"Celsius": UnitOfTemperature.CELSIUS, "Fahrenheit": UnitOfTemperature.FAHRENHEIT},
     "distPerVol": {"DistPerVol": "Km/L"},
