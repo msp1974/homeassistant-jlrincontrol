@@ -2,5 +2,5 @@
     "name": "Jaguar Landrover InControl",
     "render_readme": false,
     "iot_class": "Cloud Polling",
-    "homeassistant": "0.115.0"
+    "homeassistant": "2022.11.0"
 }
