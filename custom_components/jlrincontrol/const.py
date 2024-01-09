@@ -1,6 +1,6 @@
 import logging
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
+    UnitOfEnergy,
     UnitOfTemperature,
     UnitOfLength,
     UnitOfVolume,
@@ -71,8 +71,8 @@ JLR_TO_HA_UNITS = {
     },
     "temperature": {"Celsius": UnitOfTemperature.CELSIUS, "Fahrenheit": UnitOfTemperature.FAHRENHEIT},
     "distPerVol": {"DistPerVol": "Km/L"},
-    "energy": {"kWh": ENERGY_KILO_WATT_HOUR},
-    "energyPerDist": {"kWhPer100Dist": ENERGY_KILO_WATT_HOUR + "/100m"},
+    "energy": {"kWh": UnitOfEnergy.KILO_WATT_HOUR},
+    "energyPerDist": {"kWhPer100Dist": UnitOfEnergy.KILO_WATT_HOUR + "/100m"},
 }
 
 SENSOR_TYPES = {
