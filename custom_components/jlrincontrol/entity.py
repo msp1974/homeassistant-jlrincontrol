@@ -1,9 +1,7 @@
 import logging
 from homeassistant.const import (
     LENGTH_KILOMETERS,
-    PRESSURE_BAR,
-    PRESSURE_PA,
-    PRESSURE_PSI,
+    UnitOfPressure,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -104,10 +102,10 @@ class JLREntity(Entity):
         if self._data.pressure_unit and self._data.pressure_unit != "Default":
             return self._data.pressure_unit
         else:
-            if self._hass.config.units.pressure_unit == PRESSURE_PA:
-                return PRESSURE_BAR
+            if self._hass.config.units.pressure_unit == UnitOfPressure.PA:
+                return UnitOfPressure.BAR
             else:
-                return PRESSURE_PSI
+                return UnitOfPressure.PSI
 
     def get_odometer(self, vehicle):
         self.units = self.get_distance_units()

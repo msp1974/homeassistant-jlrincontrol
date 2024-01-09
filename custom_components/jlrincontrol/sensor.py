@@ -7,8 +7,7 @@ from homeassistant.const import (
     PERCENTAGE,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
-    PRESSURE_PA,
-    PRESSURE_BAR,
+    UnitOfPressure,
 )
 from homeassistant.helpers import icon
 from homeassistant.util import dt, unit_conversion
@@ -200,7 +199,7 @@ class JLRVehicleTyreSensor(JLREntity):
                     tyre_pressure = tyre_pressure / 10
 
                 # Convert to local units - metric = bar, imperial = psi
-                if self._units == PRESSURE_BAR:
+                if self._units == UnitOfPressure.BAR:
                     attrs[
                         k.title() + " Pressure ({})".format(self._units)
                     ] = round(tyre_pressure / 100, 2)
@@ -209,7 +208,7 @@ class JLRVehicleTyreSensor(JLREntity):
                         k.title() + " Pressure ({})".format(self._units)
                     ] = round(
                         unit_conversion.PressureConverter.convert(
-                            tyre_pressure * 1000, PRESSURE_PA, self._units
+                            tyre_pressure * 1000, UnitOfPressure.PA, self._units
                         ),
                         1,
                     )
@@ -327,7 +326,7 @@ class JLRVehicleRangeSensor(JLREntity):
         # Has battery
         if self._engine_type == FUEL_TYPE_BATTERY:
             return (
-                self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_KM", "0") 
+                self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_KM", "0")
                 if self._units == LENGTH_KILOMETERS
                 else self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_MILES", "0")
             )
@@ -376,11 +375,11 @@ class JLRVehicleRangeSensor(JLREntity):
             )
 
             attrs["Battery Range"] = (
-                self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_KM", "0") 
+                self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_KM", "0")
                 if self._units == LENGTH_KILOMETERS
                 else self._vehicle.status_ev.get("EV_RANGE_ON_BATTERY_MILES", "0")
             )
-        
+
         return attrs
 
 
