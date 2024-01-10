@@ -11,10 +11,8 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    PRESSURE_BAR,
-    PRESSURE_PSI,
+    UnitOfLength,
+    UnitOfPressure,
 )
 from homeassistant.core import callback
 import jlrpy
@@ -38,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): str, 
+        vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Required(CONF_USE_CHINA_SERVERS, default=False): bool,
     }
@@ -175,13 +173,13 @@ class JLRInControlOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_DISTANCE_UNIT,
                     default=self.options.get(
-                        CONF_DISTANCE_UNIT, LENGTH_KILOMETERS
+                        CONF_DISTANCE_UNIT, UnitOfLength.KILOMETERS
                     ),
-                ): vol.In(["Default", LENGTH_KILOMETERS, LENGTH_MILES]),
+                ): vol.In(["Default", UnitOfLength.KILOMETERS, UnitOfLength.MILES]),
                 vol.Optional(
                     CONF_PRESSURE_UNIT,
-                    default=self.options.get(CONF_PRESSURE_UNIT, PRESSURE_BAR),
-                ): vol.In(["Default", PRESSURE_BAR, PRESSURE_PSI]),
+                    default=self.options.get(CONF_PRESSURE_UNIT, UnitOfPressure.BAR),
+                ): vol.In(["Default", UnitOfPressure.BAR, UnitOfPressure.PSI]),
                 vol.Optional(
                     CONF_DEBUG_DATA,
                     default=self.options.get(CONF_DEBUG_DATA, False),

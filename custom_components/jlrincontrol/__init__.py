@@ -30,13 +30,9 @@ from homeassistant.const import (
     CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    PRESSURE_BAR,
-    PRESSURE_PA,
-    PRESSURE_PSI,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.discovery import async_load_platform
@@ -115,10 +111,10 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Required(CONF_USE_CHINA_SERVERS, default=False): cv.boolean,
                 vol.Optional(CONF_DISTANCE_UNIT): vol.In(
-                    [LENGTH_KILOMETERS, LENGTH_MILES]
+                    [UnitOfLength.KILOMETERS, UnitOfLength.MILES]
                 ),
                 vol.Optional(CONF_PRESSURE_UNIT): vol.In(
-                    [PRESSURE_BAR, PRESSURE_PSI]
+                    [UnitOfPressure.BAR, UnitOfPressure.PSI]
                 ),
                 vol.Optional(CONF_DEBUG_DATA, default=False): cv.boolean,
                 vol.Optional(CONF_PIN): cv.string,
@@ -406,7 +402,7 @@ class JLRApiHandler:
             return False
 
         _LOGGER.debug("Connected to API")
-        
+
         if len(self.connection.vehicles) > 0:
             _LOGGER.debug(f"Found {len(self.connection.vehicles)} vehicles.  Performing setup")
             _LOGGER.debug(json.dumps(self.connection.vehicles))
@@ -470,7 +466,7 @@ class JLRApiHandler:
             if self.debug_data:
                 _LOGGER.debug(f"ATTRIBUTE DATA - {vehicle.attributes}")
                 _LOGGER.debug(f"STATUS DATA - {status}")
-                
+
         return True
 
     async def async_call_service(self, service):
@@ -519,7 +515,7 @@ class JLRApiHandler:
                     self.vehicles[vehicle].get_status
                 )
                 last_updated = status.get("lastUpdatedTime")
-                
+
                 status_core = {
                     d["key"]: d["value"] for d in status["vehicleStatus"].get("coreStatus")
                 }
@@ -532,14 +528,14 @@ class JLRApiHandler:
                         d["key"]: d["value"] for d in status["vehicleStatus"].get("evStatus")
                     }
                     self.vehicles[vehicle].status_ev = status_ev
-                
-                
+
+
                 _LOGGER.debug(
                     "Received status data update for {}".format(
                         self.vehicles[vehicle].attributes.get("nickname")
                     )
                 )
-                
+
 
                 position = await self.hass.async_add_executor_job(
                     self.vehicles[vehicle].get_position

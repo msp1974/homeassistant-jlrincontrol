@@ -1,12 +1,9 @@
 import logging
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    VOLUME_LITERS,
-    VOLUME_GALLONS,
+    UnitOfEnergy,
+    UnitOfTemperature,
+    UnitOfLength,
+    UnitOfVolume,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -14,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "jlrincontrol"
 DATA_JLR_CONFIG = "jlrincontrol_config"
 JLR_DATA = "jlr_data"
-VERSION = "2.2.4"
+VERSION = "3.0.0"
 
 CONF_USE_CHINA_SERVERS = "use_china_servers"
 
@@ -66,16 +63,16 @@ JLR_USER_PREF_PARAMS = [
 ]
 
 JLR_TO_HA_UNITS = {
-    "distance": {"Km": LENGTH_KILOMETERS, "Miles": LENGTH_MILES},
+    "distance": {"Km": UnitOfLength.KILOMETERS, "Miles": UnitOfLength.MILES},
     "volume": {
-        "Litre": VOLUME_LITERS,
-        "UkGallons": VOLUME_GALLONS,
-        "UsGallons": VOLUME_GALLONS,
+        "Litre": UnitOfVolume.LITERS,
+        "UkGallons": UnitOfVolume.GALLONS,
+        "UsGallons": UnitOfVolume.GALLONS,
     },
-    "temperature": {"Celsius": TEMP_CELSIUS, "Fahrenheit": TEMP_FAHRENHEIT},
+    "temperature": {"Celsius": UnitOfTemperature.CELSIUS, "Fahrenheit": UnitOfTemperature.FAHRENHEIT},
     "distPerVol": {"DistPerVol": "Km/L"},
-    "energy": {"kWh": ENERGY_KILO_WATT_HOUR},
-    "energyPerDist": {"kWhPer100Dist": ENERGY_KILO_WATT_HOUR + "/100m"},
+    "energy": {"kWh": UnitOfEnergy.KILO_WATT_HOUR},
+    "energyPerDist": {"kWhPer100Dist": UnitOfEnergy.KILO_WATT_HOUR + "/100m"},
 }
 
 SENSOR_TYPES = {
