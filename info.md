@@ -1,10 +1,10 @@
 This component provides integration to the JLR InControl functionality to homeassistant.
 
-Due to changes in Home Assistant, this integration requires a minimum of HA0.110.0.
+Due to changes in Home Assistant, this integration requires a minimum of HA `v2022.11`.
 
 ## Functionality
 
-**Currently this loads a series of sensors for**
+**Currently, this loads a series of sensors for**
 
 - Vehicle Info
 - Status
