@@ -68,6 +68,13 @@ def convert_temp_value(temp_unit, service_code, target_value):
             return min(285, max(155, int(((target_value - 27) / 2) * 10)))
 
 
+def convert_datetime_to_epoch(dt: str) -> int:
+    """Convert string datetime to epoch time."""
+    utc_time = datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
+    epoch_time = (utc_time - datetime(1970, 1, 1)).total_seconds()
+    return round(epoch_time * 1000)
+
+
 def to_local_datetime(dte: str):
     """Convert to local time."""
     try:

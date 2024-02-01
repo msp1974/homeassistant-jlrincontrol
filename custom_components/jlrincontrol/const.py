@@ -348,13 +348,13 @@ JLR_SERVICES = {
     "set_departure_timer": {
         "custom_service": True,
         "function_name": "add_departure_timer",
-        "service_code": "NA",  # TODO Modify this to CP
+        "service_code": "CP",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_DEPARTURE_TIME_SCHEMA"],
     },
     "delete_departure_timer": {
         "custom_service": True,
         "function_name": "delete_departure_timer",
-        "service_code": "NA",  # TODO Modify this to CP
+        "service_code": "CP",
         "schema": ["SERVICES_BASE_SCHEMA"],
     },
     "start_preconditioning": {
@@ -405,7 +405,7 @@ JLR_SERVICES = {
     },
     "disable_guardian_mode": {
         "custom_service": True,
-        "function_name": "enable_guardian_mode",
+        "function_name": "disable_guardian_mode",
         "service_code": "GMCC",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
     },
@@ -421,7 +421,7 @@ JLR_SERVICES = {
     },
     "disable_service_mode": {
         "custom_service": True,
-        "function_name": "enable_service_mode",
+        "function_name": "disable_service_mode",
         "service_code": "SM",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
     },
@@ -437,7 +437,7 @@ JLR_SERVICES = {
     },
     "disable_transport_mode": {
         "custom_service": True,
-        "function_name": "enable_transport_mode",
+        "function_name": "disable_transport_mode",
         "service_code": "TM",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_PIN_SCHEMA"],
     },

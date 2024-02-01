@@ -9,7 +9,7 @@ import logging
 from urllib.error import HTTPError
 
 from .const import JLR_SERVICES
-from .util import convert_temp_value, field_mask
+from .util import convert_datetime_to_epoch, convert_temp_value, field_mask
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,6 +114,9 @@ class JLRService:
                         self.service_code,
                         kwargs.get(param),
                     )
+                elif param in ["expiration_time"]:
+                    # convert datetime string to epoc time
+                    service_kwargs[param] = convert_datetime_to_epoch(kwargs.get(param))
                 else:
                     service_kwargs[param] = kwargs.get(param)
 
@@ -130,6 +133,10 @@ class JLRService:
                 )
                 _LOGGER.debug("Service call response: %s", status)
                 # monitor service for success / failure
+                if not status:
+                    return True
+                if status.get("error"):
+                    return False
                 success = await self.async_monitor_service_call(
                     status.get("customerServiceId")
                 )

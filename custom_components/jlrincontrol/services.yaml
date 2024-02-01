@@ -192,3 +192,126 @@ set_one_off_max_charge_level:
           max: 100
           step: 1
           unit_of_measurement: "%"
+enable_journey_recording:
+  description: "Enable journey recording"
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
+disable_journey_recording:
+  description: "Disable journey recording"
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
+enable_guardian_mode:
+  description: "Enable guardian moode"
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
+  fields:
+    expiration_time:
+      name: "Expiration Time"
+      description: "Turn on guardian mode until"
+      example: "2023-05-10 18:45:00"
+      required: true
+      selector:
+        datetime:
+    pin:
+      name: Pin
+      description: "The pin set for your vehicle."
+      example: "1234"
+      default: "0000"
+      required: true
+      selector:
+        text:
+disable_guardian_mode:
+  description: "Disable guardian moode"
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
+  fields:
+    pin:
+      name: Pin
+      description: "The pin set for your vehicle."
+      example: "1234"
+      default: "0000"
+      required: true
+      selector:
+        text:
+enable_service_mode:
+  description: "Enable service moode"
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
+  fields:
+    expiration_time:
+      name: "Expiration Time"
+      description: "Turn on service mode until"
+      example: "2023-05-10 18:45:00"
+      required: true
+      selector:
+        datetime:
+    pin:
+      name: Pin
+      description: "The pin set for your vehicle."
+      example: "1234"
+      default: "0000"
+      required: true
+      selector:
+        text:
+disable_service_mode:
+  description: "Disable service moode"
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
+  fields:
+    pin:
+      name: Pin
+      description: "The pin set for your vehicle."
+      example: "1234"
+      default: "0000"
+      required: true
+      selector:
+        text:
+enable_transport_mode:
+  description: "Enable transport moode"
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
+  fields:
+    expiration_time:
+      name: "Expiration Time"
+      description: "Turn on transport mode until"
+      example: "2023-05-10 18:45:00"
+      required: true
+      selector:
+        datetime:
+    pin:
+      name: Pin
+      description: "The pin set for your vehicle."
+      example: "1234"
+      default: "0000"
+      required: true
+      selector:
+        text:
+disable_transport_mode:
+  description: "Disable transport moode"
+  target:
+    entity:
+      integration: jlrincontrol
+      domain: sensor
+  fields:
+    pin:
+      name: Pin
+      description: "The pin set for your vehicle."
+      example: "1234"
+      default: "0000"
+      required: true
+      selector:
+        text:

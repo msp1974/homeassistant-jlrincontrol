@@ -63,7 +63,7 @@ SERVICES_CHARGE_LEVEL_SCHEMA = {
     vol.Required(ATTR_CHARGE_LEVEL): vol.Coerce(int),
 }
 SERVICES_EXPIRY_SCHEMA = {
-    vol.Required(ATTR_EXPIRY): vol.Coerce(datetime),
+    vol.Required(ATTR_EXPIRY): vol.Coerce(str),
 }
 
 SERVICES_DEPARTURE_TIME_SCHEMA = {
@@ -224,9 +224,9 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry
 ) -> bool:
     """Delete device if no longer on account."""
-    _LOGGER.warning(device_entry)
+    _LOGGER.debug(device_entry)
     vin = list(device_entry.identifiers)[0][1]
-    _LOGGER.warning(vin)
+    _LOGGER.debug(vin)
     coordinator = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]
 
     if vin in coordinator.vehicles:
