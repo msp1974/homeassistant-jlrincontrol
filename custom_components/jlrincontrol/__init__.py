@@ -1,14 +1,13 @@
-"""
-Jaguar Landrover Component for In Control API
+"""Jaguar Landrover Component for In Control API.
 
 Includes Sensor Devices and Services
 
 https://github.com/msp1974/homeassistant-jlrincontrol.git
 msparker@sky.com
 """
+from datetime import datetime, timedelta
 import logging
 import uuid
-from datetime import datetime, timedelta
 
 import voluptuous as vol
 
@@ -16,9 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import device_registry as dr
-
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     ATTR_CHARGE_LEVEL,
@@ -113,12 +110,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Setup JLR InConnect component"""
+    """Initialise JLR InConnect component."""
 
     def get_schema(schema_list):
         result = {}
         for schema in schema_list:
-            result.update(eval(schema))  # pylint: disable=eval-used
+            result.update(eval(schema))  # pylint: disable=eval-used  # noqa: PGH001, S307
         return vol.Schema(cv.make_entity_service_schema(result))
 
     hass.data.setdefault(DOMAIN, {})
@@ -226,7 +223,7 @@ async def async_update_device_registry(hass: HomeAssistant, config_entry: Config
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry
 ) -> bool:
-    """Delete device if no longer on account"""
+    """Delete device if no longer on account."""
     _LOGGER.warning(device_entry)
     vin = list(device_entry.identifiers)[0][1]
     _LOGGER.warning(vin)

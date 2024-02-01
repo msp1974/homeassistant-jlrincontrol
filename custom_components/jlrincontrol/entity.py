@@ -1,4 +1,4 @@
-"""Base entity"""
+"""Base entity."""
 
 import asyncio
 import logging
@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class JLREntity(CoordinatorEntity, Entity):
-    """Base entity class"""
+    """Base entity class."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, vin: str, name: str) -> None:
         """Create a new generic JLR sensor."""
@@ -41,27 +41,32 @@ class JLREntity(CoordinatorEntity, Entity):
 
     @property
     def device_info(self):
+        """Return device info."""
         return {"identifiers": {(DOMAIN, self.vin)}}
 
     @property
     def icon(self):
+        """Return icon."""
         return self._icon
 
     @property
     def name(self):
+        """Return name."""
         return f"{self.vehicle.attributes.get('nickname')} {self._name.title()}"
 
     @property
     def unique_id(self):
+        """Return unique id."""
         return f"{self._entity_prefix}-{self._name}"
 
     @property
     def extra_state_attributes(self):
+        """Return attributes."""
         attrs = {}
         return attrs
 
     async def async_force_update(self, delay: int = 0):
-        """Force update"""
+        """Force update."""
         _LOGGER.debug("Update initiated by %s", self.name)
         if delay:
             await asyncio.sleep(delay)

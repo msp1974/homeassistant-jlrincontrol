@@ -1,11 +1,11 @@
-"""Manage execution of services"""
+"""Manage execution of services."""
 
 import asyncio
-import inspect
-import logging
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
+import inspect
+import logging
 from urllib.error import HTTPError
 
 from .const import JLR_SERVICES
@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class StatusInfo:
-    """Holds process status info"""
+    """Holds process status info."""
 
     status: str
     timestamp: datetime
@@ -31,7 +31,7 @@ class StatusInfo:
 
 
 class JLRService:
-    """Handles service call"""
+    """Handles service call."""
 
     def __init__(
         self,
@@ -39,6 +39,7 @@ class JLRService:
         vin: str,
         service: str,
     ) -> None:
+        """Initialise."""
         self.hass = coordinator.hass
         self.coordinator = coordinator
         self.vin = vin
@@ -47,7 +48,7 @@ class JLRService:
         self.service_name = JLR_SERVICES[service].get("function_name")
 
     def check_service_supported(self, service_code) -> bool:
-        """Check service code is capable and enabled"""
+        """Check service code is capable and enabled."""
         if service_code == "NA":
             return True
         if service_code in self.vehicle.supported_services:
@@ -55,20 +56,20 @@ class JLRService:
         return False
 
     async def is_service_call_in_progress(self) -> bool:
-        """Check if a service call is already in progress"""
+        """Check if a service call is already in progress."""
         services = await self.hass.async_add_executor_job(self.vehicle.api.get_services)
         if services:
             return True
         return False
 
     async def async_get_service_status(self, service_id) -> str:
-        """Get status of current service call"""
+        """Get status of current service call."""
         return await self.hass.async_add_executor_job(
             self.vehicle.api.get_service_status, service_id
         )
 
     async def validate_service_call(self):
-        """Validate service supported"""
+        """Validate service supported."""
         if self.service_code and self.service_name:
             # Check this is a supported service on this vehicle
             if self.check_service_supported(self.service_code):
@@ -97,7 +98,7 @@ class JLRService:
         return False
 
     async def async_call_service(self, **kwargs) -> bool:
-        """Call jlr service"""
+        """Call jlr service."""
         if await self.validate_service_call():
             service_kwargs = {}
 
@@ -158,7 +159,7 @@ class JLRService:
         return False
 
     async def async_monitor_service_call(self, service_id):
-        """Monitor service call for result"""
+        """Monitor service call for result."""
         service_status = await self.async_get_service_status(service_id)
         status = service_status.get("status", "Unknown")
 

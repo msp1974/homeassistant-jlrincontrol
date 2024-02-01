@@ -1,4 +1,4 @@
-"""Diagnostics support for JLRInControl"""
+"""Diagnostics support for JLRInControl."""
 from __future__ import annotations
 
 import logging
@@ -61,12 +61,11 @@ def anonymise_data(data: dict) -> dict:
     for key, value in data.items():
         if isinstance(value, dict):
             data[key] = anonymise_data(value)
-        else:
-            if key in ANON_KEYS:
-                data[key] = "**REDACTED**"
+        elif key in ANON_KEYS:
+            data[key] = "**REDACTED**"
     return data
 
 
 def anonymise_vin(vin) -> str:
-    """Anonymise vin number"""
+    """Anonymise vin number."""
     return vin[:11] + "XXXXXX"

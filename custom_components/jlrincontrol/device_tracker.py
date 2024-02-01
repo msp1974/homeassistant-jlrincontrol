@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
-    """Setup device tracker"""
+    """Initialise device tracker."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]
     devices = []
 
@@ -32,9 +32,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
 
 
 class JLRDeviceTracker(JLREntity, TrackerEntity):
-    """Device tracker"""
+    """Device tracker."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, vin: str) -> None:
+        """Initialise."""
         super().__init__(coordinator, vin, "device tracker")
         self._position = None
         self._last_position = None
@@ -42,7 +43,7 @@ class JLRDeviceTracker(JLREntity, TrackerEntity):
         self._icon = "mdi:car-connected"
 
     def has_position_changed(self) -> bool:
-        """Have geocode position changed"""
+        """Have geocode position changed."""
         if self._last_position:
             old_lat = round(self._last_position.get("latitude"), 8)
             new_lat = round(self._position.get("latitude"), 8)
@@ -79,6 +80,7 @@ class JLRDeviceTracker(JLREntity, TrackerEntity):
 
     @property
     def extra_state_attributes(self):
+        """Return sensor attributes."""
         attrs = {}
         attrs["location"] = self._address.get("formattedAddress")
         attrs["speed"] = self._position.get("speed")

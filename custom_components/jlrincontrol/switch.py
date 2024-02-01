@@ -1,7 +1,7 @@
-"""Handles integration switches"""
+"""Handles integration switches."""
 
+from datetime import UTC, datetime, timedelta
 import logging
-from datetime import datetime, timedelta, timezone
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
 
 
 class JLRSwitch(JLREntity, SwitchEntity):
-    """Button entity"""
+    """Button entity."""
 
     def __init__(
         self,
@@ -151,23 +151,21 @@ class JLRSwitch(JLREntity, SwitchEntity):
             if is_turn_on:
                 result["expiration_time"] = int(
                     (
-                        datetime.now(timezone.utc)
+                        datetime.now(UTC)
                         + timedelta(hours=self.coordinator.default_service_duration)
                     ).timestamp()
                     * 1000
                 )
             else:
-                result["expiration_time"] = int(
-                    datetime.now(timezone.utc).timestamp() * 1000
-                )
+                result["expiration_time"] = int(datetime.now(UTC).timestamp() * 1000)
         if "expiration_formatted" in params:
             if is_turn_on:
                 result["expiration_time"] = (
-                    datetime.now(timezone.utc)
+                    datetime.now(UTC)
                     + timedelta(hours=self.coordinator.default_service_duration)
                 ).strftime("%Y-%m-%dT%H:%M:00.000Z")
             else:
-                result["expiration_time"] = datetime.now(timezone.utc).strftime(
+                result["expiration_time"] = datetime.now(UTC).strftime(
                     "%Y-%m-%dT%H:%M:00.000Z"
                 )
 

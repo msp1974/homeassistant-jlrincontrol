@@ -1,4 +1,4 @@
-"""Utility functions"""
+"""Utility functions."""
 from datetime import datetime
 import logging
 from os.path import exists
@@ -8,34 +8,34 @@ import aiofiles
 
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def field_mask(str_value, from_start=0, from_end=0):
-    """Redact sensitive field data"""
+    """Redact sensitive field data."""
     str_mask = "x" * (len(str_value) - from_start - from_end)
     return f"{str_value[:from_start]}{str_mask}{str_value[-from_end:]}"
 
 
 def requires_pin(service_type, service_code):
-    """Does service require pin"""
+    """Return if service requires pin."""
     if "pin" in service_type[service_code].get("params", {}):
         return True
     return False
 
 
 def get_value_match(data: dict, key: str, value: str) -> bool:
-    """Get if attribute matches value"""
+    """Get if attribute matches value."""
     return True if data.get(key) == value else False
 
 
 def get_is_date_active(data: dict, key: str) -> bool:
-    """Get if attribute as datetime before now"""
+    """Get if attribute as datetime before now."""
     try:
-        attr_dt = dt.as_utc(dt.parse_datetime(data.get(key)))
-        if attr_dt < dt.utcnow():
+        attr_dt = dt_util.as_utc(dt_util.parse_datetime(data.get(key)))
+        if attr_dt < dt_util.utcnow():
             return False
         return True
     except (ValueError, TypeError):
@@ -43,10 +43,7 @@ def get_is_date_active(data: dict, key: str) -> bool:
 
 
 def convert_temp_value(temp_unit, service_code, target_value):
-    """
-    Convert from C/F to value between 31-57 (31 is LO 57 is HOT)
-    needed for service call
-    """
+    """Convert from C/F to value between 31-57 (31 is LO 57 is HOT) needed for service call."""
 
     # Handle setting car units (prior to version 2.0)
     if target_value >= 31 and target_value <= 57:
@@ -72,15 +69,15 @@ def convert_temp_value(temp_unit, service_code, target_value):
 
 
 def to_local_datetime(dte: str):
-    """Convert to local time"""
+    """Convert to local time."""
     try:
-        return dt.as_local(dt.parse_datetime(dte))
+        return dt_util.as_local(dt_util.parse_datetime(dte))
     except (ValueError, TypeError):
         return None
 
 
 def split_datetime(dte: datetime) -> dict:
-    """Split a datetime value into component parts and return dict"""
+    """Split a datetime value into component parts and return dict."""
     output = {}
     output["year"] = dte.year
     output["month"] = dte.month
@@ -91,7 +88,7 @@ def split_datetime(dte: datetime) -> dict:
 
 
 def get_attribute(obj, path: str) -> Any | None:
-    """Get attribute from dotted notation"""
+    """Get attribute from dotted notation."""
     attrs = path.split(".")
     temp = obj
     for attr in attrs:
@@ -103,7 +100,7 @@ def get_attribute(obj, path: str) -> Any | None:
 
 
 async def save_user_prefs(hass: HomeAssistant, user_id, uoms) -> bool:
-    """Write user preferences to file"""
+    """Write user preferences to file."""
     file = f"{hass.config.config_dir}/.storage/jlrincontrol_data_{user_id}"
     # Write to config file
     async with aiofiles.open(file, mode="w") as config_file:
@@ -113,7 +110,7 @@ async def save_user_prefs(hass: HomeAssistant, user_id, uoms) -> bool:
 
 
 async def get_user_prefs(hass: HomeAssistant, user_id) -> dict:
-    """Get user prefs from file"""
+    """Get user prefs from file."""
     file = f"{hass.config.config_dir}/.storage/jlrincontrol_data_{user_id}"
     if exists(file):
         async with aiofiles.open(file, mode="r") as user_pref_file:

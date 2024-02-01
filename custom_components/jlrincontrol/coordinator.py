@@ -1,8 +1,8 @@
-"""Handles updating data from jlrpy"""
-import json
-import logging
+"""Handles updating data from jlrpy."""
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+import json
+import logging
 from urllib.error import HTTPError
 
 import jlrpy
@@ -16,8 +16,7 @@ from homeassistant.const import (
     UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -51,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class UserPreferenceUnits:
-    """Holds unit prefs"""
+    """Holds unit prefs."""
 
     distance: str
     fuel: str
@@ -61,13 +60,13 @@ class UserPreferenceUnits:
     energy_consumed: str
 
     def to_json(self):
-        """Convert to json"""
+        """Convert to json."""
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True)
 
 
 @dataclass
 class UserData:
-    """Holds user data"""
+    """Holds user data."""
 
     first_name: str
     middle_name: str
@@ -77,7 +76,7 @@ class UserData:
 
 @dataclass
 class GuardianData:
-    """Holds guardian mode data"""
+    """Holds guardian mode data."""
 
     capable: bool = True
     active: bool = False
@@ -86,7 +85,7 @@ class GuardianData:
 
 @dataclass
 class TrackedStatuses:
-    """Holds tracked status info"""
+    """Holds tracked status info."""
 
     climate_active: bool = False
     guardian_mode_active: bool = False
@@ -98,7 +97,7 @@ class TrackedStatuses:
 
 @dataclass
 class VehicleData:
-    """Hold vehicle data"""
+    """Hold vehicle data."""
 
     vin: str
     api: jlrpy.Vehicle
@@ -119,7 +118,7 @@ class VehicleData:
 
 
 class JLRIncontrolHealthUpdateCoordinator(DataUpdateCoordinator):
-    """Update handler"""
+    """Update handler."""
 
     config_entry: ConfigEntry
 
@@ -152,7 +151,7 @@ class JLRIncontrolHealthUpdateCoordinator(DataUpdateCoordinator):
         )
 
     async def async_update_data(self):
-        """Request update from vehicle"""
+        """Request update from vehicle."""
         try:
             for vehicle in self.connection.vehicles:
                 _LOGGER.debug(
@@ -176,7 +175,7 @@ class JLRIncontrolHealthUpdateCoordinator(DataUpdateCoordinator):
             )
 
     async def async_initial_update_data(self):
-        """Do initial health update and call Data update once complete"""
+        """Do initial health update and call Data update once complete."""
         await self.async_update_data()
         self.config_entry.async_create_background_task(
             self.hass, self.coordinator.async_update_data(), "Update vehicle data"
@@ -184,7 +183,7 @@ class JLRIncontrolHealthUpdateCoordinator(DataUpdateCoordinator):
 
 
 class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
-    """Update handler"""
+    """Update handler."""
 
     config_entry: ConfigEntry
 
@@ -230,11 +229,11 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
     @callback
     def refresh(self):
-        """Non async data update"""
+        """Non async data update."""
         self.hass.loop.call_soon_threadsafe(self.async_update_data)
 
     async def async_connect(self) -> bool:
-        """Connnect to api"""
+        """Connnect to api."""
         _LOGGER.debug("Initialising JLR InControl v%s", VERSION)
         _LOGGER.debug("Creating connection to JLR InControl API")
         try:
@@ -259,7 +258,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         return True
 
     async def async_get_user_info(self) -> None:
-        """Get user info"""
+        """Get user info."""
         user = await self.hass.async_add_executor_job(self.connection.get_user_info)
         _LOGGER.debug("USERINFO: %s", user)
         user = user.get("contact")
@@ -309,7 +308,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("User Data: %s", self.user)
 
     async def async_get_vehicles(self) -> None:
-        """Get list of vehicles"""
+        """Get list of vehicles."""
         if len(self.connection.vehicles) > 0:
             _LOGGER.debug("Vehicles: %s", json.dumps(self.connection.vehicles))
             for vehicle in self.connection.vehicles:
@@ -319,7 +318,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("No vehicles found in this account")
 
     async def async_get_vehicle_attributes(self, vehicle: jlrpy.Vehicle) -> None:
-        """Get vehicle attributes"""
+        """Get vehicle attributes."""
         attributes = await self.hass.async_add_executor_job(vehicle.get_attributes)
 
         # Remove capabilities data
@@ -363,7 +362,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             )
 
     async def async_get_vehicle_status(self, vehicle: jlrpy.Vehicle) -> None:
-        """Get vehicle status"""
+        """Get vehicle status."""
         status = await self.hass.async_add_executor_job(vehicle.get_status)
 
         if status:
@@ -408,7 +407,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             self.vehicles[vehicle.vin].target_climate_temp = 21
 
     def get_tracked_statuses(self, vehicle: VehicleData) -> None:
-        """Populate tracked status items in vehicle data"""
+        """Populate tracked status items in vehicle data."""
 
         # Climate status - differs for ICE v Electric/Hybrid
         if vehicle.engine_type == "ICE":
@@ -446,7 +445,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         )
 
     def get_vehicle_engine_type(self, vehicle: VehicleData) -> None:
-        """Determine vehicle engine type"""
+        """Determine vehicle engine type."""
         _LOGGER.debug(
             "Vehicle fuel type is %s",
             vehicle.attributes.get("fuelType", "Unknown"),
@@ -460,7 +459,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             self.vehicles[vehicle.vin].engine_type = FUEL_TYPE_ICE
 
     async def async_get_vehicle_position(self, vehicle: jlrpy.Vehicle) -> None:
-        """Get vehicle position data"""
+        """Get vehicle position data."""
         position = await self.hass.async_add_executor_job(vehicle.get_position)
 
         if position:
@@ -477,7 +476,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             )
 
     async def async_get_guardian_mode_status(self, vehicle: jlrpy.Vehicle) -> None:
-        """Get guardian mode status"""
+        """Get guardian mode status."""
         if "GMCC" in self.vehicles[vehicle.vin].supported_services:
             try:
                 self.vehicles[
@@ -492,7 +491,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 )
 
     async def async_get_vehicle_last_trip_data(self, vehicle: jlrpy.Vehicle) -> None:
-        """Get vehicle trip data"""
+        """Get vehicle trip data."""
 
         trips = await self.hass.async_add_executor_job(vehicle.get_trips, 1)
         if trips and trips.get("trips"):
@@ -509,7 +508,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             )
 
     async def async_update_data(self):
-        """Update vehicle data"""
+        """Update vehicle data."""
         try:
             await self.async_get_user_info()
             for vehicle in self.connection.vehicles:
@@ -536,7 +535,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             return False
 
     async def async_call_service(self, service):
-        """Handle service call"""
+        """Handle service call."""
         if JLR_SERVICES[service.service]:
             _LOGGER.debug("Service Call: %s", service.data)
             entity_device_ids = []
@@ -572,7 +571,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                     device_reg, self.config_entry.entry_id
                 )
                 vin_list = [
-                    dict((x, y) for x, y in device.identifiers).get(DOMAIN)
+                    dict(device.identifiers).get(DOMAIN)
                     for device in devices
                     if device.id in device_ids
                     or device.id in entity_device_ids

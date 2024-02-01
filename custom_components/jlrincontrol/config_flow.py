@@ -1,7 +1,4 @@
-"""
-Config Flow for JLR InControl
-
-"""
+"""Config Flow for JLR InControl."""
 import logging
 import urllib
 import uuid
@@ -52,7 +49,7 @@ def configured_instances(hass: HomeAssistant):
 
 
 async def validate_input(hass: HomeAssistant, data):
-    """Validate the user input allows us to connect"""
+    """Validate the user input allows us to connect."""
 
     try:
         connection = await hass.async_add_executor_job(
@@ -83,7 +80,7 @@ async def validate_input(hass: HomeAssistant, data):
 
 @config_entries.HANDLERS.register(DOMAIN)
 class JLRInControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handles config setup"""
+    """Handles config setup."""
 
     VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
@@ -143,7 +140,7 @@ class JLRInControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class JLRInControlOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handles JLRIncontrol options"""
+    """Handles JLRIncontrol options."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize deCONZ options flow."""

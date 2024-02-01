@@ -7,7 +7,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfPressure, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import icon
-from homeassistant.util import dt, unit_conversion
+from homeassistant.util import dt as dt_util, unit_conversion
 
 from .const import (
     DATA_ATTRS_CAR_INFO,
@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
-    """Setup sensor entities"""
+    """Initialise sensor entities."""
     component = hass.data[DOMAIN]
     coordinator = component[config_entry.entry_id][JLR_DATA]
 
@@ -80,21 +80,24 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
 
 
 class JLRVehicleAllDataSensor(JLREntity):
-    """All info sensor"""
+    """All info sensor."""
 
     def __init__(self, coordinator, vin) -> None:
+        """Initialise."""
         super().__init__(coordinator, vin, "all info")
         self._icon = "mdi:cloud"
 
     @property
     def state(self):
+        """Return sensor state."""
         if self.vehicle.last_updated:
             last_contacted = to_local_datetime(self.vehicle.last_updated)
-            return dt.get_age(last_contacted) + " ago"
+            return dt_util.get_age(last_contacted) + " ago"
         return "Unknown"
 
     @property
     def extra_state_attributes(self):
+        """Return attributes."""
         attrs = {}
 
         # Vehicle Attributes
@@ -131,18 +134,21 @@ class JLRVehicleAllDataSensor(JLREntity):
 
 
 class JLRVehicleSensor(JLREntity):
-    """Vehicle info sensor"""
+    """Vehicle info sensor."""
 
     def __init__(self, coordinator, vin) -> None:
+        """Initialise."""
         super().__init__(coordinator, vin, "info")
         self._icon = "mdi:car-info"
 
     @property
     def state(self):
+        """Return sensor state."""
         return self.vehicle.attributes.get("registrationNumber")
 
     @property
     def extra_state_attributes(self):
+        """Return attributes."""
         attributes = self.vehicle.attributes
         attrs = {}
         attrs["Engine Type"] = self.vehicle.engine_type
@@ -163,25 +169,25 @@ class JLRVehicleSensor(JLREntity):
                 self.vehicle.status.get("lastUpdatedTime")
             )
             attrs["Last Contacted"] = last_contacted
-            attrs["Last Contacted Age"] = dt.get_age(last_contacted) + " ago"
+            attrs["Last Contacted Age"] = dt_util.get_age(last_contacted) + " ago"
         return attrs
 
 
 class JLRVehicleTyreSensor(JLREntity):
-    """Tyre status sensor"""
+    """Tyre status sensor."""
 
     def __init__(self, coordinator, vin) -> None:
+        """Initialise."""
         super().__init__(coordinator, vin, "tyres")
         self._icon = "mdi:car-tire-alert"
 
     @property
     def state(self):
+        """Return sensor state."""
         # Convert to list of values from dict
         if all(
-            [
-                self.vehicle.status.get(value) == "NORMAL"
-                for key, value in DATA_ATTRS_TYRE_STATUS.items()
-            ]
+            self.vehicle.status.get(value) == "NORMAL"
+            for key, value in DATA_ATTRS_TYRE_STATUS.items()
         ):
             return "Ok"
         else:
@@ -189,6 +195,7 @@ class JLRVehicleTyreSensor(JLREntity):
 
     @property
     def extra_state_attributes(self):
+        """Return attributes."""
         status = self.vehicle.status
         attrs = {}
 
@@ -219,19 +226,19 @@ class JLRVehicleTyreSensor(JLREntity):
 
 
 class JLRVehicleWindowSensor(JLREntity):
-    """Window status entity"""
+    """Window status entity."""
 
     def __init__(self, coordinator, vin) -> None:
+        """Initialise."""
         super().__init__(coordinator, vin, "windows")
         self._icon = "mdi:car-door"
 
     @property
     def state(self):
+        """Return sensor state."""
         if all(
-            [
-                self.vehicle.status.get(v) in ["CLOSED", "FALSE", "UNUSED"]
-                for k, v in DATA_ATTRS_WINDOW_STATUS.items()
-            ]
+            self.vehicle.status.get(v) in ["CLOSED", "FALSE", "UNUSED"]
+            for k, v in DATA_ATTRS_WINDOW_STATUS.items()
         ):
             return "Closed"
         else:
@@ -239,6 +246,7 @@ class JLRVehicleWindowSensor(JLREntity):
 
     @property
     def extra_state_attributes(self):
+        """Return attributes."""
         status = self.vehicle.status
         attrs = {}
         for key, value in DATA_ATTRS_WINDOW_STATUS.items():
@@ -257,14 +265,16 @@ class JLRVehicleWindowSensor(JLREntity):
 
 
 class JLRVehicleAlarmSensor(JLREntity):
-    """Alarm info entity"""
+    """Alarm info entity."""
 
     def __init__(self, coordinator, vin) -> None:
+        """Initialise."""
         super().__init__(coordinator, vin, "alarm")
         self._icon = "mdi:security"
 
     @property
     def state(self):
+        """Return sensor state."""
         status = self.vehicle.status.get("THEFT_ALARM_STATUS")
         if status:
             status = status.replace("ALARM_", "")
@@ -274,21 +284,21 @@ class JLRVehicleAlarmSensor(JLREntity):
 
 
 class JLRVehicleServiceSensor(JLREntity):
-    """Service status entity"""
+    """Service status entity."""
 
     def __init__(self, coordinator, vin) -> None:
+        """Initialise."""
         super().__init__(coordinator, vin, "service info")
         self._units = self.coordinator.user.user_preferences.distance
         self._icon = "mdi:wrench"
 
     @property
     def state(self):
+        """Return sensor state."""
         if all(
-            [
-                self.vehicle.status.get(value) in SERVICE_STATUS_OK
-                or self.vehicle.status.get(value) is None
-                for key, value in DATA_ATTRS_SERVICE_STATUS.items()
-            ]
+            self.vehicle.status.get(value) in SERVICE_STATUS_OK
+            or self.vehicle.status.get(value) is None
+            for key, value in DATA_ATTRS_SERVICE_STATUS.items()
         ):
             return "Ok"
         else:
@@ -296,6 +306,7 @@ class JLRVehicleServiceSensor(JLREntity):
 
     @property
     def extra_state_attributes(self):
+        """Return sensor attributes."""
         status = self.vehicle.status
         attrs = {}
         for key, value in DATA_ATTRS_SERVICE_STATUS.items():
@@ -326,9 +337,10 @@ class JLRVehicleServiceSensor(JLREntity):
 
 
 class JLRVehicleRangeSensor(JLREntity):
-    """Fuel/Battery range entity"""
+    """Fuel/Battery range entity."""
 
     def __init__(self, coordinator, vin) -> None:
+        """Initialise."""
         super().__init__(coordinator, vin, "range")
         self._units = self.coordinator.user.user_preferences.distance
         self._icon = (
@@ -339,6 +351,7 @@ class JLRVehicleRangeSensor(JLREntity):
 
     @property
     def state(self):
+        """Return sensor state."""
         # Has battery
         if self.vehicle.engine_type == FUEL_TYPE_BATTERY:
             return (
@@ -363,10 +376,12 @@ class JLRVehicleRangeSensor(JLREntity):
 
     @property
     def unit_of_measurement(self):
+        """Return UOM."""
         return self._units
 
     @property
     def extra_state_attributes(self):
+        """Return sensor attributes."""
         attrs = {}
         attrs["Fuel Type"] = self.vehicle.fuel
 
@@ -399,13 +414,17 @@ class JLRVehicleRangeSensor(JLREntity):
 
 
 class JLREVBatterySensor(JLREntity):
+    """Battery Sensor."""
+
     def __init__(self, coordinator, vin) -> None:
+        """Initialise."""
         super().__init__(coordinator, vin, "battery")
         self._units = self.coordinator.user.user_preferences.distance
         self._charging_state = False
 
     @property
     def state(self):
+        """Return sensor state."""
         return self.vehicle.status_ev.get("EV_STATE_OF_CHARGE", 0)
 
     @property
@@ -420,6 +439,7 @@ class JLREVBatterySensor(JLREntity):
 
     @property
     def icon(self):
+        """Return battery icon."""
         return icon.icon_for_battery_level(
             int(self.vehicle.status_ev.get("EV_STATE_OF_CHARGE", 0)),
             self._charging_state,
@@ -427,6 +447,7 @@ class JLREVBatterySensor(JLREntity):
 
     @property
     def extra_state_attributes(self):
+        """Return sensor attributes."""
         attrs = {}
         status = self.vehicle.status_ev
 
@@ -482,15 +503,17 @@ class JLREVBatterySensor(JLREntity):
 
 
 class JLRVehicleLastTripSensor(JLREntity):
-    """Last trip info sensor"""
+    """Last trip info sensor."""
 
     def __init__(self, coordinator, vin) -> None:
+        """Initialise."""
         super().__init__(coordinator, vin, "last trip")
         self._units = self.coordinator.user.user_preferences.distance
         self._icon = "mdi:map"
 
     @property
     def state(self):
+        """Return sensor state."""
         if self.vehicle.last_trip and self.vehicle.last_trip.get("tripDetails"):
             return round(
                 unit_conversion.DistanceConverter.convert(
@@ -506,10 +529,12 @@ class JLRVehicleLastTripSensor(JLREntity):
 
     @property
     def unit_of_measurement(self):
+        """Return sensor UOM."""
         return self._units
 
     @property
     def extra_state_attributes(self):
+        """Return sensor attributes."""
         attrs = {}
         if self.vehicle.last_trip:
             trip = self.vehicle.last_trip.get("tripDetails")
@@ -541,7 +566,7 @@ class JLRVehicleLastTripSensor(JLREntity):
                     if not avg_consumption:
                         avg_consumption = 0
                     attrs["average_consumption"] = round(avg_consumption, 1)
-                else:
+                else:  # noqa: PLR5501
                     if self._units == UnitOfLength.KILOMETERS:
                         attrs["average_consumption"] = round(
                             trip.get("averageFuelConsumption", 0), 1
@@ -556,14 +581,16 @@ class JLRVehicleLastTripSensor(JLREntity):
 
 
 class JLRVehicleStatusSensor(JLREntity):
-    """Status sensor"""
+    """Status sensor."""
 
     def __init__(self, coordinator, vin) -> None:
+        """Initialise."""
         super().__init__(coordinator, vin, "status")
         self._icon = "mdi:car"
 
     @property
     def state(self):
+        """Return sensor state."""
         status = self.vehicle.status.get("VEHICLE_STATE_TYPE")
 
         if status:
@@ -573,20 +600,23 @@ class JLRVehicleStatusSensor(JLREntity):
 
 
 class JLRVehicleClimateSensor(JLREntity):
-    """Climate status sensor"""
+    """Climate status sensor."""
 
     def __init__(self, coordinator, vin) -> None:
+        """Initialise."""
         super().__init__(coordinator, vin, "climate")
         self._icon = "mdi:air-conditioner"
 
     @property
     def state(self):
+        """Return sensor state."""
         return str(
             self.vehicle.status.get("CLIMATE_STATUS_OPERATING_STATUS", "Unknown")
         ).title()
 
     @property
     def extra_state_attributes(self):
+        """Return sensor attributes."""
         attrs = {}
 
         for name, attr in DATA_ATTRS_CLIMATE.items():

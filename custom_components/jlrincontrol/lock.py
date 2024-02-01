@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
-    """Setup lock entities"""
+    """Initialise lock entities."""
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]
     devices = []
@@ -25,9 +25,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
 
 
 class JLRLock(JLREntity, LockEntity):
-    """Handles lock entity"""
+    """Handles lock entity."""
 
     def __init__(self, coordinator, vin) -> None:
+        """Initialise."""
         super().__init__(coordinator, vin, "doors")
         self._icon = "mdi:car-key"
 
@@ -68,6 +69,7 @@ class JLRLock(JLREntity, LockEntity):
 
     @property
     def extra_state_attributes(self):
+        """Return attributes."""
         status = self.vehicle.status
         attrs = {}
         for key, value in DATA_ATTRS_DOOR_STATUS.items():

@@ -1,4 +1,4 @@
-"""Service call buttons"""
+"""Service call buttons."""
 import logging
 
 from homeassistant.components.button import ButtonEntity
@@ -35,7 +35,7 @@ async def async_setup_entry(
 
 
 class JLRButton(JLREntity, ButtonEntity):
-    """Button entity"""
+    """Button entity."""
 
     def __init__(
         self,
@@ -53,6 +53,7 @@ class JLRButton(JLREntity, ButtonEntity):
         self._icon = "mdi:fire"
 
     async def async_press(self):
+        """Button press function."""
         _LOGGER.debug("Pressed %s", self._name)
         if (
             requires_pin(SUPPORTED_BUTTON_SERVICES, self.service_code)
