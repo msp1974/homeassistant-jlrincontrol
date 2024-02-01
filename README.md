@@ -5,11 +5,11 @@
 
 # JLR Home Assistant Integration (v3.0.0)
 
-**NOTE: THis is a work in progress and not yet fully working.  Please do not try to install this dev branch.**
+**NOTE: This is currently a beta version.  Please use with this knowledge.**
 
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
-Due to changes in Home Assistant, this integration requires a minimum of HA v2022.10.
+Due to changes in Home Assistant, this integration requires a minimum of HA v2023.10.
 
 ## Functionality
 
@@ -144,20 +144,32 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 
 ## Change Log
 
+### v2.2.5
+
+- Fixed: migrate deprecated HA constants with enums #106 introduced in HA v2022.11 and deprecation warnings in HA v2024.1. This integration requires from now minium version v2022.11 of HA.
+
+### v2.2.4
+
+- Bump jlrpy to v1.5.2 to fix lock/unlock #102
+
 ### v2.2.3
+
 - Fix usage of deprecated device class constant [#84](https://github.com/msp1974/homeassistant-jlrincontrol/issues/84)
 
 ### v2.2.2
+
 - Fix deprecation issue of async_get_registry [#74](https://github.com/msp1974/homeassistant-jlrincontrol/issues/74)
 - Fix distance and pressure deprecated to use unit_conversion
 - Add config option for China region
 
 ### v2.2.1 (includes v2.1.4 Pre Release changes)
+
 - Bump jlrpy to v1.4.1
 - Added support for PHEV vehicles
 - Debug data outputs all received data
 
 ### v2.1.4 - Pre Release
+
 - Updated device_state_attributes to extra_state_attributes
 - Fixed spelling mistakes in services.yaml - PR #58.  Thanks @seanauff
 - Fixed: Service returned as a failure if status returned a status of 'running'
