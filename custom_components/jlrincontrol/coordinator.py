@@ -206,7 +206,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             if config_entry.data.get(CONF_PIN) != "0000"
             else None
         )
-        self.pressure_unit = config_entry.options.get(CONF_PRESSURE_UNIT)
+        self.pressure_unit = config_entry.options.get(CONF_PRESSURE_UNIT, "Default")
         self.default_climate_temp = config_entry.options.get(
             CONF_DEFAULT_CLIMATE_TEMP, 21
         )
