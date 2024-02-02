@@ -180,7 +180,7 @@ DATA_ATTRS_SERVICE_STATUS = {
 
 DATA_ATTRS_SERVICE_INFO = {
     "distance to service": "EXT_KILOMETERS_TO_SERVICE",
-    "exhaust fluid distance to service": ("EXT_EXHAUST_FLUID_DISTANCE_TO_SERVICE_KM"),
+    "exhaust fluid distance to service": "EXT_EXHAUST_FLUID_DISTANCE_TO_SERVICE_KM",
     "exhaust fluid fill": "EXT_EXHAUST_FLUID_VOLUME_REFILL_LITRESX10",
 }
 

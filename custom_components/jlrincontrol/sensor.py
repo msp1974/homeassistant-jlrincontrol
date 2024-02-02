@@ -289,7 +289,6 @@ class JLRVehicleServiceSensor(JLREntity):
     def __init__(self, coordinator, vin) -> None:
         """Initialise."""
         super().__init__(coordinator, vin, "service info")
-        self._units = self.coordinator.user.user_preferences.distance
         self._icon = "mdi:wrench"
 
     @property
@@ -319,10 +318,10 @@ class JLRVehicleServiceSensor(JLREntity):
             if status.get(value):
                 if key == "exhaust fluid fill":
                     attrs[key.title()] = int(
-                        unit_conversion.DistanceConverter.convert(
+                        unit_conversion.VolumeConverter.convert(
                             int(status.get(value).title()),
                             UnitOfVolume.LITERS,
-                            self._units,
+                            self.coordinator.user.user_preferences.volume,
                         )
                     )
                 else:
@@ -330,7 +329,7 @@ class JLRVehicleServiceSensor(JLREntity):
                         unit_conversion.DistanceConverter.convert(
                             int(status.get(value).title()),
                             UnitOfLength.KILOMETERS,
-                            self._units,
+                            self.coordinator.user.user_preferences.distance,
                         )
                     )
         return attrs
@@ -543,7 +542,7 @@ class JLRVehicleLastTripSensor(JLREntity):
                 attrs["start"] = to_local_datetime(trip.get("startTime"))
                 attrs["origin_latitude"] = trip.get("startPosition").get("latitude")
                 attrs["origin_longitude"] = trip.get("startPosition").get("longitude")
-                attrs["origin"] = trip.get("startPosition").get("address")
+                attrs["oristanceigin"] = trip.get("startPosition").get("address")
 
                 attrs["end"] = to_local_datetime(trip.get("endTime"))
                 attrs["destination_latitude"] = trip.get("endPosition").get("latitude")
