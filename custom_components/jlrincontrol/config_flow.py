@@ -159,9 +159,9 @@ class JLRInControlOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_USERNAME: self.config_entry.data[CONF_USERNAME],
                     CONF_PASSWORD: self.config_entry.data[CONF_PASSWORD],
                     CONF_PIN: user_input[CONF_PIN],
-                    CONF_USE_CHINA_SERVERS: self.config_entry.data[
-                        CONF_USE_CHINA_SERVERS
-                    ],
+                    CONF_USE_CHINA_SERVERS: self.config_entry.data.get(
+                        CONF_USE_CHINA_SERVERS, False
+                    ),
                 }
                 user_input.pop(CONF_PIN)
                 self.hass.config_entries.async_update_entry(
