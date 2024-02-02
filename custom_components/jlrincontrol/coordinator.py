@@ -34,6 +34,7 @@ from .const import (
     FUEL_TYPE_ICE,
     JLR_SERVICES,
     JLR_TO_HASS_UNITS,
+    POWERTRAIN_PHEV,
     VERSION,
 )
 from .services import JLRService
@@ -447,13 +448,14 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
     def get_vehicle_engine_type(self, vehicle: VehicleData) -> None:
         """Determine vehicle engine type."""
         _LOGGER.debug(
-            "Vehicle fuel type is %s",
+            "Vehicle fuel type is %s - %s",
             vehicle.attributes.get("fuelType", "Unknown"),
+            vehicle.attributes.get("powerTrainType", "Unknown"),
         )
 
         if vehicle.attributes.get("fuelType") == FUEL_TYPE_BATTERY:
             self.vehicles[vehicle.vin].engine_type = FUEL_TYPE_BATTERY
-        elif vehicle.status_ev and vehicle.status_ev.get("EV_PHEV_RANGE_COMBINED_KM"):
+        if vehicle.attributes.get("powerTrainType") == POWERTRAIN_PHEV:
             self.vehicles[vehicle.vin].engine_type = FUEL_TYPE_HYBRID
         else:
             self.vehicles[vehicle.vin].engine_type = FUEL_TYPE_ICE
