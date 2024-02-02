@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v3.0.0beta1)
+# JLR Home Assistant Integration (v3.0.0beta2)
 
 **NOTE: This is currently a beta version.  Please use with this knowledge.**
 
@@ -144,7 +144,14 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 
 ## Change Log
 
-### v3.0.0
+### v3.0.0beta2
+
+- Fixed error in creating service sensor - issue [#113](https://github.com/msp1974/homeassistant-jlrincontrol/issues/113)
+- Fixed Unknown error when saving config options caused by missing key in older configs - issue [#115](https://github.com/msp1974/homeassistant-jlrincontrol/issues/115)
+- Fixed incorrect identification of PHEV vehicles - issue [#115](https://github.com/msp1974/homeassistant-jlrincontrol/issues/115)
+
+
+### v3.0.0beta1
 
 - Added switches and buttons for key services
 - Added support for guardian, service and tansport modes
