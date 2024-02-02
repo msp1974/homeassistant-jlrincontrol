@@ -455,7 +455,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
         if vehicle.attributes.get("fuelType") == FUEL_TYPE_BATTERY:
             self.vehicles[vehicle.vin].engine_type = FUEL_TYPE_BATTERY
-        if vehicle.attributes.get("powerTrainType") == POWERTRAIN_PHEV:
+        elif vehicle.attributes.get("powerTrainType") == POWERTRAIN_PHEV:
             self.vehicles[vehicle.vin].engine_type = FUEL_TYPE_HYBRID
         else:
             self.vehicles[vehicle.vin].engine_type = FUEL_TYPE_ICE
