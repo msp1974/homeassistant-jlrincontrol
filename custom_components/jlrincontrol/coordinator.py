@@ -404,7 +404,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             temp = int(float(climate_temp_data.get("value", "42"))) / 2
             self.vehicles[vehicle.vin].target_climate_temp = temp
             _LOGGER.debug("CLIMATE TEMP: %s", temp)
-        except HTTPError:
+        except (HTTPError, AttributeError):
             self.vehicles[vehicle.vin].target_climate_temp = 21
 
     def get_tracked_statuses(self, vehicle: VehicleData) -> None:
