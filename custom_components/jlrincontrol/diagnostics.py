@@ -1,5 +1,6 @@
 """Diagnostics support for JLRInControl."""
 from __future__ import annotations
+import copy
 
 import logging
 from typing import Any
@@ -49,7 +50,7 @@ def _async_get_diagnostics(
     diag_data["Device"] = device
 
     diag_data["User"] = data.user.__dict__
-    vehicle_data = data.vehicles.copy()
+    vehicle_data = copy.deepcopy(data.vehicles)
     for vehicle in vehicle_data:
         diag_data[anonymise_vin(vehicle)] = anonymise_data(
             vehicle_data[vehicle].__dict__
