@@ -191,9 +191,9 @@ class JLRService:
                 return True
             else:
                 # Anonymise data in log output
-                status["vehicleId"] = field_mask(status["vehicleId"], 3, 2)
-                status["customerServiceId"] = field_mask(
-                    status["customerServiceId"], 11, 9
+                service_status["vehicleId"] = field_mask(service_status["vehicleId"], 3, 2)
+                service_status["customerServiceId"] = field_mask(
+                    service_status["customerServiceId"], 11, 9
                 )
 
                 _LOGGER.error(
