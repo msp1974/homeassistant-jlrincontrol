@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v3.0.0beta2)
+# JLR Home Assistant Integration (v3.0.0beta3)
 
 **NOTE: This is currently a beta version.  Please use with this knowledge.**
 
@@ -143,6 +143,14 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 2. To enable logging of the attributes and status data in the debug log, set the debug data option in config options with debugging turned on as above.
 
 ## Change Log
+
+### v3.0.0beta3
+
+- Fixed error if target climate temp not available - issue [#116](https://github.com/msp1974/homeassistant-jlrincontrol/issues/116)
+- Fixed error with identification of engine type - issue [#118](https://github.com/msp1974/homeassistant-jlrincontrol/issues/118)
+- Fixed error with invalid attribute volume - issue [#113](https://github.com/msp1974/homeassistant-jlrincontrol/issues/113)
+- Fixed error with no default pressure units - issue [#117](https://github.com/msp1974/homeassistant-jlrincontrol/issues/117)
+- Fixed issue with registration & serial no showing REDACTED after diagnostics download - issue [#119](https://github.com/msp1974/homeassistant-jlrincontrol/issues/119)
 
 ### v3.0.0beta2
 
