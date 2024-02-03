@@ -188,7 +188,7 @@ class JLRInControlOptionsFlowHandler(config_entries.OptionsFlow):
                 ): vol.Coerce(int),
                 vol.Required(
                     CONF_PRESSURE_UNIT,
-                    default=self.options.get(CONF_PRESSURE_UNIT, UnitOfPressure.BAR),
+                    default=self.options.get(CONF_PRESSURE_UNIT, "Default"),
                 ): vol.In(["Default", UnitOfPressure.BAR, UnitOfPressure.PSI]),
                 vol.Required(
                     CONF_DEFAULT_CLIMATE_TEMP,
