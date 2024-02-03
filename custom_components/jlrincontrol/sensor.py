@@ -321,7 +321,7 @@ class JLRVehicleServiceSensor(JLREntity):
                         unit_conversion.VolumeConverter.convert(
                             int(status.get(value).title()),
                             UnitOfVolume.LITERS,
-                            self.coordinator.user.user_preferences.volume,
+                            self.coordinator.user.user_preferences.fuel,
                         )
                     )
                 else:
