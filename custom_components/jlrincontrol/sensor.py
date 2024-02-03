@@ -164,10 +164,8 @@ class JLRVehicleSensor(JLREntity):
             else int(self.vehicle.status.get("ODOMETER_MILES"))
         )
 
-        if self.vehicle.status.get("lastUpdatedTime"):
-            last_contacted = to_local_datetime(
-                self.vehicle.status.get("lastUpdatedTime")
-            )
+        if self.vehicle.last_updated:
+            last_contacted = to_local_datetime(self.vehicle.last_updated)
             attrs["Last Contacted"] = last_contacted
             attrs["Last Contacted Age"] = dt_util.get_age(last_contacted) + " ago"
         return attrs
