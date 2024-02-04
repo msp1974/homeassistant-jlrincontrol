@@ -217,15 +217,52 @@ DATA_ATTRS_WINDOW_STATUS = {
 
 SERVICE_STATUS_OK = ["CLEAR", "FUNCTIONING", "NORMAL", "NORMAL_UNBLOCKED"]
 
-DEPRECATED_SERVICES = [
-    "update_health_status",
-    "lock_vehicle",
-    "unlock_vehicle",
-    "reset_alarm",
-    "honk_blink",
-    "start_charging",
-    "stop_charging",
-]
+DEPRECATED_SERVICES = {
+    "update_health_status": {
+        "use_instead_service": "button.press",
+        "use_instead_entity": "Update From Vehicle",
+    },
+    "lock_vehicle": {
+        "use_instead_service": "lock.lock",
+        "use_instead_entity": "Doors",
+    },
+    "unlock_vehicle": {
+        "use_instead_service": "lock.unlock",
+        "use_instead_entity": "Doors",
+    },
+    "reset_alarm": {
+        "use_instead_service": "button.press",
+        "use_instead_entity": "Reset Alarm",
+    },
+    "honk_blink": {
+        "use_instead_service": "button.press",
+        "use_instead_entity": "Honk Blink",
+    },
+    "start_vehicle": {
+        "use_instead_service": "switch.turn_on",
+        "use_instead_entity": "Climate",
+    },
+    "stop_vehicle": {
+        "use_instead_service": "switch.turn_off",
+        "use_instead_entity": "Climate",
+    },
+    "start_charging": {
+        "use_instead_service": "switch.turn_on",
+        "use_instead_entity": "Charging",
+    },
+    "stop_charging": {
+        "use_instead_service": "switch.turn_off",
+        "use_instead_entity": "Charging",
+    },
+    "start_preconditioning": {
+        "use_instead_service": "switch.turn_on",
+        "use_instead_entity": "Preconditioning",
+    },
+    "stop_preconditioning": {
+        "use_instead_service": "switch.turn_off",
+        "use_instead_entity": "Preconditioning",
+    },
+}
 
 SUPPORTED_BUTTON_SERVICES = {
     "ALOFF": {"name": "Reset Alarm", "service": "reset_alarm"},
