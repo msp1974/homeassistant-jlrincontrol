@@ -544,10 +544,13 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             vin_list = []
 
             # Log warning if deprecated service call
-            if service.service in DEPRECATED_SERVICES:
+            if service.service in DEPRECATED_SERVICES.keys():
+                deprecated_service = DEPRECATED_SERVICES[service.service]
                 _LOGGER.warning(
-                    "%s service has been deprecated.  Please update to use the new service for this function",
+                    "%s service has been deprecated from v3.0.0. Please use the service %s with entity %s instead.",
                     service.service,
+                    deprecated_service.get("use_instead_service"),
+                    deprecated_service.get("use_instead_entity")
                 )
 
             # Make list of config_entry_ids and vins
