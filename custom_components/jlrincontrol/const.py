@@ -240,11 +240,11 @@ DEPRECATED_SERVICES = {
     },
     "start_vehicle": {
         "use_instead_service": "switch.turn_on",
-        "use_instead_entity": "Climate",
+        "use_instead_entity": "Climate (Engine)",
     },
     "stop_vehicle": {
         "use_instead_service": "switch.turn_off",
-        "use_instead_entity": "Climate",
+        "use_instead_entity": "Climate (Engine)",
     },
     "start_charging": {
         "use_instead_service": "switch.turn_on",
@@ -256,11 +256,11 @@ DEPRECATED_SERVICES = {
     },
     "start_preconditioning": {
         "use_instead_service": "switch.turn_on",
-        "use_instead_entity": "Preconditioning",
+        "use_instead_entity": "Climate (Electric)",
     },
     "stop_preconditioning": {
         "use_instead_service": "switch.turn_off",
-        "use_instead_entity": "Preconditioning",
+        "use_instead_entity": "Climate (Electric)",
     },
 }
 
