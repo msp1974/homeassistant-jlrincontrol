@@ -427,7 +427,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
         # Charging
         vehicle.tracked_status.is_charging = get_value_match(
-            vehicle.status_ev, "EV_IS_CHARGING", "TRUE"
+            vehicle.status_ev, "EV_CHARGING_STATUS", "CHARGING"
         )
 
         # Privacy mode status
