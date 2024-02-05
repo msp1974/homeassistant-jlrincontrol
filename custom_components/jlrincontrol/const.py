@@ -278,7 +278,7 @@ SUPPORTED_SWITCH_SERVICES = {
         "state": "is_charging",
     },
     "ECC": {
-        "name": "Preconditioning",
+        "name": "Climate (Electric)",
         "on_service": "start_preconditioning",
         "off_service": "stop_preconditioning",
         "params": ["pin"],
@@ -302,7 +302,7 @@ SUPPORTED_SWITCH_SERVICES = {
         "state": "privacy_mode_enabled",
     },
     "REON": {
-        "name": "Climate",
+        "name": "Climate (Engine)",
         "on_service": "start_vehicle",
         "off_service": "stop_vehicle",
         "params": ["pin"],
