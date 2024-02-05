@@ -421,13 +421,13 @@ JLR_SERVICES = {
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_CHARGE_LEVEL_SCHEMA"],
     },
     "enable_privacy_mode": {
-        "custom_service": True,
+        "custom_service": False,
         "function_name": "enable_privacy_mode",
         "service_code": "PM",
         "schema": ["SERVICES_BASE_SCHEMA"],
     },
     "disable_privacy_mode": {
-        "custom_service": True,
+        "custom_service": False,
         "function_name": "disable_privacy_mode",
         "service_code": "PM",
         "schema": ["SERVICES_BASE_SCHEMA"],
