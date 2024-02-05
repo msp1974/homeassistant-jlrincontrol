@@ -192,13 +192,13 @@ set_one_off_max_charge_level:
           max: 100
           step: 1
           unit_of_measurement: "%"
-enable_journey_recording:
+disable_privacy_mode:
   description: "Enable journey recording"
   target:
     entity:
       integration: jlrincontrol
       domain: sensor
-disable_journey_recording:
+enable_privacy_mode:
   description: "Disable journey recording"
   target:
     entity:
