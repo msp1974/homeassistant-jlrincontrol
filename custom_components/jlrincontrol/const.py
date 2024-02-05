@@ -295,9 +295,9 @@ SUPPORTED_SWITCH_SERVICES = {
         "attrs": {"expires": "guardian_mode.expiry"},
     },
     "PM": {
-        "name": "Privacy Mode",
-        "on_service": "enable_privacy_mode",
-        "off_service": "disable_privacy_mode",
+        "name": "Journey Recording",
+        "on_service": "disable_privacy_mode",
+        "off_service": "enable_privacy_mode",
         "params": ["pin"],
         "state": "privacy_mode_enabled",
     },

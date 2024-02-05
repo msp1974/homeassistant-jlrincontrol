@@ -431,7 +431,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         )
 
         # Privacy mode status
-        vehicle.tracked_status.privacy_mode_enabled = get_value_match(
+        vehicle.tracked_status.privacy_mode_enabled = not get_value_match(
             vehicle.status, "PRIVACY_SWITCH", "TRUE"
         )
 
