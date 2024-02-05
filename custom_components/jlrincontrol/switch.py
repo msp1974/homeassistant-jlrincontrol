@@ -84,6 +84,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
         result = await jlr_service.async_call_service(**params)
         if result:
             self._attr_is_on = True
+
         await self.async_force_update(delay=2)
 
     async def async_turn_off(self, **kwargs):
@@ -101,6 +102,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
         result = await jlr_service.async_call_service(**params)
         if result:
             self._attr_is_on = False
+
         await self.async_force_update(delay=2)
 
     @property
@@ -131,7 +133,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
         else:
             add_params = service.get("add_off_params", [])
 
-        _LOGGER.debug("Service required params - %s", add_params)
+        _LOGGER.debug("Service required additional params - %s", add_params)
 
         if add_params:
             params.extend(add_params)
@@ -147,26 +149,15 @@ class JLRSwitch(JLREntity, SwitchEntity):
         if "target_temp" in params:
             result["target_temp"] = self.coordinator.default_climate_temp
 
-        if "expiration" in params:
-            if is_turn_on:
-                result["expiration_time"] = int(
-                    (
-                        datetime.now(UTC)
-                        + timedelta(hours=self.coordinator.default_service_duration)
-                    ).timestamp()
-                    * 1000
-                )
-            else:
-                result["expiration_time"] = int(datetime.now(UTC).timestamp() * 1000)
-        if "expiration_formatted" in params:
+        if "expiration_time" in params:
             if is_turn_on:
                 result["expiration_time"] = (
                     datetime.now(UTC)
                     + timedelta(hours=self.coordinator.default_service_duration)
-                ).strftime("%Y-%m-%dT%H:%M:00.000Z")
+                ).strftime("%Y-%m-%d %H:%M:00")
             else:
                 result["expiration_time"] = datetime.now(UTC).strftime(
-                    "%Y-%m-%dT%H:%M:00.000Z"
+                    "%Y-%m-%d %H:%M:00"
                 )
 
         return result

@@ -514,9 +514,9 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         try:
             await self.async_get_user_info()
             for vehicle in self.connection.vehicles:
-                await self.async_get_vehicle_status(vehicle)
                 await self.async_get_guardian_mode_status(vehicle)
                 await self.async_get_vehicle_position(vehicle)
+                await self.async_get_vehicle_status(vehicle)
 
                 if self.vehicles[vehicle.vin].status.get("PRIVACY_SWITCH") == "FALSE":
                     await self.async_get_vehicle_last_trip_data(vehicle)
@@ -550,7 +550,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                     "%s service has been deprecated from v3.0.0. Please use the service %s with entity %s instead.",
                     service.service,
                     deprecated_service.get("use_instead_service"),
-                    deprecated_service.get("use_instead_entity")
+                    deprecated_service.get("use_instead_entity"),
                 )
 
             # Make list of config_entry_ids and vins

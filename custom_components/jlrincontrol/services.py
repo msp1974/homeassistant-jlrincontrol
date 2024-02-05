@@ -135,7 +135,7 @@ class JLRService:
                 # monitor service for success / failure
                 if not status:
                     return True
-                if status.get("error"):
+                if status.get("error") or status.get("errorLabel"):
                     return False
                 success = await self.async_monitor_service_call(
                     status.get("customerServiceId")
@@ -191,7 +191,9 @@ class JLRService:
                 return True
             else:
                 # Anonymise data in log output
-                service_status["vehicleId"] = field_mask(service_status["vehicleId"], 3, 2)
+                service_status["vehicleId"] = field_mask(
+                    service_status["vehicleId"], 3, 2
+                )
                 service_status["customerServiceId"] = field_mask(
                     service_status["customerServiceId"], 11, 9
                 )
