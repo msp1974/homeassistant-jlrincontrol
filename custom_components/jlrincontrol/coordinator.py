@@ -88,7 +88,8 @@ class GuardianData:
 class TrackedStatuses:
     """Holds tracked status info."""
 
-    climate_active: bool = False
+    climate_engine_active: bool = False
+    climate_electric_active: bool = False
     guardian_mode_active: bool = False
     is_charging: bool = False
     privacy_mode_enabled: bool = False
@@ -410,15 +411,32 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
     def get_tracked_statuses(self, vehicle: VehicleData) -> None:
         """Populate tracked status items in vehicle data."""
 
-        # Climate status - differs for ICE v Electric/Hybrid
-        if vehicle.engine_type == "ICE":
-            vehicle.tracked_status.climate_active = get_value_match(
+        # Climate status - differs for ICE, Hybrid and Electric
+        # ICE has one way to activate Climate
+        if vehicle.engine_type == FUEL_TYPE_ICE:
+            climate_engine_activated = get_value_match(
                 vehicle.status, "VEHICLE_STATE_TYPE", "ENGINE_ON_REMOTE_START"
             )
-        else:
-            vehicle.tracked_status.climate_active = get_value_match(
-                vehicle.status_ev, "EV_PRECONDITION_OPERATING_STATUS", "ON"
+            vehicle.tracked_status.climate_engine_active = climate_engine_activated
+        # Hybrid has 2 ways to activate Climate: 1) Climate (electric) and 2) Climate (engine)
+        # Climate (electric) has 3 climate states: OFF, PRECLIM (heating) and STARTUP (starting)
+        elif vehicle.engine_type == FUEL_TYPE_HYBRID:
+            climate_engine_activated = get_value_match(
+                vehicle.status, "VEHICLE_STATE_TYPE", "ENGINE_ON_REMOTE_START"
             )
+            vehicle.tracked_status.climate_engine_active = climate_engine_activated
+
+            climate_electric_deactivated = get_value_match(
+                vehicle.status_ev, "EV_PRECONDITION_OPERATING_STATUS", "OFF"
+            )
+            vehicle.tracked_status.climate_electric_active = not climate_electric_deactivated
+        # Electric has one way to activate Climate
+        # It has 3 climate states: OFF, PRECLIM (heating) and STARTUP (starting)
+        else:
+            climate_electric_deactivated = get_value_match(
+                vehicle.status_ev, "EV_PRECONDITION_OPERATING_STATUS", "OFF"
+            )
+            vehicle.tracked_status.climate_electric_active = not climate_electric_deactivated
 
         # Guardian mode
         vehicle.tracked_status.guardian_mode_active = get_value_match(
