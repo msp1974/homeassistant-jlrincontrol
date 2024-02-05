@@ -420,15 +420,15 @@ JLR_SERVICES = {
         "service_code": "CP",
         "schema": ["SERVICES_BASE_SCHEMA", "SERVICES_CHARGE_LEVEL_SCHEMA"],
     },
-    "enable_journey_recording": {
+    "enable_privacy_mode": {
         "custom_service": True,
-        "function_name": "disable_privacy_mode",
+        "function_name": "enable_privacy_mode",
         "service_code": "PM",
         "schema": ["SERVICES_BASE_SCHEMA"],
     },
-    "disable_journey_recording": {
+    "disable_privacy_mode": {
         "custom_service": True,
-        "function_name": "enable_privacy_mode",
+        "function_name": "disable_privacy_mode",
         "service_code": "PM",
         "schema": ["SERVICES_BASE_SCHEMA"],
     },
