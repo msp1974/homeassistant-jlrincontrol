@@ -213,7 +213,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         self.default_service_duration = config_entry.options.get(
             CONF_DEFAULT_SERVICE_DURATION, 24
         )
-        self.update_interval = config_entry.options.get(
+        self.scan_interval = config_entry.options.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
         self.health_update_interval = config_entry.options.get(
@@ -225,7 +225,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=f"{DOMAIN} ({config_entry.unique_id})",
             update_method=self.async_update_data,
-            update_interval=timedelta(minutes=self.update_interval),
+            update_interval=timedelta(minutes=self.scan_interval),
         )
 
     @callback
