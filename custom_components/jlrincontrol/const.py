@@ -283,7 +283,7 @@ SUPPORTED_SWITCH_SERVICES = {
         "off_service": "stop_preconditioning",
         "params": ["pin"],
         "add_on_params": ["target_temp"],
-        "state": "climate_active",
+        "state": "climate_electric_active",
     },
     "GMCC": {
         "name": "Guardian Mode",
@@ -307,7 +307,7 @@ SUPPORTED_SWITCH_SERVICES = {
         "off_service": "stop_vehicle",
         "params": ["pin"],
         "add_on_params": ["target_value"],
-        "state": "climate_active",
+        "state": "climate_engine_active",
     },
     "SM": {
         "name": "Service Mode",
