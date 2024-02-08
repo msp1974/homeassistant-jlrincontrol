@@ -275,6 +275,7 @@ SUPPORTED_SWITCH_SERVICES = {
         "name": "Charging",
         "on_service": "start_charging",
         "off_service": "stop_charging",
+        "params": ["pin"],
         "state": "is_charging",
     },
     "ECC": {

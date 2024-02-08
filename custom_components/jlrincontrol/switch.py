@@ -122,7 +122,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
         return attrs
 
     def get_service_params(self, is_turn_on: bool):
-        """Get arams required for service call."""
+        """Get params required for service call."""
         service = SUPPORTED_SWITCH_SERVICES[self.service_code]
         params = list(service.get("params"))
 
