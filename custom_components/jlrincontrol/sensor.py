@@ -27,7 +27,7 @@ from .const import (
     SERVICE_STATUS_OK,
 )
 from .entity import JLREntity
-from .util import to_local_datetime
+from .util import get_attribute, to_local_datetime
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -607,9 +607,19 @@ class JLRVehicleClimateSensor(JLREntity):
     @property
     def state(self):
         """Return sensor state."""
-        return str(
-            self.vehicle.status.get("CLIMATE_STATUS_OPERATING_STATUS", "Unknown")
-        ).title()
+        climate_engine_activated: bool | None = get_attribute(self.vehicle.tracked_status, "climate_engine_active")
+        climate_status_operating_status: str = (
+            str(self.vehicle.status.get("CLIMATE_STATUS_OPERATING_STATUS", "Unknown"))
+        )
+
+        # Since attr CLIMATE_STATUS_OPERATING_STATUS only updates when Climate (electric) is activated,
+        # we must hardcode sensor state when Climate (engine) is activated
+        if climate_engine_activated:
+            state = "On"
+        else:
+            state = climate_status_operating_status
+
+        return state.title()
 
     @property
     def extra_state_attributes(self):
