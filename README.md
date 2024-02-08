@@ -144,6 +144,14 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 
 ## Change Log
 
+### V3.0.0beta4
+* Fixed: last contacted attributes missing in VehicleSensor - issue [#120](https://github.com/msp1974/homeassistant-jlrincontrol/issues/120)
+* Fixed: state of climate switch not set to ON when enabled - issues [#125](https://github.com/msp1974/homeassistant-jlrincontrol/issues/125) and [#127](https://github.com/msp1974/homeassistant-jlrincontrol/issues/127)
+* Fixed: exception thrown in error handling of failed service call - issue [#122](https://github.com/msp1974/homeassistant-jlrincontrol/issues/122)
+* Fixed: integration fails at startup after upgrade to HA 2024.2.0 - issue [#130](https://github.com/msp1974/homeassistant-jlrincontrol/issues/130)
+* Added: include which service to use instead of deprecated in warn msg - issue [#123](https://github.com/msp1974/homeassistant-jlrincontrol/issues/123)
+* Added: replace generic icon (mdi:fire) for switches and buttons
+
 ### v3.0.0beta3
 
 - Fixed error if target climate temp not available - issue [#116](https://github.com/msp1974/homeassistant-jlrincontrol/issues/116)
