@@ -49,7 +49,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
             SUPPORTED_SWITCH_SERVICES[service_code].get("name"),
         )
         self.service_code = service_code
-        self._icon = "mdi:fire"
+        self._icon = SUPPORTED_SWITCH_SERVICES[service_code].get("icon")
 
     @callback
     def _handle_coordinator_update(self) -> None:

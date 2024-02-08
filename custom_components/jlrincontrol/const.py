@@ -265,9 +265,21 @@ DEPRECATED_SERVICES = {
 }
 
 SUPPORTED_BUTTON_SERVICES = {
-    "ALOFF": {"name": "Reset Alarm", "service": "reset_alarm"},
-    "HBLF": {"name": "Honk Blink", "service": "honk_blink"},
-    "VHS": {"name": "Update From Vehicle", "service": "update_health_status"},
+    "ALOFF": {
+        "name": "Reset Alarm",
+        "service": "reset_alarm",
+        "icon": "mdi:alarm-light-off",
+    },
+    "HBLF": {
+        "name": "Honk Blink",
+        "service": "honk_blink",
+        "icon": "mdi:car-light-high",
+    },
+    "VHS": {
+        "name": "Update From Vehicle",
+        "service": "update_health_status",
+        "icon": "mdi:update",
+    },
 }
 
 SUPPORTED_SWITCH_SERVICES = {
@@ -276,6 +288,7 @@ SUPPORTED_SWITCH_SERVICES = {
         "on_service": "start_charging",
         "off_service": "stop_charging",
         "params": ["pin"],
+        "icon": "mdi:car-electric",
         "state": "is_charging",
     },
     "ECC": {
@@ -283,6 +296,7 @@ SUPPORTED_SWITCH_SERVICES = {
         "on_service": "start_preconditioning",
         "off_service": "stop_preconditioning",
         "params": ["pin"],
+        "icon": "mdi:air-conditioner",
         "add_on_params": ["target_temp"],
         "state": "climate_electric_active",
     },
@@ -291,6 +305,7 @@ SUPPORTED_SWITCH_SERVICES = {
         "on_service": "enable_guardian_mode",
         "off_service": "disable_guardian_mode",
         "params": ["pin"],
+        "icon": "mdi:shield-car",
         "add_on_params": ["expiration_time"],
         "state": "guardian_mode_active",
         "attrs": {"expires": "guardian_mode.expiry"},
@@ -300,6 +315,7 @@ SUPPORTED_SWITCH_SERVICES = {
         "on_service": "disable_privacy_mode",
         "off_service": "enable_privacy_mode",
         "params": ["pin"],
+        "icon": "mdi:transit-connection-variant",
         "state": "privacy_mode_enabled",
     },
     "REON": {
@@ -307,6 +323,7 @@ SUPPORTED_SWITCH_SERVICES = {
         "on_service": "start_vehicle",
         "off_service": "stop_vehicle",
         "params": ["pin"],
+        "icon": "mdi:air-conditioner",
         "add_on_params": ["target_value"],
         "state": "climate_engine_active",
     },
@@ -315,6 +332,7 @@ SUPPORTED_SWITCH_SERVICES = {
         "on_service": "enable_service_mode",
         "off_service": "disable_service_mode",
         "params": ["pin", "expiration_time"],
+        "icon": "mdi:car-wrench",
         "state": "service_mode_enabled",
     },
     "TM": {
@@ -322,6 +340,7 @@ SUPPORTED_SWITCH_SERVICES = {
         "on_service": "enable_transport_mode",
         "off_service": "disable_transport_mode",
         "params": ["pin", "expiration_time"],
+        "icon": "mdi:train-car-flatbed-car",
         "state": "transport_mode_enabled",
     },
 }

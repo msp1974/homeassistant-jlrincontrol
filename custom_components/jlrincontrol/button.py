@@ -50,7 +50,7 @@ class JLRButton(JLREntity, ButtonEntity):
             SUPPORTED_BUTTON_SERVICES[service_code].get("name"),
         )
         self.service_code = service_code
-        self._icon = "mdi:fire"
+        self._icon = SUPPORTED_BUTTON_SERVICES[service_code].get("icon")
 
     async def async_press(self):
         """Button press function."""
