@@ -91,9 +91,13 @@ class JLRVehicleAllDataSensor(JLREntity):
     def state(self):
         """Return sensor state."""
         if self.vehicle.last_updated:
-            last_contacted = to_local_datetime(self.vehicle.last_updated)
-            return dt_util.get_age(last_contacted) + " ago"
-        return "Unknown"
+            return self.vehicle.last_updated
+        return None
+
+    @property
+    def device_class(self):
+        """Return the class of the sensor."""
+        return SensorDeviceClass.TIMESTAMP
 
     @property
     def extra_state_attributes(self):
