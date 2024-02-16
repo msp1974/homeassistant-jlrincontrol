@@ -216,7 +216,7 @@ async def async_update_device_registry(hass: HomeAssistant, config_entry: Config
             manufacturer=data.vehicles[vin].attributes.get("vehicleBrand"),
             name=data.vehicles[vin].attributes.get("nickname"),
             model=data.vehicles[vin].attributes.get("vehicleType"),
-            sw_version=data.vehicles[vin].status.get("TU_STATUS_SW_VERSION_MAIN"),
+            sw_version=data.vehicles[vin].status.core["TU_STATUS_SW_VERSION_MAIN"],
         )
 
 

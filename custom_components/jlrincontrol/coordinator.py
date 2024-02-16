@@ -5,7 +5,7 @@ import json
 import logging
 from urllib.error import HTTPError
 
-import jlrpy
+from aiojlrpy import Connection, Vehicle, VehicleStatus, StatusMessage
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -102,7 +102,7 @@ class VehicleData:
     """Hold vehicle data."""
 
     vin: str
-    api: jlrpy.Vehicle
+    api: Vehicle
     name: str = ""
     engine_type: str = "Unknown"
     fuel: str = "Unknown"
@@ -110,8 +110,7 @@ class VehicleData:
     position: dict = field(default_factory=dict)
     attributes: dict = field(default_factory=dict)
     supported_services: list = field(default_factory=list)
-    status: dict = field(default_factory=dict)
-    status_ev: dict = field(default_factory=dict)
+    status: VehicleStatus = field(default_factory=VehicleStatus)
     guardian_mode: dict = field(default_factory=dict)
     tracked_status: TrackedStatuses = field(default_factory=TrackedStatuses)
     last_trip: dict = field(default_factory=dict)
@@ -135,7 +134,7 @@ class JLRIncontrolHealthUpdateCoordinator(DataUpdateCoordinator):
         self.hass = hass
         self.coordinator = coordinator
         self.config_entry = config_entry
-        self.connection: jlrpy.Connection = coordinator.connection
+        self.connection: Connection = coordinator.connection
         self.health_update_interval = config_entry.options.get(
             CONF_HEALTH_UPDATE_INTERVAL, 0
         )
@@ -194,7 +193,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
         self.hass = hass
         self.config_entry = config_entry
-        self.connection: jlrpy.Connection = None
+        self.connection: Connection
         self.user: UserData
         self.email = config_entry.data.get(CONF_USERNAME)
         self.password = config_entry.data.get(CONF_PASSWORD)
@@ -229,24 +228,19 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=self.scan_interval),
         )
 
-    @callback
-    def refresh(self):
-        """Non async data update."""
-        self.hass.loop.call_soon_threadsafe(self.async_update_data)
-
     async def async_connect(self) -> bool:
         """Connnect to api."""
         _LOGGER.debug("Initialising JLR InControl v%s", VERSION)
         _LOGGER.debug("Creating connection to JLR InControl API")
         try:
-            self.connection = await self.hass.async_add_executor_job(
-                jlrpy.Connection,
+            self.connection = Connection(
                 self.email,
                 self.password,
                 self.device_id,
                 "",
                 self.use_china_servers,
             )
+            await self.connection.connect()
             await self.async_get_user_info()
             await self.async_get_vehicles()
             _LOGGER.debug("Connected to API")
@@ -254,14 +248,14 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             for vehicle in self.connection.vehicles:
                 await self.async_get_vehicle_attributes(vehicle)
 
-        except HTTPError as ex:
+        except Exception as ex:
             _LOGGER.warning("Error connecting to JLRInControl.  Error is %s", ex)
             return False
         return True
 
     async def async_get_user_info(self) -> None:
         """Get user info."""
-        user = await self.hass.async_add_executor_job(self.connection.get_user_info)
+        user = await self.connection.get_user_info()
         _LOGGER.debug("USERINFO: %s", user)
         user = user.get("contact")
 
@@ -312,16 +306,15 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
     async def async_get_vehicles(self) -> None:
         """Get list of vehicles."""
         if len(self.connection.vehicles) > 0:
-            _LOGGER.debug("Vehicles: %s", json.dumps(self.connection.vehicles))
             for vehicle in self.connection.vehicles:
-                vehicle_data = VehicleData(vin=vehicle.vin, api=vehicle)
-                self.vehicles[vehicle.vin] = vehicle_data
+                _LOGGER.debug("Vehicle: %s", vehicle.vin)
+                self.vehicles[vehicle.vin] = VehicleData(vin=vehicle.vin, api=vehicle)
         else:
             _LOGGER.debug("No vehicles found in this account")
 
-    async def async_get_vehicle_attributes(self, vehicle: jlrpy.Vehicle) -> None:
+    async def async_get_vehicle_attributes(self, vehicle: Vehicle) -> None:
         """Get vehicle attributes."""
-        attributes = await self.hass.async_add_executor_job(vehicle.get_attributes)
+        attributes = await vehicle.get_attributes()
 
         # Remove capabilities data
         del attributes["capabilities"]
@@ -334,19 +327,22 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 "Retrieved attribute data for %s",
                 field_mask(vehicle.vin, 3, 2),
             )
+            _LOGGER.debug(attributes)
             self.vehicles[vehicle.vin].attributes = attributes
             self.vehicles[vehicle.vin].fuel = attributes.get("fuelType")
-            self.vehicles[vehicle.vin].name = self.vehicles[vehicle.vin].attributes.get(
-                "nickname"
-            )
+            self.vehicles[vehicle.vin].name = attributes.get("nickname")
             self.get_vehicle_engine_type(self.vehicles[vehicle.vin])
 
             # Set supported services
+
             self.vehicles[vehicle.vin].supported_services = [
                 service.get("serviceType")
-                for service in attributes.get("availableServices")
+                for service in attributes["availableServices"]
                 if service.get("vehicleCapable") and service.get("serviceEnabled")
             ]
+            _LOGGER.debug(
+                "SERVINFO: %s ", self.vehicles[vehicle.vin].supported_services
+            )
 
             # Add privacy mode, service mode and transport mode support
             self.vehicles[vehicle.vin].supported_services.extend(["PM", "SM", "TM"])
@@ -363,32 +359,14 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 field_mask(vehicle.vin, 3, 2),
             )
 
-    async def async_get_vehicle_status(self, vehicle: jlrpy.Vehicle) -> None:
+    async def async_get_vehicle_status(self, vehicle: Vehicle) -> None:
         """Get vehicle status."""
-        status = await self.hass.async_add_executor_job(vehicle.get_status)
+        status: VehicleStatus = await vehicle.get_status()
+        self.vehicles[vehicle.vin].status = status
 
         if status:
-            _LOGGER.debug(
-                "Retrieved status data for %s",
-                field_mask(vehicle.vin, 3, 2),
-            )
-            if status["vehicleStatus"].get("coreStatus"):
-                status_data = {
-                    d["key"]: d["value"] for d in status["vehicleStatus"]["coreStatus"]
-                }
-                self.vehicles[vehicle.vin].status = dict(sorted(status_data.items()))
-                self.vehicles[vehicle.vin].last_updated = status.get("lastUpdatedTime")
-
-            if status["vehicleStatus"].get("evStatus"):
-                status_ev_data = {
-                    d["key"]: d["value"] for d in status["vehicleStatus"]["evStatus"]
-                }
-                self.vehicles[vehicle.vin].status_ev = dict(
-                    sorted(status_ev_data.items())
-                )
-
+            self.vehicles[vehicle.vin].last_updated = status.last_updated_time
             self.get_tracked_statuses(self.vehicles[vehicle.vin])
-
         else:
             _LOGGER.debug(
                 "Status data is empty for %s",
@@ -398,9 +376,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         # Get climate temp preference
         # TODO: Check if different for EV
         try:
-            climate_temp_data = await self.hass.async_add_executor_job(
-                vehicle.get_rcc_target_value
-            )
+            climate_temp_data = await vehicle.get_rcc_target_value()
             _LOGGER.debug("CLIMATE TEMP: %s", climate_temp_data)
             temp = int(float(climate_temp_data.get("value", "42"))) / 2
             self.vehicles[vehicle.vin].target_climate_temp = temp
@@ -413,15 +389,17 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
         # Climate (engine) status - available for engine types ICE and Hybrid
         vehicle.tracked_status.climate_engine_active = get_value_match(
-            vehicle.status, "VEHICLE_STATE_TYPE", "ENGINE_ON_REMOTE_START"
+            vehicle.status.core, "VEHICLE_STATE_TYPE", "ENGINE_ON_REMOTE_START"
         )
 
         # Climate (electric) status - available for engine types Electric and Hybrid
         # EV_PRECONDITION_OPERATING_STATUS has 3 climate states: OFF, PRECLIM (heating) and STARTUP (starting)
         climate_electric_deactivated = get_value_match(
-            vehicle.status_ev, "EV_PRECONDITION_OPERATING_STATUS", "OFF"
+            vehicle.status.ev, "EV_PRECONDITION_OPERATING_STATUS", "OFF"
         )
-        vehicle.tracked_status.climate_electric_active = not climate_electric_deactivated
+        vehicle.tracked_status.climate_electric_active = (
+            not climate_electric_deactivated
+        )
 
         # Guardian mode
         vehicle.tracked_status.guardian_mode_active = get_value_match(
@@ -430,22 +408,22 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
         # Charging
         vehicle.tracked_status.is_charging = get_value_match(
-            vehicle.status_ev, "EV_CHARGING_STATUS", "CHARGING"
+            vehicle.status.ev, "EV_CHARGING_STATUS", "CHARGING"
         )
 
         # Privacy mode status
         vehicle.tracked_status.privacy_mode_enabled = not get_value_match(
-            vehicle.status, "PRIVACY_SWITCH", "TRUE"
+            vehicle.status.core, "PRIVACY_SWITCH", "TRUE"
         )
 
         # Service mode
         vehicle.tracked_status.service_mode_enabled = get_is_date_active(
-            vehicle.status, "SERVICE_MODE_STOP"
+            vehicle.status.core, "SERVICE_MODE_STOP"
         )
 
         # Transport mode
         vehicle.tracked_status.transport_mode_enabled = get_is_date_active(
-            vehicle.status, "TRANSPORT_MODE_STOP"
+            vehicle.status.core, "TRANSPORT_MODE_STOP"
         )
 
     def get_vehicle_engine_type(self, vehicle: VehicleData) -> None:
@@ -463,9 +441,9 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         else:
             self.vehicles[vehicle.vin].engine_type = FUEL_TYPE_ICE
 
-    async def async_get_vehicle_position(self, vehicle: jlrpy.Vehicle) -> None:
+    async def async_get_vehicle_position(self, vehicle: Vehicle) -> None:
         """Get vehicle position data."""
-        position = await self.hass.async_add_executor_job(vehicle.get_position)
+        position = await vehicle.get_position()
 
         if position:
             self.vehicles[vehicle.vin].position = position
@@ -480,25 +458,23 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 self.vehicles[vehicle.vin].name,
             )
 
-    async def async_get_guardian_mode_status(self, vehicle: jlrpy.Vehicle) -> None:
+    async def async_get_guardian_mode_status(self, vehicle: Vehicle) -> None:
         """Get guardian mode status."""
         if "GMCC" in self.vehicles[vehicle.vin].supported_services:
             try:
                 self.vehicles[
                     vehicle.vin
-                ].guardian_mode = await self.hass.async_add_executor_job(
-                    vehicle.get_guardian_mode_status
-                )
+                ].guardian_mode = await vehicle.get_guardian_mode_status()
             except HTTPError:
                 # If not supported
                 self.vehicles[vehicle.vin].guardian_mode = GuardianData(
                     capable=False, active=False, expiry="0"
                 )
 
-    async def async_get_vehicle_last_trip_data(self, vehicle: jlrpy.Vehicle) -> None:
+    async def async_get_vehicle_last_trip_data(self, vehicle: Vehicle) -> None:
         """Get vehicle trip data."""
 
-        trips = await self.hass.async_add_executor_job(vehicle.get_trips, 1)
+        trips = await vehicle.get_trips(1)
         if trips and trips.get("trips"):
             self.vehicles[vehicle.vin].last_trip = trips.get("trips")[0]
             _LOGGER.debug(
@@ -521,7 +497,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 await self.async_get_vehicle_position(vehicle)
                 await self.async_get_vehicle_status(vehicle)
 
-                if self.vehicles[vehicle.vin].status.get("PRIVACY_SWITCH") == "FALSE":
+                if self.vehicles[vehicle.vin].status.core["PRIVACY_SWITCH"] == "FALSE":
                     await self.async_get_vehicle_last_trip_data(vehicle)
                 else:
                     self.vehicles[vehicle.vin].last_trip = None

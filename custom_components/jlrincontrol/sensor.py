@@ -118,18 +118,10 @@ class JLRVehicleAllDataSensor(JLREntity):
         attrs["attributes"] = dict(sorted(attributes.items()))
 
         # Vehicle Status
-        status = {}
-        for key, value in self.vehicle.status.copy().items():
-            key = key[0].lower() + key.title().replace("_", "")[1:]
-            status[key] = value
-        attrs["core status"] = dict(sorted(status.items()))
+        attrs["core status"] = self.vehicle.status.core
 
         if self.vehicle.engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
-            status = {}
-            for key, value in self.vehicle.status_ev.copy().items():
-                key = key[0].lower() + key.title().replace("_", "")[1:]
-                status[key] = value
-            attrs["ev status"] = dict(sorted(status.items()))
+            attrs["ev status"] = self.vehicle.status.ev
 
         # Vehicle Position
         attrs["position"] = dict(sorted(self.vehicle.position.items()))
@@ -162,14 +154,14 @@ class JLRVehicleSensor(JLREntity):
                 attrs[key.title()] = attributes.get(value)
 
         attrs["Odometer"] = (
-            int(int(self.vehicle.status.get("ODOMETER_METER")) / 1000)
+            int(int(self.vehicle.status.core.get("ODOMETER_METER")) / 1000)
             if self.coordinator.user.user_preferences.distance
             == UnitOfLength.KILOMETERS
-            else int(self.vehicle.status.get("ODOMETER_MILES"))
+            else int(self.vehicle.status.core.get("ODOMETER_MILES"))
         )
 
         if self.vehicle.last_updated:
-            last_contacted = to_local_datetime(self.vehicle.last_updated)
+            last_contacted = self.vehicle.last_updated
             attrs["Last Contacted"] = last_contacted
             attrs["Last Contacted Age"] = dt_util.get_age(last_contacted) + " ago"
         return attrs
@@ -188,7 +180,7 @@ class JLRVehicleTyreSensor(JLREntity):
         """Return sensor state."""
         # Convert to list of values from dict
         if all(
-            self.vehicle.status.get(value) == "NORMAL"
+            self.vehicle.status.core.get(value) == "NORMAL"
             for key, value in DATA_ATTRS_TYRE_STATUS.items()
         ):
             return "Ok"
@@ -198,7 +190,7 @@ class JLRVehicleTyreSensor(JLREntity):
     @property
     def extra_state_attributes(self):
         """Return attributes."""
-        status = self.vehicle.status
+        status = self.vehicle.status.core
         attrs = {}
 
         # Statuses
@@ -239,7 +231,7 @@ class JLRVehicleWindowSensor(JLREntity):
     def state(self):
         """Return sensor state."""
         if all(
-            self.vehicle.status.get(v) in ["CLOSED", "FALSE", "UNUSED"]
+            self.vehicle.status.core[v] in ["CLOSED", "FALSE", "UNUSED"]
             for k, v in DATA_ATTRS_WINDOW_STATUS.items()
         ):
             return "Closed"
@@ -249,7 +241,7 @@ class JLRVehicleWindowSensor(JLREntity):
     @property
     def extra_state_attributes(self):
         """Return attributes."""
-        status = self.vehicle.status
+        status = self.vehicle.status.core
         attrs = {}
         for key, value in DATA_ATTRS_WINDOW_STATUS.items():
             # Add sunroof status if applicable
@@ -257,7 +249,7 @@ class JLRVehicleWindowSensor(JLREntity):
                 if self.vehicle.attributes.get("roofType") == "SUNROOF":
                     attrs[key.title()] = (
                         "Open"
-                        if self.vehicle.status.get("IS_SUNROOF_OPEN") == "TRUE"
+                        if self.vehicle.status.core.get("IS_SUNROOF_OPEN") == "TRUE"
                         else "Closed"
                     )
             else:
@@ -277,7 +269,7 @@ class JLRVehicleAlarmSensor(JLREntity):
     @property
     def state(self):
         """Return sensor state."""
-        status = self.vehicle.status.get("THEFT_ALARM_STATUS")
+        status = self.vehicle.status.core.get("THEFT_ALARM_STATUS")
         if status:
             status = status.replace("ALARM_", "")
             return status.replace("_", "").title()
@@ -297,8 +289,8 @@ class JLRVehicleServiceSensor(JLREntity):
     def state(self):
         """Return sensor state."""
         if all(
-            self.vehicle.status.get(value) in SERVICE_STATUS_OK
-            or self.vehicle.status.get(value) is None
+            self.vehicle.status.core.get(value) in SERVICE_STATUS_OK
+            or self.vehicle.status.core.get(value) is None
             for key, value in DATA_ATTRS_SERVICE_STATUS.items()
         ):
             return "Ok"
@@ -308,7 +300,7 @@ class JLRVehicleServiceSensor(JLREntity):
     @property
     def extra_state_attributes(self):
         """Return sensor attributes."""
-        status = self.vehicle.status
+        status = self.vehicle.status.core
         attrs = {}
         for key, value in DATA_ATTRS_SERVICE_STATUS.items():
             if status.get(value):
@@ -356,20 +348,20 @@ class JLRVehicleRangeSensor(JLREntity):
         # Has battery
         if self.vehicle.engine_type == FUEL_TYPE_BATTERY:
             return (
-                self.vehicle.status_ev.get("EV_RANGE_ON_BATTERY_KM", "0")
+                self.vehicle.status.ev.get("EV_RANGE_ON_BATTERY_KM", "0")
                 if self._units == UnitOfLength.KILOMETERS
-                else self.vehicle.status_ev.get("EV_RANGE_ON_BATTERY_MILES", "0")
+                else self.vehicle.status.ev.get("EV_RANGE_ON_BATTERY_MILES", "0")
             )
         if self.vehicle.engine_type == FUEL_TYPE_HYBRID:
             return (
-                self.vehicle.status_ev.get("EV_PHEV_RANGE_COMBINED_KM", "0")
+                self.vehicle.status.ev.get("EV_PHEV_RANGE_COMBINED_KM", "0")
                 if self._units == UnitOfLength.KILOMETERS
-                else self.vehicle.status_ev.get("EV_PHEV_RANGE_COMBINED_MILES", "0")
+                else self.vehicle.status.ev.get("EV_PHEV_RANGE_COMBINED_MILES", "0")
             )
         # Fuel only
         return round(
             unit_conversion.DistanceConverter.convert(
-                int(self.vehicle.status.get("DISTANCE_TO_EMPTY_FUEL")),
+                int(self.vehicle.status.core.get("DISTANCE_TO_EMPTY_FUEL")),
                 UnitOfLength.KILOMETERS,
                 self._units,
             )
@@ -388,27 +380,27 @@ class JLRVehicleRangeSensor(JLREntity):
 
         if self.vehicle.engine_type in [FUEL_TYPE_ICE, FUEL_TYPE_HYBRID]:
             attrs["Fuel Level"] = (
-                self.vehicle.status.get("FUEL_LEVEL_PERC", "0") + PERCENTAGE
+                self.vehicle.status.core.get("FUEL_LEVEL_PERC", "0") + PERCENTAGE
             )
 
         if self.vehicle.engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
             attrs["Battery Level"] = (
-                self.vehicle.status_ev.get("EV_STATE_OF_CHARGE", "0") + PERCENTAGE
+                self.vehicle.status.ev.get("EV_STATE_OF_CHARGE", "0") + PERCENTAGE
             )
         # If hybrid
         if self.vehicle.engine_type == FUEL_TYPE_HYBRID:
             attrs["Fuel Range"] = round(
                 unit_conversion.DistanceConverter.convert(
-                    int(self.vehicle.status.get("DISTANCE_TO_EMPTY_FUEL")),
+                    int(self.vehicle.status.core.get("DISTANCE_TO_EMPTY_FUEL")),
                     UnitOfLength.KILOMETERS,
                     self._units,
                 )
             )
 
             attrs["Battery Range"] = (
-                self.vehicle.status_ev.get("EV_RANGE_ON_BATTERY_KM", "0")
+                self.vehicle.status.ev.get("EV_RANGE_ON_BATTERY_KM", "0")
                 if self._units == UnitOfLength.KILOMETERS
-                else self.vehicle.status_ev.get("EV_RANGE_ON_BATTERY_MILES", "0")
+                else self.vehicle.status.ev.get("EV_RANGE_ON_BATTERY_MILES", "0")
             )
 
         return attrs
@@ -426,7 +418,7 @@ class JLREVBatterySensor(JLREntity):
     @property
     def state(self):
         """Return sensor state."""
-        return self.vehicle.status_ev.get("EV_STATE_OF_CHARGE", 0)
+        return self.vehicle.status.ev.get("EV_STATE_OF_CHARGE", 0)
 
     @property
     def device_class(self):
@@ -442,7 +434,7 @@ class JLREVBatterySensor(JLREntity):
     def icon(self):
         """Return battery icon."""
         return icon.icon_for_battery_level(
-            int(self.vehicle.status_ev.get("EV_STATE_OF_CHARGE", 0)),
+            int(self.vehicle.status.ev.get("EV_STATE_OF_CHARGE", 0)),
             self._charging_state,
         )
 
@@ -450,12 +442,12 @@ class JLREVBatterySensor(JLREntity):
     def extra_state_attributes(self):
         """Return sensor attributes."""
         attrs = {}
-        status = self.vehicle.status_ev
+        ev_status = self.vehicle.status.ev
 
         # Charging status
         self._charging_state = (
             True
-            if status.get("EV_CHARGING_STATUS")
+            if ev_status.get("EV_CHARGING_STATUS")
             in ["CHARGING", "WAITINGTOCHARGE", "INITIALIZATION"]
             else False
         )
@@ -463,41 +455,43 @@ class JLREVBatterySensor(JLREntity):
 
         # Max SOC Values Set
         if (
-            status.get("EV_ONE_OFF_MAX_SOC_CHARGE_SETTING_CHOICE")
-            and status.get("EV_ONE_OFF_MAX_SOC_CHARGE_SETTING_CHOICE") != "CLEAR"
+            ev_status.get("EV_ONE_OFF_MAX_SOC_CHARGE_SETTING_CHOICE")
+            and ev_status.get("EV_ONE_OFF_MAX_SOC_CHARGE_SETTING_CHOICE") != "CLEAR"
         ):
-            attrs["Max SOC"] = status.get("EV_ONE_OFF_MAX_SOC_CHARGE_SETTING_CHOICE")
+            attrs["Max SOC"] = ev_status.get("EV_ONE_OFF_MAX_SOC_CHARGE_SETTING_CHOICE")
         elif (
-            status.get("EV_PERMANENT_MAX_SOC_CHARGE_SETTING_CHOICE")
-            and status.get("EV_PERMANENT_MAX_SOC_CHARGE_SETTING_CHOICE") != "CLEAR"
+            ev_status.get("EV_PERMANENT_MAX_SOC_CHARGE_SETTING_CHOICE")
+            and ev_status.get("EV_PERMANENT_MAX_SOC_CHARGE_SETTING_CHOICE") != "CLEAR"
         ):
-            attrs["Max SOC"] = status.get("EV_PERMANENT_MAX_SOC_CHARGE_SETTING_CHOICE")
+            attrs["Max SOC"] = ev_status.get(
+                "EV_PERMANENT_MAX_SOC_CHARGE_SETTING_CHOICE"
+            )
 
         attrs["Charging State"] = JLR_CHARGE_STATUS_TO_HA.get(
-            status.get("EV_CHARGING_STATUS"),
-            status.get("EV_CHARGING_STATUS", "Unknown").title(),
+            ev_status.get("EV_CHARGING_STATUS"),
+            ev_status.get("EV_CHARGING_STATUS", "Unknown").title(),
         )
 
         attrs["Charging Method"] = JLR_CHARGE_METHOD_TO_HA.get(
-            status.get("EV_CHARGING_METHOD"),
-            status.get("EV_CHARGING_METHOD", "Unknown").title(),
+            ev_status.get("EV_CHARGING_METHOD"),
+            ev_status.get("EV_CHARGING_METHOD", "Unknown").title(),
         )
 
-        attrs["Minutes to Full Charge"] = status.get(
+        attrs["Minutes to Full Charge"] = ev_status.get(
             "EV_MINUTES_TO_FULLY_CHARGED", "Unknown"
         )
 
-        attrs[f"Charging Rate ({self._units.lower()}/h)"] = status.get(
+        attrs[f"Charging Rate ({self._units.lower()}/h)"] = ev_status.get(
             f"EV_CHARGING_RATE_{self._units}_PER_HOUR", "Unknown"
         )
 
-        attrs["Charging Rate (%/h)"] = status.get(
+        attrs["Charging Rate (%/h)"] = ev_status.get(
             "EV_CHARGING_RATE_SOC_PER_HOUR", "Unknown"
         )
 
         # Last Charge Amount
         attrs["Last Charge Energy (kWh)"] = round(
-            int(status.get("EV_ENERGY_CONSUMED_LAST_CHARGE_KWH", 0)) / 10, 1
+            int(ev_status.get("EV_ENERGY_CONSUMED_LAST_CHARGE_KWH", 0)) / 10, 1
         )
 
         return attrs
@@ -592,7 +586,7 @@ class JLRVehicleStatusSensor(JLREntity):
     @property
     def state(self):
         """Return sensor state."""
-        status = self.vehicle.status.get("VEHICLE_STATE_TYPE")
+        status = self.vehicle.status.core.get("VEHICLE_STATE_TYPE")
 
         if status:
             return status.replace("_", " ").title()
@@ -611,9 +605,11 @@ class JLRVehicleClimateSensor(JLREntity):
     @property
     def state(self):
         """Return sensor state."""
-        climate_engine_activated: bool | None = get_attribute(self.vehicle.tracked_status, "climate_engine_active")
-        climate_status_operating_status: str = (
-            str(self.vehicle.status.get("CLIMATE_STATUS_OPERATING_STATUS", "Unknown"))
+        climate_engine_activated: bool | None = get_attribute(
+            self.vehicle.tracked_status, "climate_engine_active"
+        )
+        climate_status_operating_status: str = str(
+            self.vehicle.status.core.get("CLIMATE_STATUS_OPERATING_STATUS", "Unknown")
         )
 
         # Since attr CLIMATE_STATUS_OPERATING_STATUS only updates when Climate (electric) is activated,
@@ -631,7 +627,7 @@ class JLRVehicleClimateSensor(JLREntity):
         attrs = {}
 
         for name, attr in DATA_ATTRS_CLIMATE.items():
-            if value := self.vehicle.status.get(attr):
+            if value := self.vehicle.status.core.get(attr):
                 attrs[name] = value
 
         #  Add target temp

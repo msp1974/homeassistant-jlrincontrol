@@ -348,7 +348,7 @@ SUPPORTED_SWITCH_SERVICES = {
 JLR_SERVICES = {
     "update_health_status": {
         "custom_service": True,
-        "function_name": "get_health_status",
+        "function_name": "request_vehicle_health_status_update",
         "service_code": "VHS",
         "schema": [],
     },

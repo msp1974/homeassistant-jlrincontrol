@@ -57,16 +57,14 @@ class JLRService:
 
     async def is_service_call_in_progress(self) -> bool:
         """Check if a service call is already in progress."""
-        services = await self.hass.async_add_executor_job(self.vehicle.api.get_services)
+        services = await self.vehicle.api.get_services()
         if services:
             return True
         return False
 
     async def async_get_service_status(self, service_id) -> str:
         """Get status of current service call."""
-        return await self.hass.async_add_executor_job(
-            self.vehicle.api.get_service_status, service_id
-        )
+        return await self.vehicle.api.get_service_status(service_id)
 
     async def validate_service_call(self):
         """Validate service supported."""
@@ -122,9 +120,8 @@ class JLRService:
 
             # Call service
             try:
-                status = await self.hass.async_add_executor_job(
-                    partial(service, **service_kwargs)
-                )
+                status = await service(**service_kwargs)
+
                 _LOGGER.debug(
                     "Service %s called on vehicle %s. %s",
                     self.service_name,

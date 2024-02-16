@@ -3,7 +3,7 @@ import logging
 import urllib
 import uuid
 
-import jlrpy
+from aiojlrpy import Connection
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -52,14 +52,14 @@ async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
     try:
-        connection = await hass.async_add_executor_job(
-            jlrpy.Connection,
+        connection = Connection(
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
             "",
             "",
             data[CONF_USE_CHINA_SERVERS],
         )
+        await connection.connect()
     except urllib.error.HTTPError as ex:
         if ex.code > 400 and ex.code < 500:
             raise InvalidAuth from ex

@@ -66,8 +66,7 @@ class JLRDeviceTracker(JLREntity, TrackerEntity):
         # Only call geocode if position has changed
         if self.has_position_changed():
             try:
-                address = await self.hass.async_add_executor_job(
-                    self.coordinator.connection.reverse_geocode,
+                address = await self.coordinator.connection.reverse_geocode(
                     round(self._position.get("latitude"), 8),
                     round(self._position.get("longitude"), 8),
                 )

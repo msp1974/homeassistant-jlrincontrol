@@ -35,7 +35,7 @@ class JLRLock(JLREntity, LockEntity):
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        return self.vehicle.status.get("DOOR_IS_ALL_DOORS_LOCKED") == "TRUE"
+        return self.vehicle.status.core["DOOR_IS_ALL_DOORS_LOCKED"] == "TRUE"
 
     async def async_lock(self, **kwargs):
         """Lock the car."""
@@ -73,11 +73,11 @@ class JLRLock(JLREntity, LockEntity):
         status = self.vehicle.status
         attrs = {}
         for key, value in DATA_ATTRS_DOOR_STATUS.items():
-            if status.get(value) and status.get(value) != "UNKNOWN":
-                attrs[key.title() + " Status"] = status.get(value).title()
+            if status.core.get(value) and status.core.get(value) != "UNKNOWN":
+                attrs[key.title() + " Status"] = status.core.get(value).title()
 
         for key, value in DATA_ATTRS_DOOR_POSITION.items():
-            if status.get(value) and status.get(value) != "UNKNOWN":
-                attrs[key.title() + " Position"] = status.get(value).title()
+            if status.core.get(value) and status.core.get(value) != "UNKNOWN":
+                attrs[key.title() + " Position"] = status.core.get(value).title()
 
         return attrs
