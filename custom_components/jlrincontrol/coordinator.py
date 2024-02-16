@@ -238,7 +238,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=self.scan_interval),
         )
 
-    async def get_delayed_vehicle_status(self, vehicle: VehicleData, delay: int = 0):
+    async def get_delayed_vehicle_status(self, delay: int = 0):
         """Get vehicle status."""
         await asyncio.sleep(delay)
         _LOGGER.debug("Calling update data caused by message with no VHS\n")
