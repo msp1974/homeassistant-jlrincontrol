@@ -1,11 +1,19 @@
 """Handles updating data from jlrpy."""
+import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import json
 import logging
 from urllib.error import HTTPError
 
-from aiojlrpy import Connection, Vehicle, VehicleStatus, StatusMessage
+from aiojlrpy import (
+    Connection,
+    Vehicle,
+    JLRServices,
+    VehicleStatus,
+    StatusMessage,
+    process_vhs_message,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -220,6 +228,8 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             CONF_HEALTH_UPDATE_INTERVAL
         )
 
+        self.scheduled_update_task: asyncio.Task = None
+
         super().__init__(
             hass,
             _LOGGER,
@@ -227,6 +237,39 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             update_method=self.async_update_data,
             update_interval=timedelta(minutes=self.scan_interval),
         )
+
+    async def get_delayed_vehicle_status(self, vehicle: VehicleData, delay: int = 0):
+        """Get vehicle status."""
+        await asyncio.sleep(delay)
+        _LOGGER.debug("Calling update data caused by message with no VHS\n")
+        await self.async_update_data()
+
+    async def _on_ws_message(self, message: StatusMessage):
+        """Websocket message callback function."""
+        _LOGGER.info(message)
+        if self.vehicles:
+            if message.service == JLRServices.GUARDIAN_MODE:
+                if message.vin:
+                    data = json.loads(message.data.get("b"))
+                    self.vehicles[message.vin].tracked_status.guardian_mode_active = (
+                        True if data["status"] == "ACTIVE" else False
+                    )
+            if message.service == JLRServices.VEHICLE_HEALTH:
+                if message.vin:
+                    json_data = json.loads(message.data.get("b"))
+                    status = process_vhs_message(json_data)
+                    self.vehicles[message.vin].status = status
+                    if self.scheduled_update_task:
+                        self.scheduled_update_task.cancel()
+            if message.service in [
+                JLRServices.REMOTE_DOOR_LOCK,
+                JLRServices.REMOTE_DOOR_UNLOCK,
+            ]:
+                if message.vin:
+                    self.scheduled_update_task = asyncio.create_task(
+                        self.get_delayed_vehicle_status(15)
+                    )
+            self.hass.async_add_executor_job(self.async_update_listeners)
 
     async def async_connect(self) -> bool:
         """Connnect to api."""
@@ -239,6 +282,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 self.device_id,
                 "",
                 self.use_china_servers,
+                self._on_ws_message,
             )
             await self.connection.connect()
             await self.async_get_user_info()

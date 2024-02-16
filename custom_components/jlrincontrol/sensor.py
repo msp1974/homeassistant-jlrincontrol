@@ -269,12 +269,18 @@ class JLRVehicleAlarmSensor(JLREntity):
     @property
     def state(self):
         """Return sensor state."""
-        status = self.vehicle.status.core.get("THEFT_ALARM_STATUS")
-        if status:
-            status = status.replace("ALARM_", "")
-            return status.replace("_", "").title()
-        else:
-            return "Not Supported"
+        # status = self.vehicle.status.core.get("THEFT_ALARM_STATUS")
+        # if status:
+        #    status = status.replace("ALARM_", "")
+        #    return status.replace("_", "").title()
+        # else:
+        #    return "Not Supported"
+        alert = [
+            alert
+            for alert in self.vehicle.status.alerts
+            if alert.name == "ALARM_UNARMED"
+        ]
+        return "Armed" if alert and not alert[0].active else "Unarmed"
 
 
 class JLRVehicleServiceSensor(JLREntity):
