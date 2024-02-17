@@ -256,11 +256,12 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                     )
             if message.service == JLRServices.VEHICLE_HEALTH:
                 if message.vin:
-                    json_data = json.loads(message.data.get("b"))
-                    status = process_vhs_message(json_data)
-                    self.vehicles[message.vin].status = status
-                    if self.scheduled_update_task:
-                        self.scheduled_update_task.cancel()
+                    if data := message.data.get("b"):
+                        json_data = json.loads(message.data.get("b"))
+                        status = process_vhs_message(json_data)
+                        self.vehicles[message.vin].status = status
+                        if self.scheduled_update_task:
+                            self.scheduled_update_task.cancel()
             if message.service in [
                 JLRServices.REMOTE_DOOR_LOCK,
                 JLRServices.REMOTE_DOOR_UNLOCK,
