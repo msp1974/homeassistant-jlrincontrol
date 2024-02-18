@@ -5,12 +5,20 @@ from os.path import exists
 from typing import Any
 
 import aiofiles
+from aiojlrpy import Alert
 
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_alert_by_name(vehicle, alert_name: str) -> Alert | None:
+    """Get vehicle alert by name."""
+    alerts = [alert for alert in vehicle.status.alerts if alert.name == alert_name]
+    if alerts:
+        return alerts[0]
 
 
 def field_mask(str_value, from_start=0, from_end=0):

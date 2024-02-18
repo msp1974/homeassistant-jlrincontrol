@@ -1,4 +1,5 @@
 """Integration constants."""
+from enum import StrEnum
 import logging
 
 from homeassistant.const import (
@@ -66,6 +67,16 @@ FUEL_TYPE_ICE = "ICE"
 FUEL_TYPE_HYBRID = "Hybrid"
 POWERTRAIN_PHEV = "PHEV"
 POWERTRAIN_IC = "INTERNAL COMBUSTION"
+POWERTRAIN_ELECTRIC = "BEV"
+
+
+class PowerTrainType(StrEnum):
+    """Class to hold powertrain types."""
+
+    INTERNAL_COMBUSTION = "ICE"
+    PHEV = "Hybrid"
+    BEV = "Electric"
+
 
 SUBSCRIPTIONS = {
     "GBR025RC_L": "Pro Services",

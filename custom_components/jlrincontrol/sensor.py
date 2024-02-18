@@ -611,21 +611,12 @@ class JLRVehicleClimateSensor(JLREntity):
     @property
     def state(self):
         """Return sensor state."""
-        climate_engine_activated: bool | None = get_attribute(
-            self.vehicle.tracked_status, "climate_engine_active"
+        return (
+            "On"
+            if self.vehicle.tracked_status.climate_engine_active
+            or self.vehicle.tracked_status.climate_electric_active
+            else "Off"
         )
-        climate_status_operating_status: str = str(
-            self.vehicle.status.core.get("CLIMATE_STATUS_OPERATING_STATUS", "Unknown")
-        )
-
-        # Since attr CLIMATE_STATUS_OPERATING_STATUS only updates when Climate (electric) is activated,
-        # we must hardcode sensor state when Climate (engine) is activated
-        if climate_engine_activated:
-            state = "On"
-        else:
-            state = climate_status_operating_status
-
-        return state.title()
 
     @property
     def extra_state_attributes(self):

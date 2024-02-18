@@ -44,10 +44,12 @@ from .const import (
     JLR_TO_HASS_UNITS,
     POWERTRAIN_PHEV,
     VERSION,
+    PowerTrainType,
 )
 from .services import JLRService
 from .util import (
     field_mask,
+    get_alert_by_name,
     get_is_date_active,
     get_user_prefs,
     get_value_match,
@@ -439,12 +441,20 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
         # Climate (electric) status - available for engine types Electric and Hybrid
         # EV_PRECONDITION_OPERATING_STATUS has 3 climate states: OFF, PRECLIM (heating) and STARTUP (starting)
-        climate_electric_deactivated = get_value_match(
-            vehicle.status.ev, "EV_PRECONDITION_OPERATING_STATUS", "OFF"
-        )
-        vehicle.tracked_status.climate_electric_active = (
-            not climate_electric_deactivated
-        )
+        # Alerts are more accurate than EV_PRECONDITION_OPERATING_STATUS to determine state
+        if vehicle.engine_type in [PowerTrainType.BEV, PowerTrainType.PHEV]:
+            preconditioning_started = get_alert_by_name(
+                vehicle, "PRECONDITIONING_STARTED"
+            )
+            preconditioning_stopped = get_alert_by_name(
+                vehicle, "PRECONDITIONING_STOPPED"
+            )
+            vehicle.tracked_status.climate_electric_active = (
+                preconditioning_started.last_updated
+                > preconditioning_stopped.last_updated
+            )
+        else:
+            vehicle.tracked_status.climate_electric_active = False
 
         # Guardian mode
         vehicle.tracked_status.guardian_mode_active = get_value_match(
@@ -479,12 +489,9 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             vehicle.attributes.get("powerTrainType", "Unknown"),
         )
 
-        if vehicle.attributes.get("fuelType") == FUEL_TYPE_BATTERY:
-            self.vehicles[vehicle.vin].engine_type = FUEL_TYPE_BATTERY
-        elif vehicle.attributes.get("powerTrainType") == POWERTRAIN_PHEV:
-            self.vehicles[vehicle.vin].engine_type = FUEL_TYPE_HYBRID
-        else:
-            self.vehicles[vehicle.vin].engine_type = FUEL_TYPE_ICE
+        self.vehicles[vehicle.vin].engine_type = PowerTrainType[
+            vehicle.attributes.get("powerTrainType")
+        ]
 
     async def async_get_vehicle_position(self, vehicle: Vehicle) -> None:
         """Get vehicle position data."""
