@@ -118,10 +118,18 @@ class JLRVehicleAllDataSensor(JLREntity):
         attrs["attributes"] = dict(sorted(attributes.items()))
 
         # Vehicle Status
-        attrs["core status"] = self.vehicle.status.core
+        status = {}
+        for key, value in self.vehicle.status.core.copy().items():
+            key = key[0].lower() + key.title().replace("_", "")[1:]
+            status[key] = value
+        attrs["core status"] = dict(sorted(status.items()))
 
         if self.vehicle.engine_type in [FUEL_TYPE_BATTERY, FUEL_TYPE_HYBRID]:
-            attrs["ev status"] = self.vehicle.status.ev
+            status = {}
+            for key, value in self.vehicle.status.ev.copy().items():
+                key = key[0].lower() + key.title().replace("_", "")[1:]
+                status[key] = value
+            attrs["ev status"] = dict(sorted(status.items()))
 
         # Vehicle Position
         attrs["position"] = dict(sorted(self.vehicle.position.items()))
