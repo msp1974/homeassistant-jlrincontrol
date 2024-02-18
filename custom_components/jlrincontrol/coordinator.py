@@ -423,13 +423,18 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         # Get climate temp preference
         # TODO: Check if different for EV
         try:
-            climate_temp_data = await vehicle.get_rcc_target_value()
-            _LOGGER.debug("CLIMATE TEMP: %s", climate_temp_data)
-            temp = int(float(climate_temp_data.get("value", "42"))) / 2
-            self.vehicles[vehicle.vin].target_climate_temp = temp
-            _LOGGER.debug("CLIMATE TEMP: %s", temp)
-        except (HTTPError, AttributeError):
             self.vehicles[vehicle.vin].target_climate_temp = 21
+            if self.vehicles[vehicle.vin].engine_type in [
+                PowerTrainType.INTERNAL_COMBUSTION,
+                PowerTrainType.PHEV,
+            ]:
+                climate_temp_data = await vehicle.get_rcc_target_value()
+                _LOGGER.debug("CLIMATE TEMP: %s", climate_temp_data)
+                temp = int(float(climate_temp_data.get("value", "42"))) / 2
+                self.vehicles[vehicle.vin].target_climate_temp = temp
+                _LOGGER.debug("CLIMATE TEMP: %s", temp)
+        except (HTTPError, AttributeError):
+            pass
 
     def get_tracked_statuses(self, vehicle: VehicleData) -> None:
         """Populate tracked status items in vehicle data."""
