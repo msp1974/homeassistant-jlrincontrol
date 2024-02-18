@@ -131,6 +131,17 @@ class JLRVehicleAllDataSensor(JLREntity):
                 status[key] = value
             attrs["ev status"] = dict(sorted(status.items()))
 
+        # Vehicle alerts
+        alerts = {}
+        for alert in self.vehicle.status.alerts.copy():
+            alert_name = alert.name[0].lower() + alert.name.title().replace("_", "")[1:]
+            alerts[alert_name] = {
+                "active": alert.active,
+                "value": alert.value,
+                "lastUpdated": alert.last_updated,
+            }
+            attrs["alerts"] = dict(sorted(alerts.items()))
+
         # Vehicle Position
         attrs["position"] = dict(sorted(self.vehicle.position.items()))
 
