@@ -259,11 +259,14 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                         json_data = json.loads(message.data.get("b"))
                         status = process_vhs_message(json_data)
                         self.vehicles[message.vin].status = status
+                        self.get_tracked_statuses(self.vehicles[message.vin])
                         if self.scheduled_update_task:
                             self.scheduled_update_task.cancel()
             if message.service in [
                 JLRServices.REMOTE_DOOR_LOCK,
                 JLRServices.REMOTE_DOOR_UNLOCK,
+                JLRServices.REMOTE_ENGINE_ON,
+                JLRServices.REMOTE_ENGINE_OFF,
             ]:
                 if message.vin:
                     self.scheduled_update_task = asyncio.create_task(
@@ -411,6 +414,11 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         if status:
             self.vehicles[vehicle.vin].last_updated = status.last_updated_time
             self.get_tracked_statuses(self.vehicles[vehicle.vin])
+            _LOGGER.debug(
+                "API Status: %s\nTracked Status: %s",
+                status,
+                self.vehicles[vehicle.vin].tracked_status,
+            )
         else:
             _LOGGER.debug(
                 "Status data is empty for %s",
