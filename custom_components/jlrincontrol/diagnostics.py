@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 from aiojlrpy import VehicleStatus
-from config.custom_components.jlrincontrol.coordinator import VehicleData
+from .coordinator import VehicleData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
