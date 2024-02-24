@@ -8,12 +8,13 @@ from urllib.error import HTTPError
 
 from aiojlrpy import (
     Connection,
-    Vehicle,
     JLRServices,
-    VehicleStatus,
     StatusMessage,
+    Vehicle,
+    VehicleStatus,
     process_vhs_message,
 )
+from aiojlrpy.exceptions import JLRException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -23,7 +24,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     UnitOfEnergy,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -37,12 +38,8 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEPRECATED_SERVICES,
     DOMAIN,
-    FUEL_TYPE_BATTERY,
-    FUEL_TYPE_HYBRID,
-    FUEL_TYPE_ICE,
     JLR_SERVICES,
     JLR_TO_HASS_UNITS,
-    POWERTRAIN_PHEV,
     VERSION,
     PowerTrainType,
 )
@@ -295,7 +292,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             for vehicle in self.connection.vehicles:
                 await self.async_get_vehicle_attributes(vehicle)
 
-        except Exception as ex:
+        except JLRException as ex:
             _LOGGER.warning("Error connecting to JLRInControl.  Error is %s", ex)
             return False
         return True
@@ -522,7 +519,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 self.vehicles[
                     vehicle.vin
                 ].guardian_mode = await vehicle.get_guardian_mode_status()
-            except HTTPError:
+            except (HTTPError, JLRException):
                 # If not supported
                 self.vehicles[vehicle.vin].guardian_mode = GuardianData(
                     capable=False, active=False, expiry="0"
@@ -568,7 +565,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                     self.vehicles[vehicle.vin].name,
                 )
             return True
-        except HTTPError as ex:
+        except JLRException as ex:
             _LOGGER.debug("Unable to update data from JLRInControl servers. %s", ex)
             return False
 
@@ -580,10 +577,10 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             vin_list = []
 
             # Log warning if deprecated service call
-            if service.service in DEPRECATED_SERVICES.keys():
+            if service.service in DEPRECATED_SERVICES:
                 deprecated_service = DEPRECATED_SERVICES[service.service]
                 _LOGGER.warning(
-                    "%s service has been deprecated from v3.0.0. Please use the service %s with entity %s instead.",
+                    "%s service has been deprecated from v3.0.0. Please use the service %s with entity %s instead",
                     service.service,
                     deprecated_service.get("use_instead_service"),
                     deprecated_service.get("use_instead_entity"),
