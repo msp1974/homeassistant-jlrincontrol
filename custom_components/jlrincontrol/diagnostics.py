@@ -79,7 +79,7 @@ def _async_get_diagnostics(
     for vehicle in data.vehicles:
         vehicle_data = get_diagnostic_data(data.vehicles[vehicle])
         diag_data[anonymise_vin(vehicle)] = anonymise_data(
-            vehicle_data.__dict__,
+            copy.deepcopy(vehicle_data.__dict__),
         )
     return diag_data
 
