@@ -1,9 +1,14 @@
 """Diagnostics support for JLRInControl."""
 from __future__ import annotations
 import copy
+from dataclasses import dataclass, field
+from datetime import datetime
 
 import logging
 from typing import Any
+
+from aiojlrpy import VehicleStatus
+from config.custom_components.jlrincontrol.coordinator import VehicleData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -30,6 +35,26 @@ ANON_KEYS = [
 ]
 
 
+@dataclass
+class VehicleDiagnosticData:
+    """Hold vehicle data."""
+
+    vin: str
+    name: str = ""
+    engine_type: str = "Unknown"
+    fuel: str = "Unknown"
+    last_updated: datetime = None
+    position: dict = field(default_factory=dict)
+    attributes: dict = field(default_factory=dict)
+    supported_services: list = field(default_factory=list)
+    status: VehicleStatus = field(default_factory=VehicleStatus)
+    guardian_mode: dict = field(default_factory=dict)
+    tracked_status: dict = field(default_factory=dict)
+    last_trip: dict = field(default_factory=dict)
+    trips: dict = field(default_factory=dict)
+    target_climate_temp: int = 0
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
@@ -50,12 +75,33 @@ def _async_get_diagnostics(
     diag_data["Device"] = device
 
     diag_data["User"] = data.user.__dict__
-    vehicle_data = copy.deepcopy(data.vehicles)
-    for vehicle in vehicle_data:
+    # vehicle_data = copy.deepcopy(data.vehicles)
+    for vehicle in data.vehicles:
+        vehicle_data = get_diagnostic_data(data.vehicles[vehicle])
         diag_data[anonymise_vin(vehicle)] = anonymise_data(
-            vehicle_data[vehicle].__dict__
+            vehicle_data.__dict__,
         )
     return diag_data
+
+
+def get_diagnostic_data(data: VehicleData) -> VehicleDiagnosticData:
+    """Return diag data."""
+    return VehicleDiagnosticData(
+        vin=data.vin,
+        name=data.vin,
+        engine_type=data.engine_type,
+        fuel=data.fuel,
+        last_updated=data.last_updated,
+        position=data.position,
+        attributes=data.attributes,
+        supported_services=data.supported_services,
+        status=data.status,
+        guardian_mode=data.guardian_mode,
+        tracked_status=data.tracked_status,
+        last_trip=data.last_trip,
+        trips=data.trips,
+        target_climate_temp=data.target_climate_temp,
+    )
 
 
 def anonymise_data(data: dict) -> dict:
