@@ -245,7 +245,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
     async def _on_ws_message(self, message: StatusMessage):
         """Websocket message callback function."""
-        _LOGGER.info(message)
+        _LOGGER.debug(message)
         if self.vehicles:
             if message.service == JLRServices.GUARDIAN_MODE:
                 if message.vin:
