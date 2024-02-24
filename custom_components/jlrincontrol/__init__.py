@@ -5,7 +5,7 @@ Includes Sensor Devices and Services
 https://github.com/msp1974/homeassistant-jlrincontrol.git
 msparker@sky.com
 """
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 import uuid
 
@@ -245,8 +245,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     _LOGGER.debug("Unregister JLR InControl Services")
     for service, service_info in JLR_SERVICES.items():
         if service_info.get("custom_service", False):
-            _LOGGER.debug("Unregister %s", service[0])
-            hass.services.async_remove(DOMAIN, service[0])
+            _LOGGER.debug("Unregister %s", service)
+            hass.services.async_remove(DOMAIN, service)
 
     # Remove listeners
     _LOGGER.debug("Removing health update listener")
