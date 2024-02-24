@@ -157,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
         # Call async_refresh on coordinator after succesful health update
         health_update_listener = health_update_coordinator.async_add_listener(
-            coordinator.refresh
+            coordinator.async_update_data
         )
 
         # Add health update listener to config
