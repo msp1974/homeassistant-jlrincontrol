@@ -181,13 +181,6 @@ class JLRIncontrolHealthUpdateCoordinator(DataUpdateCoordinator):
                 ex,
             )
 
-    async def async_initial_update_data(self):
-        """Do initial health update and call Data update once complete."""
-        await self.async_update_data()
-        self.config_entry.async_create_background_task(
-            self.hass, self.coordinator.async_update_data(), "Update vehicle data"
-        )
-
 
 class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
     """Update handler."""

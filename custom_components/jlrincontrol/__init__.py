@@ -125,6 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     try:
         await coordinator.async_connect()
     except Exception as ex:
+        _LOGGER.error(ex)
         raise ConfigEntryNotReady from ex
 
     await coordinator.async_config_entry_first_refresh()
@@ -155,21 +156,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             {HEALTH_UPDATE_TRACKER: health_update_coordinator}
         )
 
-        # Call async_refresh on coordinator after succesful health update
-        health_update_listener = health_update_coordinator.async_add_listener(
-            coordinator.async_update_data
-        )
-
-        # Add health update listener to config
-        hass.data[DOMAIN][config_entry.entry_id].update(
-            {HEALTH_UPDATE_LISTENER: health_update_listener}
-        )
-
         # Do initial call to health_update service after HASS start up.
         # This speeds up restart.
         config_entry.async_create_background_task(
             hass,
-            health_update_coordinator.async_initial_update_data(),
+            health_update_coordinator.async_config_entry_first_refresh(),
             "Initial vehicle health update",
         )
 
