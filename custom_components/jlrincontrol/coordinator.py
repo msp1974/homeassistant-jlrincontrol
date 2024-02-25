@@ -171,7 +171,6 @@ class JLRIncontrolHealthUpdateCoordinator(DataUpdateCoordinator):
                 )
                 success = await jlr_service.async_call_service()
                 if success:
-                    # await self.hass.async_add_executor_job(vehicle.get_health_status)
                     _LOGGER.debug(
                         "Health update successful for %s",
                         self.coordinator.vehicles[vehicle.vin].name,
@@ -250,6 +249,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             if message.service == JLRServices.GUARDIAN_MODE:
                 if message.vin:
                     data = json.loads(message.data.get("b"))
+                    self.vehicles[message.vin].guardian_mode = data
                     self.vehicles[message.vin].tracked_status.guardian_mode_active = (
                         True if data["status"] == "ACTIVE" else False
                     )
@@ -267,6 +267,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 JLRServices.REMOTE_DOOR_UNLOCK,
                 JLRServices.REMOTE_ENGINE_ON,
                 JLRServices.REMOTE_ENGINE_OFF,
+                JLRServices.ELECTRIC_CLIMATE_CONTROL,
             ]:
                 if message.vin:
                     self.scheduled_update_task = asyncio.create_task(
@@ -288,8 +289,9 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 self._on_ws_message,
             )
             await self.connection.connect()
-            await self.async_get_user_info()
             await self.async_get_vehicles()
+            await self.async_get_user_info()
+
             _LOGGER.debug("Connected to API")
 
             for vehicle in self.connection.vehicles:
