@@ -440,26 +440,20 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         """Populate tracked status items in vehicle data."""
 
         # Climate (engine) status - available for engine types ICE and Hybrid
-        vehicle.tracked_status.climate_engine_active = get_value_match(
-            vehicle.status.core, "VEHICLE_STATE_TYPE", "ENGINE_ON_REMOTE_START"
-        )
+        if vehicle.engine_type in [
+            PowerTrainType.INTERNAL_COMBUSTION,
+            PowerTrainType.PHEV,
+        ]:
+            vehicle.tracked_status.climate_engine_active = get_value_match(
+                vehicle.status.core, "VEHICLE_STATE_TYPE", "ENGINE_ON_REMOTE_START"
+            )
 
         # Climate (electric) status - available for engine types Electric and Hybrid
         # EV_PRECONDITION_OPERATING_STATUS has 3 climate states: OFF, PRECLIM (heating) and STARTUP (starting)
-        # Alerts are more accurate than EV_PRECONDITION_OPERATING_STATUS to determine state
         if vehicle.engine_type in [PowerTrainType.BEV, PowerTrainType.PHEV]:
-            preconditioning_started = get_alert_by_name(
-                vehicle, "PRECONDITIONING_STARTED"
+            vehicle.tracked_status.climate_electric_active = not get_value_match(
+                vehicle.status_ev, "EV_PRECONDITION_OPERATING_STATUS", "OFF"
             )
-            preconditioning_stopped = get_alert_by_name(
-                vehicle, "PRECONDITIONING_STOPPED"
-            )
-            vehicle.tracked_status.climate_electric_active = (
-                preconditioning_started.last_updated
-                > preconditioning_stopped.last_updated
-            )
-        else:
-            vehicle.tracked_status.climate_electric_active = False
 
         # Guardian mode
         vehicle.tracked_status.guardian_mode_active = get_value_match(
