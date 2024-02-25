@@ -452,7 +452,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         # EV_PRECONDITION_OPERATING_STATUS has 3 climate states: OFF, PRECLIM (heating) and STARTUP (starting)
         if vehicle.engine_type in [PowerTrainType.BEV, PowerTrainType.PHEV]:
             vehicle.tracked_status.climate_electric_active = not get_value_match(
-                vehicle.status_ev, "EV_PRECONDITION_OPERATING_STATUS", "OFF"
+                vehicle.status.ev, "EV_PRECONDITION_OPERATING_STATUS", "OFF"
             )
 
         # Guardian mode
