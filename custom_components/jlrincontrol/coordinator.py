@@ -218,7 +218,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             CONF_HEALTH_UPDATE_INTERVAL
         )
 
-        self.scheduled_status_task: asyncio.Task = None
+        self.scheduled_status_task: asyncio.TimerHandle = None
 
         super().__init__(
             hass,
@@ -267,7 +267,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
     async def schedule_status_update(self, delay: int = 60):
         """Schedule status update in delay seconds if not already scheduled or needed sooner than scheduled."""
         # If scheduled task already exists
-        if self.scheduled_status_task and not self.scheduled_status_task.done:
+        if self.scheduled_status_task:
             # Check how long till it runs and cancel if longer than delay
             if self.scheduled_status_task.when() > self.hass.loop.time() + delay:
                 await self.cancel_scheduled_status_update()
@@ -280,7 +280,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
     async def cancel_scheduled_status_update(self):
         """Cancel any scheduled status update."""
-        if self.scheduled_status_task and not self.scheduled_status_task.done:
+        if self.scheduled_status_task:
             self.scheduled_status_task.cancel()
 
     async def async_connect(self) -> bool:
