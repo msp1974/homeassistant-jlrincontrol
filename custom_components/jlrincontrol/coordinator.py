@@ -79,6 +79,7 @@ class UserData:
     middle_name: str
     last_name: str
     user_preferences: UserPreferenceUnits = field(default_factory=UserPreferenceUnits)
+    user_prefs_from_account: bool = False
 
 
 @dataclass
@@ -113,6 +114,7 @@ class VehicleData:
     engine_type: str = "Unknown"
     fuel: str = "Unknown"
     last_updated: datetime = None
+    last_status_update: datetime = None
     position: dict = field(default_factory=dict)
     attributes: dict = field(default_factory=dict)
     supported_services: list = field(default_factory=list)
@@ -307,7 +309,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 await self.async_get_vehicle_attributes(vehicle)
 
             _LOGGER.debug("Connecting to websocket api")
-            await self.connection.websocket_connect()
+            self.hass.create_task(self.connection.websocket_connect())
 
         except JLRException as ex:
             _LOGGER.warning("Error connecting to JLRInControl.  Error is %s", ex)
@@ -320,8 +322,10 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("USERINFO: %s", user)
         user = user.get("contact")
 
-        uoms = str(user.get("userPreferences", {}).get("unitsOfMeasurement", ""))
-        if uoms:
+        received_uoms = str(
+            user.get("userPreferences", {}).get("unitsOfMeasurement", "")
+        )
+        if uoms := received_uoms:
             # Save user prefs in .storage file
             await save_user_prefs(self.hass, self.email, uoms)
         else:
@@ -360,6 +364,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             middle_name=user.get("middleName", "Unknown"),
             last_name=user.get("lastName", "Unknown"),
             user_preferences=user_prefs,
+            user_prefs_from_account=received_uoms is not None,
         )
 
         _LOGGER.debug("User Data: %s", self.user)
@@ -422,6 +427,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         if status:
             vehicle.status = status
             vehicle.last_updated = status.last_updated_time
+            vehicle.last_status_update = datetime.now()
             await self.get_tracked_statuses(vehicle)
             _LOGGER.debug(
                 "API Status: %s\nTracked Status: %s",
@@ -571,25 +577,31 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
     async def async_update_data(self):
         """Update vehicle data."""
         try:
-            await self.async_get_user_info()
-            for _, vehicle in self.vehicles.items():
-                await self.async_get_guardian_mode_status(vehicle)
-                await self.async_get_vehicle_position(vehicle)
-                await self.async_get_vehicle_status(vehicle)
+            # Get user prefs if not yet received
+            if not self.user.user_prefs_from_account:
+                await self.async_get_user_info()
 
-                if vehicle.status.core["PRIVACY_SWITCH"] == "FALSE":
-                    await self.async_get_vehicle_last_trip_data(vehicle)
-                else:
-                    vehicle.last_trip = None
-                    _LOGGER.debug(
-                        "Journey recording is disabled. Trip data not loaded for %s",
+            for _, vehicle in self.vehicles.items():
+                if (not vehicle.last_status_update) or (
+                    datetime.now() - vehicle.last_status_update
+                ) >= timedelta(seconds=30):
+                    await self.async_get_vehicle_position(vehicle)
+                    await self.async_get_guardian_mode_status(vehicle)
+                    await self.async_get_vehicle_status(vehicle)
+
+                    if vehicle.status.core["PRIVACY_SWITCH"] == "FALSE":
+                        await self.async_get_vehicle_last_trip_data(vehicle)
+                    else:
+                        vehicle.last_trip = None
+                        _LOGGER.debug(
+                            "Journey recording is disabled. Trip data not loaded for %s",
+                            vehicle.name,
+                        )
+
+                    _LOGGER.info(
+                        "JLR InControl update received for %s",
                         vehicle.name,
                     )
-
-                _LOGGER.info(
-                    "JLR InControl update received for %s",
-                    vehicle.name,
-                )
             return True
         except JLRException as ex:
             _LOGGER.debug("Unable to update data from JLRInControl servers. %s", ex)
