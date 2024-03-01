@@ -1,5 +1,6 @@
 """Handles updating data from jlrpy."""
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import json
@@ -25,6 +26,7 @@ from homeassistant.const import (
     UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -45,6 +47,7 @@ from .const import (
 )
 from .services import JLRService
 from .util import (
+    debug_log_status,
     field_mask,
     get_is_date_active,
     get_user_prefs,
@@ -124,6 +127,7 @@ class VehicleData:
     last_trip: dict = field(default_factory=dict)
     trips: dict = field(default_factory=dict)
     target_climate_temp: int = 21
+    short_interval_monitor: bool = False
 
 
 class JLRIncontrolHealthUpdateCoordinator(DataUpdateCoordinator):
@@ -220,7 +224,8 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             CONF_HEALTH_UPDATE_INTERVAL
         )
 
-        self.scheduled_status_task: asyncio.TimerHandle = None
+        self.scheduled_update_task: asyncio.Task = None
+        self.short_interval_monitor_task: asyncio.Task = None
 
         super().__init__(
             hass,
@@ -229,6 +234,23 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             update_method=self.async_update_data,
             update_interval=timedelta(minutes=self.scan_interval),
         )
+
+    async def get_delayed_vehicle_status(self, vehicle: VehicleData, delay: int = 0):
+        """Get vehicle status."""
+        await asyncio.sleep(delay)
+        _LOGGER.debug("Calling update data caused by message with no VHS\n")
+        await self.async_update_data(vehicle)
+
+    async def monitored_vehicle_status(self, interval: int):
+        """Get vehicle status."""
+        while True:
+            await asyncio.sleep(interval)
+            for _, vehicle in self.vehicles.items():
+                if vehicle.short_interval_monitor:
+                    _LOGGER.debug(
+                        "Calling monitoring update status for %s", vehicle.name
+                    )
+                    await self.async_status_only_update(vehicle)
 
     async def _on_ws_message(self, message: StatusMessage):
         """Websocket message callback function."""
@@ -246,10 +268,14 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                     if data := message.data.get("b"):
                         json_data = json.loads(message.data.get("b"))
                         status = process_vhs_message(json_data)
+                        debug_log_status(status)
+                        self.identify_status_changes(self.vehicles[message.vin], status)
                         self.vehicles[message.vin].status = status
                         await self.get_tracked_statuses(self.vehicles[message.vin])
                         # Just had VHS message so cancel any outstanding status updates
-                        await self.cancel_scheduled_status_update()
+                        if self.scheduled_update_task:
+                            self.scheduled_update_task.cancel()
+
             if (
                 message.service
                 in [
@@ -262,28 +288,11 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 and message.vin
             ):
                 # Schedule status update in case VHS message doesn't come
-                await self.schedule_status_update(15, message.vin)
+                self.scheduled_update_task = asyncio.create_task(
+                    self.get_delayed_vehicle_status(self.vehicles[message.vin], 15)
+                )
 
             self.hass.async_add_executor_job(self.async_update_listeners)
-
-    async def schedule_status_update(self, delay: int = 60):
-        """Schedule status update in delay seconds if not already scheduled or needed sooner than scheduled."""
-        # If scheduled task already exists
-        if self.scheduled_status_task:
-            # Check how long till it runs and cancel if longer than delay
-            if self.scheduled_status_task.when() > self.hass.loop.time() + delay:
-                await self.cancel_scheduled_status_update()
-            else:
-                return
-        # Schedule status update task
-        self.scheduled_status_task = self.hass.loop.call_later(
-            delay, self.async_status_only_update()
-        )
-
-    async def cancel_scheduled_status_update(self):
-        """Cancel any scheduled status update."""
-        if self.scheduled_status_task:
-            self.scheduled_status_task.cancel()
 
     async def async_connect(self) -> bool:
         """Connnect to api."""
@@ -311,6 +320,11 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Connecting to websocket api")
             self.hass.create_task(self.connection.websocket_connect())
 
+            _LOGGER.debug("Setting up vehicle monitoring job")
+            self.hass.async_create_background_task(
+                self.monitored_vehicle_status(60), "JLR Status Polling"
+            )
+
         except JLRException as ex:
             _LOGGER.warning("Error connecting to JLRInControl.  Error is %s", ex)
             return False
@@ -318,7 +332,11 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_get_user_info(self) -> None:
         """Get user info."""
-        user = await self.connection.get_user_info()
+        if not self.connection.user:
+            user = await self.connection.get_user_info()
+        else:
+            user = self.connection.user
+
         _LOGGER.debug("USERINFO: %s", user)
         user = user.get("contact")
 
@@ -425,15 +443,13 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         """Get vehicle status."""
         status: VehicleStatus = await vehicle.api.get_status()
         if status:
+            debug_log_status(status)
+            self.identify_status_changes(vehicle, status)
             vehicle.status = status
             vehicle.last_updated = status.last_updated_time
             vehicle.last_status_update = datetime.now()
             await self.get_tracked_statuses(vehicle)
-            _LOGGER.debug(
-                "API Status: %s\nTracked Status: %s",
-                status,
-                vehicle.tracked_status,
-            )
+            _LOGGER.debug("TRACKED STATUS: %s", vehicle.tracked_status)
         else:
             _LOGGER.debug(
                 "Status data is empty for %s",
@@ -455,6 +471,49 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug("CLIMATE TEMP: %s", temp)
         except (HTTPError, AttributeError):
             pass
+
+    def identify_status_changes(self, vehicle: VehicleData, new_status: VehicleStatus):
+        """Debug log changed status params."""
+        if vehicle.status:
+            # Core Status
+            for status_class in ["core", "ev"]:
+                if getattr(vehicle.status, status_class):
+                    for key, value in getattr(vehicle.status, status_class).items():
+                        if value != getattr(new_status, status_class)[key]:
+                            _LOGGER.debug(
+                                "%s - prev: %s, new: %s",
+                                key,
+                                value,
+                                getattr(new_status, status_class)[key],
+                            )
+
+            # Alerts
+            for alert in vehicle.status.alerts:
+                if (
+                    alert.last_updated
+                    != [
+                        new_alert
+                        for new_alert in new_status.alerts
+                        if alert.name == new_alert.name
+                    ][0].last_updated
+                ):
+                    message = (
+                        "NEW ACTIVE ALERT" if alert.active else "ALERT BECAME INACTIVE"
+                    )
+
+                    _LOGGER.debug(
+                        "%s: %s",
+                        message,
+                        alert,
+                    )
+
+        _LOGGER.debug("Last updated: %s", new_status.last_updated_time)
+        _LOGGER.debug(
+            "Last updated status: %s", new_status.last_updated_time_vehicle_status
+        )
+        _LOGGER.debug(
+            "Last updated alerts: %s\n", new_status.last_updated_time_vehicle_alert
+        )
 
     async def get_tracked_statuses(self, vehicle: VehicleData) -> None:
         """Populate tracked status items in vehicle data."""
@@ -504,13 +563,14 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
     async def tracked_status_actions(self, vehicle: VehicleData):
         """Perform actions for tracked statuses."""
-        if vehicle.tracked_status.climate_electric_active:
+        if (
+            vehicle.tracked_status.climate_electric_active
+            or vehicle.tracked_status.climate_engine_active
+        ):
             # Schedule status update in 1 min if not already scheduled
-            _LOGGER.debug(
-                "Electric climate active - scheduling 1 min updates to track remaining time"
-            )
-            if self.scheduled_status_task and self.scheduled_status_task.done:
-                self.hass.loop.call_later(60, self.async_status_only_update())
+            vehicle.short_interval_monitor = True
+        else:
+            vehicle.short_interval_monitor = False
 
     def get_vehicle_engine_type(self, vehicle: VehicleData) -> None:
         """Determine vehicle engine type."""
