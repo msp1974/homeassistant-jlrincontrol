@@ -231,6 +231,9 @@ async def async_remove_config_entry_device(
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload a config entry."""
     _LOGGER.info("Unloading JLR InControl Component")
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]
+    _LOGGER.debug("Disconnecting websocket")
+    await coordinator.connection.websocket_disconnect()
 
     # Deregister services
     _LOGGER.debug("Unregister JLR InControl Services")
