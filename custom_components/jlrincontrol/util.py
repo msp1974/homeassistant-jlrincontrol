@@ -133,3 +133,14 @@ async def get_user_prefs(hass: HomeAssistant, user_id) -> dict:
             if contents:
                 uoms = contents
         return uoms
+
+
+def debug_log_status(status):
+    """Output status to debug log."""
+    for status_class in ["core", "ev", "alerts"]:
+        if getattr(status, status_class):
+            _LOGGER.debug(
+                "STATUS - %s: %s",
+                status_class.upper(),
+                getattr(status, status_class),
+            )
