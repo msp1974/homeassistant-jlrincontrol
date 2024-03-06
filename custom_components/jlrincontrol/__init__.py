@@ -83,7 +83,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         new_data[DEVICE_ID] = str(uuid.uuid4())
 
         # Move pin to data from options
-        new_data[CONF_PIN] = new_options[CONF_PIN]
+        new_data[CONF_PIN] = new_options.get(CONF_PIN, "0000")
 
         # Remove no longer needed options
         remove_options = [
