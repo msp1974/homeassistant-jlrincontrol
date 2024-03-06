@@ -261,7 +261,8 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_get_user_info(self) -> None:
         """Get user info."""
-        user = await self.hass.async_add_executor_job(self.connection.get_user_info)
+        # TODO: Revert this to self.get_user_info when jlrpy fixed
+        user = await self.hass.async_add_executor_job(self.connection._login_user, self.connection.head)
         _LOGGER.debug("USERINFO: %s", user)
         user = user.get("contact")
 
@@ -421,7 +422,9 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         climate_electric_deactivated = get_value_match(
             vehicle.status_ev, "EV_PRECONDITION_OPERATING_STATUS", "OFF"
         )
-        vehicle.tracked_status.climate_electric_active = not climate_electric_deactivated
+        vehicle.tracked_status.climate_electric_active = (
+            not climate_electric_deactivated
+        )
 
         # Guardian mode
         vehicle.tracked_status.guardian_mode_active = get_value_match(
