@@ -3,9 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v3.0.0beta3)
-
-**NOTE: This is currently a beta version.  Please use with this knowledge.**
+# JLR Home Assistant Integration (v3.0.0)
 
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
@@ -15,6 +13,7 @@ Due to changes in Home Assistant, this integration requires a minimum of HA v202
 
 Currently this loads a series of sensors for
 
+- All Info
 - Vehicle Info
 - Status
 - Alarm
@@ -22,22 +21,23 @@ Currently this loads a series of sensors for
 - Windows
 - Tyres
 - Range
-- Location
+- Location (device tracker)
 - Battery Sensor (EV & PHEV Only)
 - Service Info
 - Last Trip
-- All Vehicle Data (see Note 3)
 
 Has buttons for
 
 - Honk Blink
 - Reset Alarm
 - Update from Vehicle
+- Lock/unlock
 
 Has switches for
 
-- Climate (ICE only)
-- Preconditioning (EV & PHEV only)
+- Climate (Engine) (ICE only)
+- Climate (Electric) (EV & PHEV only)
+- Charging
 - Guardian Mode
 - Service Mode
 - Transport Mode
@@ -45,13 +45,13 @@ Has switches for
 
 And has services for
 
-- Update Health Status (forces update from vehicle)
-- Honk/Flash
-- Lock/Unlock
-- Start Engine/Stop Engine
-- Start Charging/Stop Charging
-- Reset Alarm
-- Start Preconditioning/Stop Preconditioning
+- Update Health Status (forces update from vehicle) (deprecated - use button.press with button.xxxx_update_from_vehicle instead)
+- Honk/Flash (deprecated - use button.press with button.xxxx_honk_blink instead)
+- Lock/Unlock (deprecated - use lock.unlock/lock with lock.xxxx_doors instead)
+- Start Engine/Stop Engine - (deprecated - use switch.turn_on/turn_off with switch.xxxx_climate_engine instead)
+- Start Charging/Stop Charging - (deprecated - use switch.turn_on/turn_off with switch.xxxx_charging instead)
+- Reset Alarm (deprecated - use button.press with button.xxxx_reset_alarm instead)
+- Start Preconditioning/Stop Preconditioning - (deprecated - use switch.turn_on/turn_off with switch.xxxx_climate_electric instead)
 - Set Max Charge (Always and One Off)
 
 **Note:** Not all functions are available on all models and therefore the buttons/switches may not be created.  If you call services that are not supported you will get an error in the error log.
@@ -59,6 +59,8 @@ And has services for
 **Note 2**: When calling a service, HA will monitor the status of the service call and report in the error log if it failed.
 
 **Note 3**: This sensor shows all returned data for attributes, statuses and position as device attribute data. See recipes for how to use this in your automations or template sensors. By default it is not enabled and can be enabled in config options.
+
+**Note 4**: The integration attempts to get the units from your JLR account and should reflect that.  Due to the api sometime not returning this, it may not be correct on 1st restart after installing this version.  However, it will keep trying and then store these in HA for future use if not provided again.
 
 Also, due to lack of a fleet of Jaguars and LandRovers/RangeRovers (donations welcome!), there maybe issues with some models not supporting some functions. Please raise an issue for these and say what vehicle you have and post the log.
 
@@ -86,7 +88,7 @@ Add via Configuration -> Integrations in the UI
 
 ## Health Status Update
 
-This integration has the ability to perform a scheduled health status update request from your vehicle. By default this is disabled. Setting the interval and your pin in the config options will enable this.
+This integration has the ability to perform a scheduled health status update request from your vehicle. By default this is disabled. Setting the interval in the config options will enable this.
 
 I do not know the impact on either vehicle battery or JLRs view on running this often, so please use at your own risk. I would certainly not set it to too low an interval. Recommended 120 mins.
 
@@ -100,7 +102,6 @@ As all use cases cannot be covered and to allow the best benefit to all of this 
 
 The [recipes](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/Recipes.md) document gives an example of a template sensor that uses this data and shows how to extract the values from the all info sensor.
 
-**NOTE**: By default this sensor is not created and must be enabled in the config options. Configuration -> Integrations -> Select Options on the JLR Incontrol integration. You do not need to restart HA to enable or disable this sensor, but you may need to add it into your Lovelace UI after enabling it.
 
 ## Installation
 
@@ -115,7 +116,7 @@ The [recipes](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/
 
 ### Branch Versions
 
-As of v1.0.0, the dev branch is now where the very latest version is held. Please note that there maybe issues with new functions or fixes that have not been fully tested. It will also be updated regularly as new fixes/functions are developed, so please check you have the latest update before raising an issue. The master branch is the current release.
+The dev branch is where the very latest version is held. Please note that there maybe issues with new functions or fixes that have not been fully tested. It will also be updated regularly as new fixes/functions are developed, so please check you have the latest update before raising an issue. The master branch is the current release.
 
 ## Community Recipes
 
@@ -128,6 +129,8 @@ I am looking for suggestions to improve this integration and make it useful for 
 ## Contributors
 
 This integration uses the jlrpy api written by [ardevd](https://github.com/ardevd/jlrpy). A big thanks for all the work you have done on this.
+
+Also thanks for all your help ismarslomic in supporting and testing
 
 ## Debugging
 
@@ -143,6 +146,9 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 2. To enable logging of the attributes and status data in the debug log, set the debug data option in config options with debugging turned on as above.
 
 ## Change Log
+
+### v3.0.0
+* Bump jlrpy to xxxx
 
 ### V3.0.0beta4
 * Fixed: last contacted attributes missing in VehicleSensor - issue [#120](https://github.com/msp1974/homeassistant-jlrincontrol/issues/120)
@@ -306,8 +312,3 @@ This integration uses the jlrpy api written by [ardevd](https://github.com/ardev
 ### v0.1alpha
 
 Initial build of the component to read basic sensors
-
-## Known Issues
-
-- Service Info sensor shows ok even if car is needing service or adblue top up.
-- Sometimes the JLR servers do not provide user units preference info, in which case the integration defaults to HA units.  Look to save this if provided.
