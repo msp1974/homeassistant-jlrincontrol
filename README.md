@@ -3,7 +3,9 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v3.0.0)
+# JLR Home Assistant Integration (v3.0.0beta5)
+
+**This is a beta release.  Some things might not function as intended**
 
 This repository contains a Home Assistant integration for the Jaguar Landrover InControl system, allowing visibility of key vehicle information and control of enabled services.
 
@@ -147,8 +149,8 @@ Also thanks for all your help ismarslomic in supporting and testing
 
 ## Change Log
 
-### v3.0.0
-* Bump jlrpy to xxxx
+### v3.0.0beta5
+* Bump jlrpy to v1.6.0
 
 ### V3.0.0beta4
 * Fixed: last contacted attributes missing in VehicleSensor - issue [#120](https://github.com/msp1974/homeassistant-jlrincontrol/issues/120)
