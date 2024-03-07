@@ -243,9 +243,10 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     # Deregister services
     _LOGGER.debug("Unregister JLR InControl Services")
-    for service in JLR_SERVICES.items():
-        _LOGGER.debug("Unregister %s", service[0])
-        hass.services.async_remove(DOMAIN, service[0])
+    for service, service_info in JLR_SERVICES.items():
+        if service_info.get("custom_service", False):
+            _LOGGER.debug("Unregistering %s", service)
+            hass.services.async_remove(DOMAIN, service)
 
     # Remove listeners
     _LOGGER.debug("Removing health update listener")
