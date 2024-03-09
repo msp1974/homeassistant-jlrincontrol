@@ -73,6 +73,7 @@ class UserData:
     middle_name: str
     last_name: str
     user_preferences: UserPreferenceUnits = field(default_factory=UserPreferenceUnits)
+    user_prefs_from_account: bool = False
 
 
 @dataclass
@@ -262,12 +263,16 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
     async def async_get_user_info(self) -> None:
         """Get user info."""
         # TODO: Revert this to self.get_user_info when jlrpy fixed
-        user = await self.hass.async_add_executor_job(self.connection._login_user, self.connection.head)
+        user = await self.hass.async_add_executor_job(
+            self.connection._login_user, self.connection.head
+        )
         _LOGGER.debug("USERINFO: %s", user)
         user = user.get("contact")
 
-        uoms = str(user.get("userPreferences", {}).get("unitsOfMeasurement", ""))
-        if uoms:
+        received_uoms = str(
+            user.get("userPreferences", {}).get("unitsOfMeasurement", "")
+        )
+        if uoms := received_uoms:
             # Save user prefs in .storage file
             await save_user_prefs(self.hass, self.email, uoms)
         else:
@@ -306,6 +311,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
             middle_name=user.get("middleName", "Unknown"),
             last_name=user.get("lastName", "Unknown"),
             user_preferences=user_prefs,
+            user_prefs_from_account=received_uoms is not None,
         )
 
         _LOGGER.debug("User Data: %s", self.user)
@@ -518,7 +524,9 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
     async def async_update_data(self):
         """Update vehicle data."""
         try:
-            await self.async_get_user_info()
+            if not self.user.user_prefs_from_account:
+                await self.async_get_user_info()
+
             for vehicle in self.connection.vehicles:
                 await self.async_get_guardian_mode_status(vehicle)
                 await self.async_get_vehicle_position(vehicle)
