@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "jlrincontrol"
 DATA_JLR_CONFIG = "jlrincontrol_config"
 JLR_DATA = "jlr_data"
-VERSION = "2.2.6"
+VERSION = "2.2.7"
 
 CONF_USE_CHINA_SERVERS = "use_china_servers"
 
