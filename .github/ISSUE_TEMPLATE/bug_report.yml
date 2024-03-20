@@ -3,9 +3,10 @@ description: Used for reporting issues and bugs with JLR Home Assistant Integrat
 body:
   - type: markdown
     attributes:
-      value: >
-        This issue form is for reporting **issues** and **bugs** only! If you have a **feature** or **enhancement** 
-        request, please use the **Feature request** template.
+      value: |
+        This issue form is for reporting **issues** and **bugs** only! 
+        
+        If you have a **feature** or **enhancement**  request, please use the **Feature request** template.
         
         Before reporting new issue, please check if identical issue has already been reported (with open or 
         closed status). This helps respecting ours (and yours) valuable time and effort.
