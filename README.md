@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/msp1974/homeassistant-jlrincontrol)](https://github.com/msp1974/homeassistant-jlrincontrol/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/msp1974/homeassistant-jlrincontrol)](https://GitHub.com/msp1974/homeassistant-jlrincontrol/releases/)
 
-# JLR Home Assistant Integration (v3.0.0beta5)
+# JLR Home Assistant Integration (v3.0.0beta7)
 
 **This is a beta release.  Some things might not function as intended**
 
@@ -148,6 +148,9 @@ Also thanks for all your help ismarslomic in supporting and testing
 2. To enable logging of the attributes and status data in the debug log, set the debug data option in config options with debugging turned on as above.
 
 ## Change Log
+
+### v3.0.0beta7
+- Bump jlrpy to v1.7.0 to fix [#138](https://github.com/msp1974/homeassistant-jlrincontrol/issues/138)
 
 ### v3.0.0beta5
 * Bump jlrpy to v1.6.0
