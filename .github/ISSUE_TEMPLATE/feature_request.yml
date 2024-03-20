@@ -1,0 +1,54 @@
+name: Report an feature request for JLR Home Assistant Integration
+description: Report an feature request for JLR Home Assistant Integration.
+body:
+  - type: markdown
+    attributes:
+      value: >
+        This issue form is for reporting **feature** and **enhancement** request only! If you have a 
+        **issue** or **enhancement** request, please use the **Bug report** template.
+        
+        Before reporting new issue, please check if identical issue has already been reported (with open or 
+        closed status). This helps respecting ours (and yours) valuable time and effort.
+
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: The problem
+      description: >-
+        Is your feature request related to a problem? Please describe!
+
+        Provide a clear and concise description of what the problem is and how it impacts you.
+
+  - type: input
+    validations:
+      required: true
+    attributes:
+      label: Vehicle type and model
+      placeholder: Electric, Jaguar I-Pace
+      description: >
+        The type and model of your vehicle.
+
+  - type: markdown
+    attributes:
+      value: |
+        # The Solution
+
+  - type: textarea
+    attributes:
+      label: Describe the solution you'd like
+      description: >
+        A clear and concise description of what you want to happen.
+
+  - type: textarea
+    attributes:
+      label: Describe alternatives you've considered
+      description: >
+        A clear and concise description of any alternative solutions or features you've considered.
+      render: txt
+
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: >
+        Add any other context or screenshots about the feature request here.

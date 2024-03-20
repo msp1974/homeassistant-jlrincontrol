@@ -1,0 +1,83 @@
+name: Report an issue with JLR Home Assistant Integration
+description: Used for reporting issues and bugs with JLR Home Assistant Integration.
+body:
+  - type: markdown
+    attributes:
+      value: >
+        This issue form is for reporting **issues** and **bugs** only! If you have a **feature** or **enhancement** 
+        request, please use the **Feature request** template.
+        
+        Before reporting new issue, please check if identical issue has already been reported (with open or 
+        closed status). This helps respecting ours (and yours) valuable time and effort.
+
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: The problem
+      description: >-
+        Describe the issue you are experiencing here, to communicate to the maintainers. 
+        Tell us what you were trying to do and what happened. If applicable, add screenshots to help explain your 
+        problem.
+
+        Provide a clear and concise description of what the problem is.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Environment
+
+  - type: input
+    id: version
+    validations:
+      required: true
+    attributes:
+      label: What version of JLR Home Assistant Integration has the issue?
+      placeholder: v2.X.X
+      description: >
+        Can be found in: HACS ⇒ Integrations ⇒ Jaguar Landrover InControl
+
+  - type: input
+    attributes:
+      label: What was the last working version of JLR Home Assistant Integration?
+      placeholder: v2.X.X
+      description: >
+        If known, otherwise leave blank.
+
+  - type: input
+    validations:
+      required: true
+    attributes:
+      label: Vehicle type and model
+      placeholder: Electric, Jaguar I-Pace
+      description: >
+        The type and model of your vehicle.
+
+  - type: markdown
+    attributes:
+      value: |
+        # Details
+
+  - type: textarea
+    attributes:
+      label: Diagnostics information
+      placeholder: "drag-and-drop the diagnostics data file here (do not copy-and-paste the content)"
+      description: >-
+        This integrations provide the ability to [download diagnostic data](https://www.home-assistant.io/docs/configuration/troubleshooting/#debug-logs-and-diagnostics).
+
+        **It would really help if you could download the diagnostics data for the device you are having issues with,
+        and <ins>drag-and-drop that file into the textbox below.</ins>**
+
+        It generally allows pinpointing defects and thus resolving issues faster.
+
+  - type: textarea
+    attributes:
+      label: Anything in the logs that might be useful for us?
+      description: For example, error message, or stack traces.
+      render: txt
+
+  - type: textarea
+    attributes:
+      label: Additional information
+      description: >
+        If you have any additional information for us, use the field below.
