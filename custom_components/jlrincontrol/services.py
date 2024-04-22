@@ -8,6 +8,8 @@ import inspect
 import logging
 from urllib.error import HTTPError
 
+from homeassistant.exceptions import HomeAssistantError
+
 from .const import JLR_SERVICES
 from .util import convert_datetime_to_epoch, convert_temp_value, field_mask
 
@@ -107,7 +109,16 @@ class JLRService:
             # populate required parameters for service call
             service = getattr(self.vehicle.api, self.service_name)
             for param in inspect.signature(service).parameters:
-                if param in ["target_value", "target_temp"]:
+                if param in ["pin"]:
+                    if kwargs.get("pin"):
+                        service_kwargs["pin"] = kwargs.get("pin")
+                    elif self.coordinator.pin and self.coordinator.pin != "0000":
+                        service_kwargs["pin"] = self.coordinator.pin
+                    else:
+                        raise HomeAssistantError(
+                            "Service requires a pin and no pin provided."
+                        )
+                elif param in ["target_value", "target_temp"]:
                     # convert temp values to car requirements
                     service_kwargs[param] = convert_temp_value(
                         self.hass.config.units.temperature_unit,

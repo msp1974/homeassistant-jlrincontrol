@@ -15,8 +15,7 @@ lock_vehicle:
       name: Pin
       description: "The pin set for your vehicle."
       example: "1234"
-      default: "0000"
-      required: true
+      required: false
       selector:
         text:
 unlock_vehicle:
@@ -30,8 +29,7 @@ unlock_vehicle:
       name: Pin
       description: "The pin set for your vehicle."
       example: "1234"
-      default: "0000"
-      required: true
+      required: false
       selector:
         text:
 reset_alarm:
@@ -45,8 +43,7 @@ reset_alarm:
       name: Pin
       description: "The pin set for your vehicle."
       example: "1234"
-      default: "0000"
-      required: true
+      required: false
       selector:
         text:
 honk_blink:
@@ -66,8 +63,7 @@ start_vehicle:
       name: Pin
       description: "The pin set for your vehicle."
       example: "1234"
-      default: "0000"
-      required: true
+      required: false
       selector:
         text:
     target_value:
@@ -93,8 +89,7 @@ stop_vehicle:
       name: Pin
       description: "The pin set for your vehicle."
       example: "1234"
-      default: "0000"
-      required: true
+      required: false
       selector:
         text:
 start_charging:
@@ -222,8 +217,7 @@ enable_guardian_mode:
       name: Pin
       description: "The pin set for your vehicle."
       example: "1234"
-      default: "0000"
-      required: true
+      required: false
       selector:
         text:
 disable_guardian_mode:
@@ -237,8 +231,7 @@ disable_guardian_mode:
       name: Pin
       description: "The pin set for your vehicle."
       example: "1234"
-      default: "0000"
-      required: true
+      required: false
       selector:
         text:
 enable_service_mode:
@@ -259,8 +252,7 @@ enable_service_mode:
       name: Pin
       description: "The pin set for your vehicle."
       example: "1234"
-      default: "0000"
-      required: true
+      required: false
       selector:
         text:
 disable_service_mode:
@@ -274,8 +266,7 @@ disable_service_mode:
       name: Pin
       description: "The pin set for your vehicle."
       example: "1234"
-      default: "0000"
-      required: true
+      required: false
       selector:
         text:
 enable_transport_mode:
@@ -296,8 +287,7 @@ enable_transport_mode:
       name: Pin
       description: "The pin set for your vehicle."
       example: "1234"
-      default: "0000"
-      required: true
+      required: false
       selector:
         text:
 disable_transport_mode:
@@ -311,7 +301,6 @@ disable_transport_mode:
       name: Pin
       description: "The pin set for your vehicle."
       example: "1234"
-      default: "0000"
-      required: true
+      required: false
       selector:
         text:
