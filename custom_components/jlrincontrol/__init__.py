@@ -5,6 +5,7 @@ Includes Sensor Devices and Services
 https://github.com/msp1974/homeassistant-jlrincontrol.git
 msparker@sky.com
 """
+
 from datetime import datetime, timedelta
 import logging
 import uuid
@@ -51,7 +52,7 @@ SERVICES_BASE_SCHEMA = {
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
 }
 SERVICES_PIN_SCHEMA = {
-    vol.Required(ATTR_PIN): vol.Coerce(str),
+    vol.Optional(ATTR_PIN): vol.Coerce(str),
 }
 SERVICES_TARGET_TEMP_SCHEMA = {
     vol.Required(ATTR_TARGET_TEMP): vol.Coerce(int),
@@ -99,9 +100,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             except KeyError:
                 pass
 
-        config_entry.version = 2
         hass.config_entries.async_update_entry(
-            config_entry, data=new_data, options=new_options
+            config_entry, data=new_data, options=new_options, version=2
         )
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
