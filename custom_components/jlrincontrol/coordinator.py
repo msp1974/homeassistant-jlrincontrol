@@ -110,7 +110,7 @@ class VehicleData:
     fuel: str = "Unknown"
     last_updated: datetime = None
     position: dict = field(default_factory=dict)
-    address: str = {"formattedAddress": "Unknown"}
+    address: dict = field(default_factory=dict)
     attributes: dict = field(default_factory=dict)
     supported_services: list = field(default_factory=list)
     status: dict = field(default_factory=dict)
