@@ -1,4 +1,5 @@
 """Handles updating data from jlrpy."""
+
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import json
@@ -109,6 +110,7 @@ class VehicleData:
     fuel: str = "Unknown"
     last_updated: datetime = None
     position: dict = field(default_factory=dict)
+    address: str = {"formattedAddress": "Unknown"}
     attributes: dict = field(default_factory=dict)
     supported_services: list = field(default_factory=list)
     status: dict = field(default_factory=dict)
@@ -474,16 +476,32 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_get_vehicle_position(self, vehicle: jlrpy.Vehicle) -> None:
         """Get vehicle position data."""
+        last_position = self.vehicles[vehicle.vin].position
         position = await self.hass.async_add_executor_job(vehicle.get_position)
 
         if position:
-            self.vehicles[vehicle.vin].position = position
+            self.vehicles[vehicle.vin].position = position.get("position")
             _LOGGER.debug(
-                "Received position data update for %s",
+                "Received position data for %s",
                 self.vehicles[vehicle.vin].name,
             )
+
+            # Get address only if new position to reduce api requests
+            if position.get("position") != last_position:
+                _LOGGER.debug("Vehicle has new position, getting address data")
+
+                # Get address details
+                address = await self.hass.async_add_executor_job(
+                    self.connection.reverse_geocode,
+                    round(self.vehicles[vehicle.vin].position.get("latitude"), 8),
+                    round(self.vehicles[vehicle.vin].position.get("longitude"), 8),
+                )
+                if address:
+                    self.vehicles[vehicle.vin].address = address
+                else:
+                    self.vehicles[vehicle.vin].address = {"formattedAddress": "Unknown"}
         else:
-            self.vehicles[vehicle.vin].position = None
+            self.vehicles[vehicle.vin].position = {}
             _LOGGER.debug(
                 "No position data received for %s",
                 self.vehicles[vehicle.vin].name,
