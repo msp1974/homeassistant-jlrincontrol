@@ -1,4 +1,5 @@
 """Handles updating data from jlrpy."""
+
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -119,6 +120,7 @@ class VehicleData:
     last_updated: datetime = None
     last_status_update: datetime = None
     position: dict = field(default_factory=dict)
+    address: dict = field(default_factory=dict)
     attributes: dict = field(default_factory=dict)
     supported_services: list = field(default_factory=list)
     status: VehicleStatus = field(default_factory=VehicleStatus)
@@ -580,14 +582,29 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_get_vehicle_position(self, vehicle: VehicleData) -> None:
         """Get vehicle position data."""
+        last_position = vehicle.position
         position = await vehicle.api.get_position()
 
         if position:
-            vehicle.position = position
+            vehicle.position = position.get("position")
             _LOGGER.debug(
                 "Received position data update for %s",
                 vehicle.name,
             )
+
+            # Get address only if new position to reduce api requests
+            if vehicle.position != last_position:
+                _LOGGER.debug("Vehicle has new position, getting address data")
+
+                # Get address details
+                address = await self.connection.reverse_geocode(
+                    round(vehicle.position.get("latitude"), 8),
+                    round(vehicle.position.get("longitude"), 8),
+                )
+                if address:
+                    vehicle.address = address
+                else:
+                    vehicle.address = {"formattedAddress": "Unknown"}
         else:
             vehicle.position = None
             _LOGGER.debug(
