@@ -73,7 +73,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
 
         if (
             requires_pin(SUPPORTED_SWITCH_SERVICES, self.service_code)
-            and not self.coordinator.pin
+            and not self.vehicle.pin
         ):
             raise HomeAssistantError("Unable to perform function.  No pin set")
 
@@ -92,7 +92,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
         _LOGGER.debug("Switch %s turned off", self._name)
         if (
             requires_pin(SUPPORTED_SWITCH_SERVICES, self.service_code)
-            and not self.coordinator.pin
+            and not self.vehicle.pin
         ):
             raise HomeAssistantError("Unable to perform function.  No pin set")
         service = SUPPORTED_SWITCH_SERVICES[self.service_code].get("off_service")
@@ -141,7 +141,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
         # Assign values to params
         result = {}
         if "pin" in params:
-            result["pin"] = self.coordinator.pin
+            result["pin"] = self.vehicle.pin
 
         if "target_value" in params:
             result["target_value"] = self.coordinator.default_climate_temp

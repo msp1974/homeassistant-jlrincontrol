@@ -6,7 +6,7 @@ https://github.com/msp1974/homeassistant-jlrincontrol.git
 msparker@sky.com
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 import uuid
 
@@ -101,7 +101,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 pass
 
         hass.config_entries.async_update_entry(
-            config_entry, data=new_data, options=new_options, version=2
+            config_entry, data=new_data, options=new_options, version=2, minor_version=1
         )
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)

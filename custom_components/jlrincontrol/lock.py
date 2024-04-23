@@ -41,11 +41,11 @@ class JLRLock(JLREntity, LockEntity):
         """Lock the car."""
         _LOGGER.debug("Locking vehicle")
 
-        if self.coordinator.pin:
+        if self.vehicle.pin:
             kwargs = {}
             kwargs["service_name"] = "lock"
             kwargs["service_code"] = "RDL"
-            kwargs["pin"] = self.coordinator.pin
+            kwargs["pin"] = self.vehicle.pin
             jlr_service = JLRService(self.coordinator, self.vin, "lock_vehicle")
             await jlr_service.async_call_service(**kwargs)
             await self.async_force_update()
@@ -56,11 +56,11 @@ class JLRLock(JLREntity, LockEntity):
         """Unlock the car."""
         _LOGGER.debug("Unlocking vehicle")
 
-        if self.coordinator.pin:
+        if self.vehicle.pin:
             kwargs = {}
             kwargs["service_name"] = "unlock"
             kwargs["service_code"] = "RDU"
-            kwargs["pin"] = self.coordinator.pin
+            kwargs["pin"] = self.vehicle.pin
             jlr_service = JLRService(self.coordinator, self.vin, "unlock_vehicle")
             await jlr_service.async_call_service(**kwargs)
             await self.async_force_update()

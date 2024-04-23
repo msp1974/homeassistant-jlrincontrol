@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This account is already configured"
+      "already_configured": "This account is already configured",
+      "reconfigure_successful": "Reconfiguration successful"
     },
     "error": {
       "cannot_connect": "Unable to connect to the JLR InControl servers.",
@@ -15,11 +16,32 @@
         "data": {
           "username": "Email",
           "password": "Password",
-          "pin": "Pin",
           "use_china_servers": "China Region"
         },
         "description": "Please enter the email and password for your InControl account.",
         "title": "JLR InControl Setup"
+      },
+      "pin": {
+        "data": {
+          "pin": "Pin"
+        },
+        "description": "Please enter the pin code for {name}",
+        "title": "JLR InControl Setup"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "Password",
+          "use_china_servers": "China Region"
+        },
+        "description": "Please enter the email and password for your InControl account.",
+        "title": "JLR InControl Reconfigure"
+      },
+      "reconfigure_pin": {
+        "data": {
+          "pin": "Pin"
+        },
+        "description": "Please enter the pin code for {name}",
+        "title": "JLR InControl Reconfigure"
       }
     },
     "title": "JLR In Control"
