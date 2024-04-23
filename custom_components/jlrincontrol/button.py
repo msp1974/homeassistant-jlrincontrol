@@ -1,4 +1,5 @@
 """Service call buttons."""
+
 import logging
 
 from homeassistant.components.button import ButtonEntity
@@ -57,7 +58,7 @@ class JLRButton(JLREntity, ButtonEntity):
         _LOGGER.debug("Pressed %s", self._name)
         if (
             requires_pin(SUPPORTED_BUTTON_SERVICES, self.service_code)
-            and not self.coordinator.pin
+            and not self.vehicle.pin
         ):
             raise HomeAssistantError("Unable to perform function.  No pin set")
 

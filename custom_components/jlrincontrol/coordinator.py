@@ -114,6 +114,7 @@ class VehicleData:
 
     vin: str
     api: Vehicle
+    pin: str
     name: str = ""
     engine_type: str = "Unknown"
     fuel: str = "Unknown"
@@ -207,11 +208,6 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         self.device_id = config_entry.data.get(CONF_DEVICE_ID)
         self.vehicles: dict[str, VehicleData] = {}
         self.entities = []
-        self.pin = (
-            config_entry.data.get(CONF_PIN)
-            if config_entry.data.get(CONF_PIN) != "0000"
-            else None
-        )
         self.pressure_unit = config_entry.options.get(CONF_PRESSURE_UNIT, "Default")
         self.default_climate_temp = config_entry.options.get(
             CONF_DEFAULT_CLIMATE_TEMP, 21
@@ -394,7 +390,13 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
         if len(self.connection.vehicles) > 0:
             for vehicle in self.connection.vehicles:
                 _LOGGER.debug("Vehicle: %s", vehicle.vin)
-                self.vehicles[vehicle.vin] = VehicleData(vin=vehicle.vin, api=vehicle)
+                self.vehicles[vehicle.vin] = VehicleData(
+                    vin=vehicle.vin,
+                    api=vehicle,
+                    pin=self.config_entry.data[CONF_PIN].get(vehicle.vin, "0000")
+                    if isinstance(self.config_entry.data[CONF_PIN], dict)
+                    else self.config_entry.data[CONF_PIN],
+                )
         else:
             _LOGGER.debug("No vehicles found in this account")
 

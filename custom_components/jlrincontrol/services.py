@@ -110,8 +110,8 @@ class JLRService:
                 if param in ["pin"]:
                     if kwargs.get("pin"):
                         service_kwargs["pin"] = kwargs.get("pin")
-                    elif self.coordinator.pin and self.coordinator.pin != "0000":
-                        service_kwargs["pin"] = self.coordinator.pin
+                    elif self.vehicle.pin and self.vehicle.pin != "0000":
+                        service_kwargs["pin"] = self.vehicle.pin
                     else:
                         raise HomeAssistantError(
                             "Service requires a pin and no pin provided."
