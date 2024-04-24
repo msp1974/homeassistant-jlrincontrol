@@ -5,7 +5,7 @@ from typing import Any
 import urllib
 import uuid
 
-import jlrpy
+from aiojlrpy import Connection, Vehicle
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -57,7 +57,7 @@ async def validate_input(hass: HomeAssistant, data):
     # TODO: match exceptions with aiojlrpy
     try:
         connection = await hass.async_add_executor_job(
-            jlrpy.Connection,
+            Connection,
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
             "",
@@ -83,7 +83,7 @@ async def validate_input(hass: HomeAssistant, data):
     }
 
 
-async def async_get_vehicle_name(hass: HomeAssistant, vehicle: jlrpy.Vehicle) -> None:
+async def async_get_vehicle_name(hass: HomeAssistant, vehicle: Vehicle) -> None:
     """Get vehicle attributes."""
     attributes = await hass.async_add_executor_job(vehicle.get_attributes)
 
