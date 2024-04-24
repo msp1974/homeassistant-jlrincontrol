@@ -64,6 +64,7 @@ async def validate_input(hass: HomeAssistant, data):
             "",
             data[CONF_USE_CHINA_SERVERS],
         )
+        await connection.connect()
     except urllib.error.HTTPError as ex:
         if ex.code > 400 and ex.code < 500:
             raise InvalidAuth from ex
@@ -85,7 +86,7 @@ async def validate_input(hass: HomeAssistant, data):
 
 async def async_get_vehicle_name(hass: HomeAssistant, vehicle: Vehicle) -> None:
     """Get vehicle attributes."""
-    attributes = await hass.async_add_executor_job(vehicle.get_attributes)
+    attributes = await vehicle.get_attributes()
 
     if attributes:
         return attributes.get("nickname", vehicle.vin)
