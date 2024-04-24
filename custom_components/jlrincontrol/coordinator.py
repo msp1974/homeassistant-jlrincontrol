@@ -492,24 +492,27 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                             )
 
             # Alerts
-            for alert in vehicle.status.alerts:
-                if (
-                    alert.last_updated
-                    != [
-                        new_alert
-                        for new_alert in new_status.alerts
-                        if alert.name == new_alert.name
-                    ][0].last_updated
-                ):
-                    message = (
-                        "NEW ACTIVE ALERT" if alert.active else "ALERT BECAME INACTIVE"
-                    )
+            if vehicle.status.alerts:
+                for alert in new_status.alerts:
+                    if (
+                        alert.last_updated
+                        != [
+                            prev_alert
+                            for prev_alert in vehicle.status.alerts
+                            if alert.name == prev_alert.name
+                        ][0].last_updated
+                    ):
+                        message = (
+                            "NEW ACTIVE ALERT"
+                            if alert.active
+                            else "ALERT BECAME INACTIVE"
+                        )
 
-                    _LOGGER.debug(
-                        "%s: %s",
-                        message,
-                        alert,
-                    )
+                        _LOGGER.debug(
+                            "%s: %s",
+                            message,
+                            alert,
+                        )
 
         _LOGGER.debug("Last updated: %s", new_status.last_updated_time)
         _LOGGER.debug(
