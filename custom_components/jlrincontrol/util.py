@@ -1,4 +1,5 @@
 """Utility functions."""
+
 from datetime import datetime
 import logging
 from os.path import exists
@@ -144,3 +145,9 @@ def debug_log_status(status):
                 status_class.upper(),
                 getattr(status, status_class),
             )
+
+
+def is_alert_active(alerts: list, alert_id: str) -> bool:
+    """Return if specified alert is active."""
+    alert = [alert for alert in alerts if alert.name == alert_id]
+    return alert and alert[0].active

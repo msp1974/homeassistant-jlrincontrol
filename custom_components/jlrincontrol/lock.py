@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from .const import DATA_ATTRS_DOOR_POSITION, DATA_ATTRS_DOOR_STATUS, DOMAIN, JLR_DATA
 from .entity import JLREntity
 from .services import JLRService
+from .util import is_alert_active
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,13 +36,13 @@ class JLRLock(JLREntity, LockEntity):
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        return self.vehicle.status.core["DOOR_IS_ALL_DOORS_LOCKED"] == "TRUE"
+        return not is_alert_active(self.vehicle.status.alerts, "VEHICLE_UNLOCKED")
 
     async def async_lock(self, **kwargs):
         """Lock the car."""
         _LOGGER.debug("Locking vehicle")
 
-        if self.vehicle.pin:
+        if self.vehicle.pin and self.vehicle.pin != "0000":
             kwargs = {}
             kwargs["service_name"] = "lock"
             kwargs["service_code"] = "RDL"
@@ -50,13 +51,13 @@ class JLRLock(JLREntity, LockEntity):
             await jlr_service.async_call_service(**kwargs)
             await self.async_force_update()
         else:
-            _LOGGER.warning("Cannot lock vehicle - pin not set in options")
+            _LOGGER.warning("Cannot lock vehicle - pin not set")
 
     async def async_unlock(self, **kwargs):
         """Unlock the car."""
         _LOGGER.debug("Unlocking vehicle")
 
-        if self.vehicle.pin:
+        if self.vehicle.pin and self.vehicle.pin != "0000":
             kwargs = {}
             kwargs["service_name"] = "unlock"
             kwargs["service_code"] = "RDU"
@@ -65,7 +66,7 @@ class JLRLock(JLREntity, LockEntity):
             await jlr_service.async_call_service(**kwargs)
             await self.async_force_update()
         else:
-            _LOGGER.warning("Cannot unlock vehicle - pin not set in options")
+            _LOGGER.warning("Cannot unlock vehicle - pin not set")
 
     @property
     def extra_state_attributes(self):

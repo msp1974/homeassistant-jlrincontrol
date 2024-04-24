@@ -1,4 +1,5 @@
 """Support for JLR InControl Sensors."""
+
 import logging
 
 from homeassistant.components.sensor import SensorDeviceClass
@@ -27,7 +28,7 @@ from .const import (
     SERVICE_STATUS_OK,
 )
 from .entity import JLREntity
-from .util import get_attribute, to_local_datetime
+from .util import get_attribute, is_alert_active, to_local_datetime
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -299,7 +300,11 @@ class JLRVehicleAlarmSensor(JLREntity):
             for alert in self.vehicle.status.alerts
             if alert.name == "ALARM_UNARMED"
         ]
-        return "Armed" if alert and not alert[0].active else "Unarmed"
+        return (
+            "Unarmed"
+            if is_alert_active(self.vehicle.status.alerts, "ALARM_UNARMED")
+            else "Armed"
+        )
 
 
 class JLRVehicleServiceSensor(JLREntity):
@@ -317,7 +322,7 @@ class JLRVehicleServiceSensor(JLREntity):
             self.vehicle.status.core.get(value) in SERVICE_STATUS_OK
             or self.vehicle.status.core.get(value) is None
             for key, value in DATA_ATTRS_SERVICE_STATUS.items()
-        ):
+        ) and not is_alert_active(self.vehicle.status.alerts, "DIST_TO_SERVICE_KM"):
             return "Ok"
         else:
             return "Warning"
