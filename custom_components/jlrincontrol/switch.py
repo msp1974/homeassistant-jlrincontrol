@@ -54,11 +54,6 @@ class JLRSwitch(JLREntity, SwitchEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if state_attr := SUPPORTED_SWITCH_SERVICES[self.service_code].get("state"):
-            self._attr_is_on = get_attribute(self.vehicle.tracked_status, state_attr)
-        else:
-            self._attr_is_on = False
-
         _LOGGER.debug(
             "%s switch update requested. State is %s",
             self.name,
@@ -66,6 +61,13 @@ class JLRSwitch(JLREntity, SwitchEntity):
         )
 
         self.async_write_ha_state()
+
+    @property
+    def is_on(self):
+        """Return the state of the switch."""
+        if state_attr := SUPPORTED_SWITCH_SERVICES[self.service_code].get("state"):
+            return get_attribute(self.vehicle.tracked_status, state_attr)
+        return False
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
