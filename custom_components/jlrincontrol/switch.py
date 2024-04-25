@@ -22,13 +22,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
     coordinator = hass.data[DOMAIN][config_entry.entry_id][JLR_DATA]  # Get Handler
 
     # Get list of supported services
-    for vehicle in coordinator.vehicles:
-        services = coordinator.vehicles[vehicle].supported_services
+    for vehicle in coordinator.vehicles.values():
+        services = vehicle.supported_services
 
-        _LOGGER.debug("Setting up switches for %s", coordinator.vehicles[vehicle].name)
-        for service_code in SUPPORTED_SWITCH_SERVICES:
-            if service_code in services:
-                jlr_switches.append(JLRSwitch(coordinator, vehicle, service_code))
+        _LOGGER.debug("Setting up switches for %s", vehicle.name)
+        jlr_switches = [
+            JLRSwitch(coordinator, vehicle.vin, service_code)
+            for service_code in SUPPORTED_SWITCH_SERVICES
+            if service_code in services
+        ]
 
     async_add_entities(jlr_switches, True)
 

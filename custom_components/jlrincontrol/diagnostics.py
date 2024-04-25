@@ -1,20 +1,21 @@
 """Diagnostics support for JLRInControl."""
+
 from __future__ import annotations
+
 import copy
 from dataclasses import dataclass, field
 from datetime import datetime
-
 import logging
 from typing import Any
 
 from aiojlrpy import VehicleStatus
-from .coordinator import VehicleData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN, JLR_DATA
+from .vehicle import JLRVehicle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +85,7 @@ def _async_get_diagnostics(
     return diag_data
 
 
-def get_diagnostic_data(data: VehicleData) -> VehicleDiagnosticData:
+def get_diagnostic_data(data: JLRVehicle) -> VehicleDiagnosticData:
     """Return diag data."""
     return VehicleDiagnosticData(
         vin=data.vin,

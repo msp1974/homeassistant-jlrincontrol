@@ -28,7 +28,7 @@ from .const import (
     SERVICE_STATUS_OK,
 )
 from .entity import JLREntity
-from .util import get_attribute, is_alert_active, to_local_datetime
+from .util import is_alert_active, to_local_datetime
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -175,8 +175,7 @@ class JLRVehicleSensor(JLREntity):
 
         attrs["Odometer"] = (
             int(int(self.vehicle.status.core.get("ODOMETER_METER")) / 1000)
-            if self.coordinator.user.user_preferences.distance
-            == UnitOfLength.KILOMETERS
+            if self.coordinator.user.units.distance == UnitOfLength.KILOMETERS
             else int(self.vehicle.status.core.get("ODOMETER_MILES"))
         )
 
@@ -228,7 +227,7 @@ class JLRVehicleTyreSensor(JLREntity):
                     tyre_pressure = tyre_pressure / 10
 
                 # Convert to local units - metric = bar, imperial = psi
-                units = self.coordinator.user.user_preferences.pressure
+                units = self.coordinator.user.units.pressure
                 attrs[f"{key.title()} Pressure ({units})"] = round(
                     unit_conversion.PressureConverter.convert(
                         tyre_pressure, UnitOfPressure.KPA, units
@@ -289,17 +288,6 @@ class JLRVehicleAlarmSensor(JLREntity):
     @property
     def state(self):
         """Return sensor state."""
-        # status = self.vehicle.status.core.get("THEFT_ALARM_STATUS")
-        # if status:
-        #    status = status.replace("ALARM_", "")
-        #    return status.replace("_", "").title()
-        # else:
-        #    return "Not Supported"
-        alert = [
-            alert
-            for alert in self.vehicle.status.alerts
-            if alert.name == "ALARM_UNARMED"
-        ]
         return (
             "Unarmed"
             if is_alert_active(self.vehicle.status.alerts, "ALARM_UNARMED")
@@ -345,7 +333,7 @@ class JLRVehicleServiceSensor(JLREntity):
                         unit_conversion.VolumeConverter.convert(
                             int(status.get(value).title()),
                             UnitOfVolume.LITERS,
-                            self.coordinator.user.user_preferences.fuel,
+                            self.coordinator.user.units.fuel,
                         )
                     )
                 else:
@@ -353,7 +341,7 @@ class JLRVehicleServiceSensor(JLREntity):
                         unit_conversion.DistanceConverter.convert(
                             int(status.get(value).title()),
                             UnitOfLength.KILOMETERS,
-                            self.coordinator.user.user_preferences.distance,
+                            self.coordinator.user.units.distance,
                         )
                     )
         return attrs
@@ -365,7 +353,7 @@ class JLRVehicleRangeSensor(JLREntity):
     def __init__(self, coordinator, vin) -> None:
         """Initialise."""
         super().__init__(coordinator, vin, "range")
-        self._units = self.coordinator.user.user_preferences.distance
+        self._units = self.coordinator.user.units.distance
         self._icon = (
             "mdi:speedometer"
             if self.vehicle.fuel == FUEL_TYPE_BATTERY
@@ -442,7 +430,7 @@ class JLREVBatterySensor(JLREntity):
     def __init__(self, coordinator, vin) -> None:
         """Initialise."""
         super().__init__(coordinator, vin, "battery")
-        self._units = self.coordinator.user.user_preferences.distance
+        self._units = self.coordinator.user.units.distance
         self._charging_state = False
 
     @property
@@ -475,12 +463,11 @@ class JLREVBatterySensor(JLREntity):
         ev_status = self.vehicle.status.ev
 
         # Charging status
-        self._charging_state = (
-            True
-            if ev_status.get("EV_CHARGING_STATUS")
-            in ["CHARGING", "WAITINGTOCHARGE", "INITIALIZATION"]
-            else False
-        )
+        self._charging_state = ev_status.get("EV_CHARGING_STATUS") in [
+            "CHARGING",
+            "WAITINGTOCHARGE",
+            "INITIALIZATION",
+        ]
         attrs["Charging"] = self._charging_state
 
         # Max SOC Values Set
@@ -533,7 +520,7 @@ class JLRVehicleLastTripSensor(JLREntity):
     def __init__(self, coordinator, vin) -> None:
         """Initialise."""
         super().__init__(coordinator, vin, "last trip")
-        self._units = self.coordinator.user.user_preferences.distance
+        self._units = self.coordinator.user.units.distance
         self._icon = "mdi:map"
 
     @property

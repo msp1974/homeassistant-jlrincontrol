@@ -3,7 +3,6 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
-from functools import partial
 import inspect
 import logging
 from urllib.error import HTTPError

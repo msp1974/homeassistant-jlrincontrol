@@ -28,9 +28,11 @@ async def async_setup_entry(
         services = coordinator.vehicles[vehicle].supported_services
 
         _LOGGER.debug("Setting up buttons for %s", coordinator.vehicles[vehicle].name)
-        for service_code in SUPPORTED_BUTTON_SERVICES:
-            if service_code in services:
-                jlr_buttons.append(JLRButton(coordinator, vehicle, service_code))
+        jlr_buttons = [
+            JLRButton(coordinator, vehicle, service_code)
+            for service_code in SUPPORTED_BUTTON_SERVICES
+            if service_code in services
+        ]
 
     async_add_entities(jlr_buttons, True)
 

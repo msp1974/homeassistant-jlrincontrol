@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN
-from .coordinator import VehicleData
+from .vehicle import JLRVehicle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class JLREntity(CoordinatorEntity, Entity):
         self._name = name
         self._icon = "mdi:cloud"
 
-        self.vehicle: VehicleData = self.coordinator.vehicles[self.vin]
+        self.vehicle: JLRVehicle = self.coordinator.vehicles[self.vin]
 
         _LOGGER.debug("Loading %s", self.name)
 

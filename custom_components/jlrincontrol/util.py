@@ -2,14 +2,11 @@
 
 from datetime import datetime
 import logging
-from os.path import exists
 from typing import Any
 
-import aiofiles
 from aiojlrpy import Alert
 
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +34,7 @@ def requires_pin(service_type, service_code):
 
 def get_value_match(data: dict, key: str, value: str) -> bool:
     """Get if attribute matches value."""
-    return True if data.get(key) == value else False
+    return data.get(key) == value
 
 
 def get_is_date_active(data: dict, key: str) -> bool:
@@ -113,27 +110,6 @@ def get_attribute(obj, path: str) -> Any | None:
         else:
             return None
     return temp
-
-
-async def save_user_prefs(hass: HomeAssistant, user_id, uoms) -> bool:
-    """Write user preferences to file."""
-    file = f"{hass.config.config_dir}/.storage/jlrincontrol_data_{user_id}"
-    # Write to config file
-    async with aiofiles.open(file, mode="w") as config_file:
-        # try:
-        await config_file.write(uoms)
-    return True
-
-
-async def get_user_prefs(hass: HomeAssistant, user_id) -> dict:
-    """Get user prefs from file."""
-    file = f"{hass.config.config_dir}/.storage/jlrincontrol_data_{user_id}"
-    if exists(file):
-        async with aiofiles.open(file, mode="r") as user_pref_file:
-            contents = await user_pref_file.read()
-            if contents:
-                uoms = contents
-        return uoms
 
 
 def debug_log_status(status):
