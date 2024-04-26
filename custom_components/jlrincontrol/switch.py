@@ -59,7 +59,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
         _LOGGER.debug(
             "%s switch update requested. State is %s",
             self.name,
-            self._attr_is_on,
+            self.is_on,
         )
 
         self.async_write_ha_state()
