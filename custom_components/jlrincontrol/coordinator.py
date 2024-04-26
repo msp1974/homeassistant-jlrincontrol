@@ -187,6 +187,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug("Vehicle: %s", vehicle.vin)
                 self.vehicles[vehicle.vin] = JLRVehicle(
                     vin=vehicle.vin,
+                    hass=self.hass,
                     connection=self.connection,
                     api=vehicle,
                     pin=self.config_entry.data[CONF_PIN].get(vehicle.vin, "0000")
@@ -207,6 +208,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                     self.vehicles[message.vin].tracked_status.guardian_mode_active = (
                         data["status"] == "ACTIVE"
                     )
+                    self.hass.async_add_executor_job(self.async_update_listeners)
             elif message.service == JLRServices.VEHICLE_HEALTH:
                 if message.vin:
                     if data := message.data.get("b"):
@@ -217,8 +219,17 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                         self.vehicles[message.vin].status = status
                         await self.vehicles[message.vin].get_tracked_statuses()
                         # Just had VHS message so cancel any outstanding status updates
-                        if self.scheduled_update_task:
+
+                        if (
+                            self.scheduled_update_task
+                            and not self.scheduled_update_task.done()
+                        ):
+                            _LOGGER.debug(
+                                "Cancelling scheduled status update as VHS message received in time"
+                            )
                             self.scheduled_update_task.cancel()
+
+                        self.hass.async_add_executor_job(self.async_update_listeners)
 
             elif (
                 message.service
@@ -232,17 +243,21 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 and message.vin
             ):
                 # Schedule status update in case VHS message doesn't come
-                self.scheduled_update_task = asyncio.create_task(
-                    self.get_delayed_vehicle_status(self.vehicles[message.vin], 15)
-                )
-
-            self.hass.async_add_executor_job(self.async_update_listeners)
+                if (
+                    not self.scheduled_update_task
+                ) or self.scheduled_update_task.done():
+                    _LOGGER.debug(
+                        "Scheduling status update in 15s if VHS message not sent"
+                    )
+                    self.scheduled_update_task = asyncio.create_task(
+                        self.get_delayed_vehicle_status(self.vehicles[message.vin], 15)
+                    )
 
     async def get_delayed_vehicle_status(self, vehicle: JLRVehicle, delay: int = 0):
         """Get vehicle status."""
         await asyncio.sleep(delay)
         _LOGGER.debug("Calling update data caused by message with no VHS\n")
-        await self.async_update_data()
+        await self.async_refresh()
 
     async def monitored_vehicle_status(self, interval: int):
         """Get vehicle status."""

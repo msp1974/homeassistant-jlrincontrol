@@ -8,6 +8,8 @@ from urllib.error import HTTPError
 from aiojlrpy import Connection, Vehicle, VehicleStatus
 from aiojlrpy.exceptions import JLRException
 
+from homeassistant.core import HomeAssistant
+
 from .const import PowerTrainType
 from .util import debug_log_status, field_mask, get_is_date_active, get_value_match
 
@@ -41,6 +43,7 @@ class JLRVehicle:
     """Class to hold vehicle data and functions."""
 
     vin: str
+    hass: HomeAssistant
     connection: Connection
     api: Vehicle
     pin: str
