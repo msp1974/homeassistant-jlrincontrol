@@ -62,7 +62,7 @@ class JLRSwitch(JLREntity, SwitchEntity):
             self.is_on,
         )
 
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def is_on(self):

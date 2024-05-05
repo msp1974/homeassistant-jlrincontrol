@@ -228,8 +228,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                                 "Cancelling scheduled status update as VHS message received in time"
                             )
                             self.scheduled_update_task.cancel()
-
-                        self.hass.async_add_executor_job(self.async_update_listeners)
+                        self.async_update_listeners()
 
             elif (
                 message.service
