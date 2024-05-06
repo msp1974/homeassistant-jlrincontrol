@@ -205,10 +205,8 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
                 if message.vin:
                     data = json.loads(message.data.get("b"))
                     self.vehicles[message.vin].guardian_mode = data
-                    self.vehicles[message.vin].tracked_status.guardian_mode_active = (
-                        data["status"] == "ACTIVE"
-                    )
-                    self.hass.async_add_executor_job(self.async_update_listeners)
+                    await self.vehicles[message.vin].get_tracked_statuses()
+                    self.async_update_listeners()
             elif message.service == JLRServices.VEHICLE_HEALTH:
                 if message.vin:
                     if data := message.data.get("b"):
