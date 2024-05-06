@@ -250,12 +250,12 @@ class JLRVehicleWindowSensor(JLREntity):
     @property
     def state(self):
         """Return sensor state."""
-        if all(
-            self.vehicle.status.core[v] in ["CLOSED", "FALSE", "UNUSED"]
-            for k, v in DATA_ATTRS_WINDOW_STATUS.items()
-        ):
-            return "Closed"
-        return "Open"
+        return (
+            "Open"
+            if is_alert_active(self.vehicle.status.alerts, "WINDOW_OPEN'")
+            or is_alert_active(self.vehicle.status.alerts, "ROOF_OPEN'")
+            else "Closed"
+        )
 
     @property
     def extra_state_attributes(self):
@@ -268,7 +268,7 @@ class JLRVehicleWindowSensor(JLREntity):
                 if self.vehicle.attributes.get("roofType") == "SUNROOF":
                     attrs[key.title()] = (
                         "Open"
-                        if self.vehicle.status.core.get("IS_SUNROOF_OPEN") == "TRUE"
+                        if is_alert_active(self.vehicle.status.alerts, "ROOF_OPEN")
                         else "Closed"
                     )
             else:
