@@ -170,13 +170,16 @@ class JLRVehicle:
             for status_class in ["core", "ev"]:
                 if getattr(self.status, status_class):
                     for key, value in getattr(self.status, status_class).items():
-                        if value != getattr(new_status, status_class)[key]:
-                            _LOGGER.debug(
-                                "%s - prev: %s, new: %s",
-                                key,
-                                value,
-                                getattr(new_status, status_class)[key],
-                            )
+                        try:
+                            if value != getattr(new_status, status_class)[key]:
+                                _LOGGER.debug(
+                                    "%s - prev: %s, new: %s",
+                                    key,
+                                    value,
+                                    getattr(new_status, status_class)[key],
+                                )
+                        except KeyError:
+                            _LOGGER.debug("Key %s no longer exists in updated status", key)
 
             # Alerts
             if self.status.alerts:
