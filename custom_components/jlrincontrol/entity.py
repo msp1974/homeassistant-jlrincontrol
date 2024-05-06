@@ -63,8 +63,7 @@ class JLREntity(CoordinatorEntity, Entity):
     @property
     def extra_state_attributes(self):
         """Return attributes."""
-        attrs = {}
-        return attrs
+        return {}
 
     async def async_force_update(self, delay: int = 0):
         """Force update."""

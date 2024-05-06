@@ -272,7 +272,7 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
     async def async_status_only_update(self, vehicle: JLRVehicle):
         """Update vehicle status only."""
         await vehicle.async_get_vehicle_status()
-        self.hass.async_add_executor_job(self.async_update_listeners)
+        self.async_update_listeners()
 
     async def async_update_data(self):
         """Update vehicle data."""
@@ -283,7 +283,8 @@ class JLRIncontrolUpdateCoordinator(DataUpdateCoordinator):
 
             for vehicle in self.vehicles.values():
                 await vehicle.update_data()
-            return True
+
+            return True  # noqa: TRY300
         except JLRException as ex:
             _LOGGER.debug("Unable to update data from JLRInControl servers. %s", ex)
             return False

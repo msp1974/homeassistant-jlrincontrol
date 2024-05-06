@@ -1,4 +1,5 @@
 """Integration constants."""
+
 from enum import StrEnum
 import logging
 
@@ -37,7 +38,7 @@ HEALTH_UPDATE_TRACKER = "health_update_tracker"
 HEALTH_UPDATE_LISTENER = "health_update_listener"
 UPDATE_LISTENER = "update_listener"
 
-PLATFORMS = ["sensor", "lock", "device_tracker", "button", "switch"]
+PLATFORMS = ["button", "device_tracker", "lock", "sensor", "switch"]
 
 ATTR_PIN = "pin"
 ATTR_EXPIRY = "expiration_time"
@@ -45,6 +46,7 @@ ATTR_CHARGE_LEVEL = "max_charge_level"
 ATTR_TARGET_VALUE = "target_value"
 ATTR_TARGET_TEMP = "target_temp"
 ATTR_DEPARTURE_DATETIME = "departure_datetime"
+ATTR_EXHAUST_FLUID_FILL = "exhaust fluid fill"
 
 
 JLR_TO_HASS_UNITS = {

@@ -11,6 +11,7 @@ from homeassistant.helpers import icon
 from homeassistant.util import dt as dt_util, unit_conversion
 
 from .const import (
+    ATTR_EXHAUST_FLUID_FILL,
     DATA_ATTRS_CAR_INFO,
     DATA_ATTRS_CLIMATE,
     DATA_ATTRS_SERVICE_INFO,
@@ -203,8 +204,8 @@ class JLRVehicleTyreSensor(JLREntity):
             for key, value in DATA_ATTRS_TYRE_STATUS.items()
         ):
             return "Ok"
-        else:
-            return "Warning"
+
+        return "Warning"
 
     @property
     def extra_state_attributes(self):
@@ -254,8 +255,7 @@ class JLRVehicleWindowSensor(JLREntity):
             for k, v in DATA_ATTRS_WINDOW_STATUS.items()
         ):
             return "Closed"
-        else:
-            return "Open"
+        return "Open"
 
     @property
     def extra_state_attributes(self):
@@ -312,8 +312,7 @@ class JLRVehicleServiceSensor(JLREntity):
             for key, value in DATA_ATTRS_SERVICE_STATUS.items()
         ) and not is_alert_active(self.vehicle.status.alerts, "DIST_TO_SERVICE_KM"):
             return "Ok"
-        else:
-            return "Warning"
+        return "Warning"
 
     @property
     def extra_state_attributes(self):
@@ -325,10 +324,9 @@ class JLRVehicleServiceSensor(JLREntity):
                 attrs[key.title()] = status.get(value).replace("_", " ").title()
 
         # Add metric sensors
-        # TODO: Remove fixed string
         for key, value in DATA_ATTRS_SERVICE_INFO.items():
             if status.get(value):
-                if key == "exhaust fluid fill":
+                if key == ATTR_EXHAUST_FLUID_FILL:
                     attrs[key.title()] = int(
                         unit_conversion.VolumeConverter.convert(
                             int(status.get(value).title()),
@@ -536,8 +534,7 @@ class JLRVehicleLastTripSensor(JLREntity):
                     self._units,
                 )
             )
-        else:
-            return 0
+        return 0
 
     @property
     def unit_of_measurement(self):
@@ -607,8 +604,7 @@ class JLRVehicleStatusSensor(JLREntity):
 
         if status:
             return status.replace("_", " ").title()
-        else:
-            return "Unknown"
+        return "Unknown"
 
 
 class JLRVehicleClimateSensor(JLREntity):
